@@ -44,25 +44,27 @@ include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
 /**
  * Return dolibarr global constant string value
  * @param string $key key to return value, return '' if not set
+ * @param string $default value to return
  * @return string
  */
-function getDolGlobalString($key)
+function getDolGlobalString($key, $default = '')
 {
 	global $conf;
-	// return $conf->global->$key ?? '';
-	return (string) (empty($conf->global->$key) ? '' : $conf->global->$key);
+	// return $conf->global->$key ?? $default;
+	return (string) (empty($conf->global->$key) ? $default : $conf->global->$key);
 }
 
 /**
  * Return dolibarr global constant int value
  * @param string $key key to return value, return 0 if not set
+ * @param int $default value to return
  * @return int
  */
-function getDolGlobalInt($key)
+function getDolGlobalInt($key, $default = 0)
 {
 	global $conf;
-	// return $conf->global->$key ?? 0;
-	return (int) (empty($conf->global->$key) ? 0 : $conf->global->$key);
+	// return $conf->global->$key ?? $default;
+	return (int) (empty($conf->global->$key) ? $default : $conf->global->$key);
 }
 
 /**
@@ -1203,6 +1205,35 @@ function dol_string_unaccent($str)
 function dol_string_nospecial($str, $newstr = '_', $badcharstoreplace = '', $badcharstoremove = '')
 {
 	$forbidden_chars_to_replace = array(" ", "'", "/", "\\", ":", "*", "?", "\"", "<", ">", "|", "[", "]", ",", ";", "=", '°'); // more complete than dol_sanitizeFileName
+	$forbidden_chars_to_remove = array();
+	//$forbidden_chars_to_remove=array("(",")");
+
+	if (is_array($badcharstoreplace)) {
+		$forbidden_chars_to_replace = $badcharstoreplace;
+	}
+	if (is_array($badcharstoremove)) {
+		$forbidden_chars_to_remove = $badcharstoremove;
+	}
+
+	return str_replace($forbidden_chars_to_replace, $newstr, str_replace($forbidden_chars_to_remove, "", $str));
+}
+
+/**
+ *	Clean a string from all punctuation characters to use it as a ref or login.
+ *  This is a more complete function than dol_sanitizeFileName.
+ *
+ *	@param	string			$str            	String to clean
+ * 	@param	string			$newstr				String to replace forbidden chars with
+ *  @param  array|string	$badcharstoreplace  List of forbidden characters to replace
+ *  @param  array|string	$badcharstoremove   List of forbidden characters to remove
+ * 	@return string          					Cleaned string
+ *
+ * 	@see    		dol_sanitizeFilename(), dol_string_unaccent(), dol_string_nounprintableascii()
+ */
+function dol_string_nospecial2($str, $newstr = '_', $badcharstoreplace = '', $badcharstoremove = '')
+{
+	$forbidden_chars_to_replace = array("'", "\\", ":", "*", "?", "\"", "<", ">", "|", "[", "]", ",", ";", "=", '°'); // more complete than dol_sanitizeFileName
+	//$forbidden_chars_to_replace = array(" ", "'", "/", "\\", ":", "*", "?", "\"", "<", ">", "|", "[", "]", ",", ";", "=", '°'); // more complete than dol_sanitizeFileName
 	$forbidden_chars_to_remove = array();
 	//$forbidden_chars_to_remove=array("(",")");
 
@@ -5558,6 +5589,7 @@ function get_localtax($vatrate, $local, $thirdparty_buyer = "", $thirdparty_sell
 	} else {
 		$sql .= " AND t.recuperableonly = '".$db->escape($vatnpr)."'";
 	}
+	$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 
 	$resql = $db->query($sql);
 
@@ -5667,6 +5699,7 @@ function getTaxesFromId($vatrate, $buyer = null, $seller = null, $firstparamisid
 		if ($vatratecode) {
 			$sql .= " AND t.code = '".$db->escape($vatratecode)."'";
 		}
+		$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 	}
 
 	$resql = $db->query($sql);
@@ -5813,6 +5846,7 @@ function get_product_vat_for_country($idprod, $thirdpartytouse, $idprodfournpric
 			$sql = "SELECT t.taux as vat_rate, t.code as default_vat_code";
 			$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
 			$sql .= " WHERE t.active=1 AND t.fk_pays = c.rowid AND c.code='".$db->escape($thirdpartytouse->country_code)."'";
+			$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 			$sql .= " ORDER BY t.taux DESC, t.code ASC, t.recuperableonly ASC";
 			$sql .= $db->plimit(1);
 
@@ -5880,6 +5914,7 @@ function get_product_localtax_for_country($idprod, $local, $thirdpartytouse)
 		$sql = "SELECT taux as vat_rate, localtax1, localtax2";
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
 		$sql .= " WHERE t.active=1 AND t.fk_pays = c.rowid AND c.code='".$db->escape($thirdpartytouse->country_code)."'";
+		$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 		$sql .= " ORDER BY t.taux DESC, t.recuperableonly ASC";
 		$sql .= $db->plimit(1);
 

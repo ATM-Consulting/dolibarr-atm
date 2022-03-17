@@ -227,6 +227,13 @@ if ($object->element == 'supplier_proposal' || $object->element == 'order_suppli
 	print ($line->ref_fourn ? $line->ref_fourn : $line->ref_supplier);
 	print '</td>';
 }
+// InfraS add begin
+if ($object->element == 'invoice_supplier' && $conf->global->MAIN_MODULE_INFRASPRP) {
+	dol_include_once('/infrasprp/core/lib/infrasprp.lib.php');
+	print '<td class = "linecolrefproject">'.infrasprp_printprj($line->id).'</td>';
+	$coldisplay++;
+}
+// InfraS add end
 // VAT Rate
 print '<td class="linecolvat nowrap right">';
 $coldisplay++;
@@ -270,6 +277,15 @@ if ((($line->info_bits & 2) != 2) && $line->special_code != 3) {
 }
 print '</td>';
 
+// InfraS add begin
+if (!empty($extrafields) && $conf->global->MAIN_MODULE_COEFPRICE) {
+	if ((($line->info_bits & 2) != 2) && $line->special_code != 3)	print $line->showOptionals($extrafields, 'view', array('style'=>'class="drag drop oddeven"', 'onlykey'=>'coefprice'), '', '', 1);
+	else print '&nbsp;';
+	$coefprice	= !empty($line->array_options['options_coefprice']) ? $line->array_options['options_coefprice'] : 1;
+	$coldisplay++;
+}
+// InfraS add end
+
 if (!empty($conf->global->PRODUCT_USE_UNITS)) {
 	print '<td class="linecoluseunit nowrap left">';
 	$label = $line->getLabelOfUnit('short');
@@ -278,11 +294,12 @@ if (!empty($conf->global->PRODUCT_USE_UNITS)) {
 	}
 	print '</td>';
 }
-if (!empty($line->remise_percent) && $line->special_code != 3) {
+$showDiscOpt	= isset($conf->global->INFRASPLUS_PDF_SHOW_DISCOUNT_OPT) ? $conf->global->INFRASPLUS_PDF_SHOW_DISCOUNT_OPT : 0;	// InfraS add
+if (!empty($line->remise_percent) && ($line->special_code != 3 || $showDiscOpt)) {	// InfraS change
 	print '<td class="linecoldiscount right">';
 	$coldisplay++;
 	include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-	print dol_print_reduction($line->remise_percent, $langs);
+	print dol_print_reduction(price2num($line->remise_percent, 'MU'), $langs);	// InfraS change
 	print '</td>';
 } else {
 	print '<td class="linecoldiscount">&nbsp;</td>';
@@ -301,12 +318,29 @@ if (isset($this->situation_cycle_ref) && $this->situation_cycle_ref) {
 }
 
 if ($usemargins && !empty($conf->margin->enabled) && empty($user->socid)) {
+	// InfraS add begin
+	if ($conf->global->MAIN_MODULE_COEFPRICE) {
+		if (!empty($user->rights->margins->creer)) {
+			print '<td class="linecolmargin1 nowrap margininfos right">'.price($line->pa_ht * $coefprice * $line->qty).'</td>';
+			$coldisplay++;
+		}
+		if (!empty($conf->global->DISPLAY_MARGIN_RATES) && $user->rights->margins->liretous) {
+			dol_include_once('/coefprice/core/lib/coefprice.lib.php');
+			$marge	= coefprice_getMarginInfos($line->subprice, $line->remise_percent, $line->tva_tx, $line->localtax1_tx, $line->localtax2_tx, $line->fk_fournprice, $line->pa_ht);
+			$marge	= price2num($marge[3], 'MT') * $coefprice * $line->qty;
+			print '<td class="linecolmargin2 nowrap margininfos right">'.($line->pa_ht == 0 ? 'n/a' : price($marge)).'</td>';
+			$coldisplay++;
+		}
+	}
+	else {
+	// InfraS add end
 	if (!empty($user->rights->margins->creer)) { ?>
 		<td class="linecolmargin1 nowrap margininfos right"><?php $coldisplay++; ?><?php print price($line->pa_ht); ?></td>
 	<?php }
 	if (!empty($conf->global->DISPLAY_MARGIN_RATES) && $user->rights->margins->liretous) { ?>
 		<td class="linecolmargin2 nowrap margininfos right"><?php $coldisplay++; ?><?php print (($line->pa_ht == 0) ? 'n/a' : price(price2num($line->marge_tx, 'MT')).'%'); ?></td>
 	<?php }
+	}	// InfraS add
 	if (!empty($conf->global->DISPLAY_MARK_RATES) && $user->rights->margins->liretous) {?>
 		<td class="linecolmargin2 nowrap margininfos right"><?php $coldisplay++; ?><?php print price(price2num($line->marque_tx, 'MT')).'%'; ?></td>
 	<?php }

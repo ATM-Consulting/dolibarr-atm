@@ -95,7 +95,7 @@ if ($module == 'propal') {
 //else dol_print_error('','Bad value '.$module.' for param module');
 
 if (!empty($conf->fckeditor->enabled) && !empty($conf->global->FCKEDITOR_ENABLE_SOCIETE)) {
-	$typeofdata = 'ckeditor:dolibarr_notes:100%:200::1:12:95%:0'; // Rem: This var is for all notes, not only thirdparties note.
+	$typeofdata = 'ckeditor:dolibarr_notes:100%:200::1:12:95%:1';	// Rem: This var is for all notes, not only thirdparties note. // InfraS change last param from 0 to 1
 } else {
 	$typeofdata = 'textarea:12:95%';
 }

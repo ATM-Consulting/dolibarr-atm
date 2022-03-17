@@ -1321,6 +1321,11 @@ function complete_dictionary_with_modules(&$taborder, &$tabname, &$tablib, &$tab
 										$tabcomplete[$tmptablename]['help'] = $val;
 									}
 								}
+								else {	// InfraS add begin
+									foreach ($objMod->dictionaries['tabname'] as $val) {
+										$nbtabhelp++; $tabhelp[] = '';
+										}
+								}	// InfraS add end
 								if (!empty($objMod->dictionaries['tabfieldcheck'])) {
 									foreach ($objMod->dictionaries['tabfieldcheck'] as $key => $val) {
 										$tmptablename = preg_replace('/'.MAIN_DB_PREFIX.'/', '', $tabnamerelwithkey[$key]);

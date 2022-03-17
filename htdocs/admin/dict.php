@@ -205,7 +205,7 @@ $tabsql[6] = "SELECT a.id    as rowid, a.code as code, a.libelle AS libelle, a.t
 $tabsql[7] = "SELECT a.id    as rowid, a.code as code, a.libelle AS libelle, a.accountancy_code as accountancy_code, a.deductible, c.code as country_code, c.label as country, a.fk_pays as country_id, a.active FROM ".MAIN_DB_PREFIX."c_chargesociales AS a, ".MAIN_DB_PREFIX."c_country as c WHERE a.fk_pays=c.rowid and c.active=1";
 $tabsql[8] = "SELECT t.id	 as rowid, t.code as code, t.libelle, t.fk_country as country_id, c.code as country_code, c.label as country, t.position, t.active FROM ".MAIN_DB_PREFIX."c_typent as t LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON t.fk_country=c.rowid";
 $tabsql[9] = "SELECT c.code_iso as code, c.label, c.unicode, c.active FROM ".MAIN_DB_PREFIX."c_currencies AS c";
-$tabsql[10] = "SELECT t.rowid, t.code, t.taux, t.localtax1_type, t.localtax1, t.localtax2_type, t.localtax2, c.label as country, c.code as country_code, t.fk_pays as country_id, t.recuperableonly, t.note, t.active, t.accountancy_code_sell, t.accountancy_code_buy FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c WHERE t.fk_pays=c.rowid";
+$tabsql[10] = "SELECT t.rowid, t.entity, t.code, t.taux, t.localtax1_type, t.localtax1, t.localtax2_type, t.localtax2, c.label as country, c.code as country_code, t.fk_pays as country_id, t.recuperableonly, t.note, t.active, t.accountancy_code_sell, t.accountancy_code_buy FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c WHERE t.fk_pays=c.rowid AND t.entity = ".getEntity($tabname[10]);
 $tabsql[11] = "SELECT t.rowid as rowid, t.element, t.source, t.code, t.libelle, t.position, t.active FROM ".MAIN_DB_PREFIX."c_type_contact AS t";
 $tabsql[12] = "SELECT c.rowid as rowid, c.code, c.libelle, c.libelle_facture, c.nbjour, c.type_cdr, c.decalage, c.active, c.sortorder, c.entity FROM ".MAIN_DB_PREFIX."c_payment_term AS c WHERE c.entity = ".getEntity($tabname[12]);
 $tabsql[13] = "SELECT c.id    as rowid, c.code, c.libelle, c.type, c.active, c.entity FROM ".MAIN_DB_PREFIX."c_paiement AS c WHERE c.entity = ".getEntity($tabname[13]);
@@ -232,7 +232,7 @@ $tabsql[33] = "SELECT rowid, pos, code, label, active FROM ".MAIN_DB_PREFIX."c_h
 $tabsql[34] = "SELECT rowid, pos, code, label, c_level, active FROM ".MAIN_DB_PREFIX."c_hrm_function";
 $tabsql[35] = "SELECT c.rowid, c.label, c.active, c.entity FROM ".MAIN_DB_PREFIX."c_exp_tax_cat c";
 $tabsql[36] = "SELECT r.rowid, r.fk_c_exp_tax_cat, r.range_ik, r.active, r.entity FROM ".MAIN_DB_PREFIX."c_exp_tax_range r";
-$tabsql[37] = "SELECT r.rowid, r.code, r.label, r.short_label, r.unit_type, r.scale, r.active FROM ".MAIN_DB_PREFIX."c_units r";
+$tabsql[37] = "SELECT r.rowid, r.code, r.sortorder, r.label, r.short_label, r.unit_type, r.scale, r.active FROM ".MAIN_DB_PREFIX."c_units r";
 $tabsql[38] = "SELECT s.rowid, s.entity, s.code, s.label, s.url, s.icon, s.active FROM ".MAIN_DB_PREFIX."c_socialnetworks as s WHERE s.entity = ".getEntity($tabname[38]);
 $tabsql[39] = "SELECT code, label as libelle, sortorder, active FROM ".MAIN_DB_PREFIX."c_prospectcontactlevel";
 $tabsql[40] = "SELECT id      as rowid, code, libelle, picto, active FROM ".MAIN_DB_PREFIX."c_stcommcontact";
@@ -278,7 +278,7 @@ $tabsqlsort[33] = "code ASC";
 $tabsqlsort[34] = "code ASC";
 $tabsqlsort[35] = "c.label ASC";
 $tabsqlsort[36] = "r.fk_c_exp_tax_cat ASC, r.range_ik ASC";
-$tabsqlsort[37] = "r.unit_type ASC, r.scale ASC, r.code ASC";
+$tabsqlsort[37] = "r.sortorder ASC";
 $tabsqlsort[38] = "rowid, code ASC";
 $tabsqlsort[39] = "sortorder ASC";
 $tabsqlsort[40] = "code ASC";
@@ -297,7 +297,7 @@ $tabfield[6] = "code,libelle,type,color,position";
 $tabfield[7] = "code,libelle,country,accountancy_code,deductible";
 $tabfield[8] = "code,libelle,country_id,country".(!empty($conf->global->SOCIETE_SORT_ON_TYPEENT) ? ',position' : '');
 $tabfield[9] = "code,label,unicode";
-$tabfield[10] = "country_id,country,code,taux,localtax1_type,localtax1,localtax2_type,localtax2,recuperableonly,accountancy_code_sell,accountancy_code_buy,note";
+$tabfield[10] = "country_id,country,code,taux,localtax1_type,localtax1,localtax2_type,localtax2,recuperableonly,accountancy_code_sell,accountancy_code_buy,note,entity";
 $tabfield[11] = "element,source,code,libelle,position";
 $tabfield[12] = "code,libelle,libelle_facture,nbjour,type_cdr,decalage,sortorder,entity";
 $tabfield[13] = "code,libelle,type,entity";
@@ -324,7 +324,7 @@ $tabfield[33] = "code,label";
 $tabfield[34] = "code,label";
 $tabfield[35] = "label";
 $tabfield[36] = "range_ik,fk_c_exp_tax_cat";
-$tabfield[37] = "code,label,short_label,unit_type,scale";
+$tabfield[37] = "code,label,short_label,unit_type,scale,sortorder";
 $tabfield[38] = "code,label,url,icon,entity";
 $tabfield[39] = "code,libelle,sortorder";
 $tabfield[40] = "code,libelle,picto";
@@ -370,7 +370,7 @@ $tabfieldvalue[33] = "code,label";
 $tabfieldvalue[34] = "code,label";
 $tabfieldvalue[35] = "label";
 $tabfieldvalue[36] = "range_ik,fk_c_exp_tax_cat";
-$tabfieldvalue[37] = "code,label,short_label,unit_type,scale";
+$tabfieldvalue[37] = "code,label,short_label,unit_type,scale,sortorder";
 $tabfieldvalue[38] = "code,label,url,icon";
 $tabfieldvalue[39] = "code,libelle,sortorder";
 $tabfieldvalue[40] = "code,libelle,picto";
@@ -389,7 +389,7 @@ $tabfieldinsert[6] = "code,libelle,type,color,position";
 $tabfieldinsert[7] = "code,libelle,fk_pays,accountancy_code,deductible";
 $tabfieldinsert[8] = "code,libelle,fk_country".(!empty($conf->global->SOCIETE_SORT_ON_TYPEENT) ? ',position' : '');
 $tabfieldinsert[9] = "code_iso,label,unicode";
-$tabfieldinsert[10] = "fk_pays,code,taux,localtax1_type,localtax1,localtax2_type,localtax2,recuperableonly,accountancy_code_sell,accountancy_code_buy,note";
+$tabfieldinsert[10] = "fk_pays,code,taux,localtax1_type,localtax1,localtax2_type,localtax2,recuperableonly,accountancy_code_sell,accountancy_code_buy,note,entity";
 $tabfieldinsert[11] = "element,source,code,libelle,position";
 $tabfieldinsert[12] = "code,libelle,libelle_facture,nbjour,type_cdr,decalage,sortorder,entity";
 $tabfieldinsert[13] = "code,libelle,type,entity";
@@ -417,7 +417,7 @@ $tabfieldinsert[33] = "code,label";
 $tabfieldinsert[34] = "code,label";
 $tabfieldinsert[35] = "label";
 $tabfieldinsert[36] = "range_ik,fk_c_exp_tax_cat";
-$tabfieldinsert[37] = "code,label,short_label,unit_type,scale";
+$tabfieldinsert[37] = "code,label,short_label,unit_type,scale,sortorder";
 $tabfieldinsert[38] = "code,label,url,icon,entity";
 $tabfieldinsert[39] = "code,label,sortorder";
 $tabfieldinsert[40] = "code,libelle,picto";
@@ -1272,7 +1272,7 @@ if ($id) {
 			}
 			if ($value == 'type') {
 				if ($tabname[$id] == MAIN_DB_PREFIX."c_paiement") {
-					$valuetoshow = $form->textwithtooltip($langs->trans("Type"), $langs->trans("TypePaymentDesc"), 2, 1, img_help(1, ''));
+					$valuetoshow = $form->textwithtooltip($langs->trans("Type"), $langs->trans((!empty($conf->global->INFRASPLUS_PDF_USE_PAY_SPEC) ? "InfraSPlusDictListPaiements" : "TypePaymentDesc")), 2, 1, img_help(1, ''));
 				} else {
 					$valuetoshow = $langs->trans("Type");
 				}
@@ -1904,7 +1904,7 @@ if ($id) {
 								$key = $langs->trans("PaymentType".strtoupper($obj->code));
 								$valuetoshow = ($obj->code && $key != "PaymentType".strtoupper($obj->code) ? $key : $obj->{$value});
 							} elseif ($value == 'type' && $tabname[$id] == MAIN_DB_PREFIX.'c_paiement') {
-								$payment_type_list = array(0=>$langs->trans('PaymentTypeCustomer'), 1=>$langs->trans('PaymentTypeSupplier'), 2=>$langs->trans('PaymentTypeBoth'));
+								$payment_type_list = array(0=>$langs->trans('PaymentTypeCustomer'), 1=>$langs->trans('PaymentTypeSupplier'), 2=>$langs->trans('PaymentTypeBoth'), 3=>$langs->trans('InfraSPlusDictPaymentTypeSpe'));
 								$valuetoshow = $payment_type_list[$valuetoshow];
 							} elseif ($value == 'label' && $tabname[$id] == MAIN_DB_PREFIX.'c_input_reason') {
 								$key = $langs->trans("DemandReasonType".strtoupper($obj->code));
@@ -2279,7 +2279,7 @@ function fieldList($fieldlist, $obj = '', $tabname = '', $context = '')
 			print '</td>';
 		} elseif ($value == 'type' && $tabname == MAIN_DB_PREFIX.'c_paiement') {
 			print '<td>';
-			$select_list = array(0=>$langs->trans('PaymentTypeCustomer'), 1=>$langs->trans('PaymentTypeSupplier'), 2=>$langs->trans('PaymentTypeBoth'));
+			$select_list = array(0=>$langs->trans('PaymentTypeCustomer'), 1=>$langs->trans('PaymentTypeSupplier'), 2=>$langs->trans('PaymentTypeBoth'), 3=>$langs->trans('InfraSPlusDictPaymentTypeSpe'));
 			print $form->selectarray($value, $select_list, (!empty($obj->{$value}) ? $obj->{$value}:'2'));
 			print '</td>';
 		} elseif ($value == 'recuperableonly' || $value == 'type_cdr' || $value == 'deductible' || $value == 'category_type') {

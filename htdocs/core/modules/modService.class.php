@@ -102,6 +102,13 @@ class modService extends DolibarrModules
 		$this->rights[$r][4] = 'creer';
 		$r++;
 
+        $this->rights[$r][0] = 533; // id de la permission
+        $this->rights[$r][1] = 'Modify product accountancy information'; // libelle de la permission
+        $this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+        $this->rights[$r][4] = 'service_accountancy_advance'; // Visible if option MAIN_USE_ADVANCED_PERMS is on
+        $this->rights[$r][5] = 'write';
+        $r++;
+
 		$this->rights[$r][0] = 534; // id de la permission
 		$this->rights[$r][1] = 'Delete les services'; // libelle de la permission
 		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)

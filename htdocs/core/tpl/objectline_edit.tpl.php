@@ -248,7 +248,7 @@ $coldisplay++;
 		}
 		$coldisplay++;
 		print '<td class="left">';
-		print $form->selectUnits($line->fk_unit, "units", 0, $unit_type);
+		print $form->selectUnits($line->fk_unit, "units", 1, $unit_type);
 		print '</td>';
 	}
 	?>

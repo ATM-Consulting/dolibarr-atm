@@ -987,7 +987,7 @@ function dol_unescapefile($filename)
  */
 function dolCheckVirus($src_file)
 {
-	global $conf;
+	global $conf, $db;	// InfraS change
 
 	if (!empty($conf->global->MAIN_ANTIVIRUS_COMMAND)) {
 		if (!class_exists('AntiVir')) {
@@ -2337,6 +2337,10 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 
 		$accessallowed = ($user->admin && preg_match('/^module_.*\.zip$/', basename($original_file)));
 		$original_file = $dirins.'/'.$original_file;
+	} elseif (($modulepart == 'cgv') && !empty($conf->mycompany->dir_output)) {			// InfraS add
+		// Wrapping for some images														// InfraS add
+		$accessallowed = 1;																// InfraS add
+		$original_file = $conf->mycompany->dir_output.'/'.$original_file;				// InfraS add
 	} elseif ($modulepart == 'mycompany' && !empty($conf->mycompany->dir_output)) {
 		// Wrapping for some images
 		$accessallowed = 1;
@@ -2345,6 +2349,10 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 		// Wrapping for users photos
 		$accessallowed = 1;
 		$original_file = $conf->user->dir_output.'/'.$original_file;
+	} elseif (($modulepart == 'companylogo') && !empty($conf->mycompany->dir_output)) {	// InfraS add
+		// Wrapping for users photos													// InfraS add
+		$accessallowed = 1;																// InfraS add
+		$original_file = $conf->mycompany->dir_output.'/logos/'.$original_file;			// InfraS add
 	} elseif ($modulepart == 'memberphoto' && !empty($conf->adherent->dir_output)) {
 		// Wrapping for members photos
 		$accessallowed = 1;
