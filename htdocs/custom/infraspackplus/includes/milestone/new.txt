@@ -1,8 +1,0 @@
-else if ($conf->infraspackplus->enabled && isset($_SESSION['InfraSPackPlus_model']) && !empty($object->lines[$i]->product_ref))
-			{
-				$object->lines[$i+1]->pagebreak = true;
-				$return++;
-			}
-			else
-			{
-				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD
