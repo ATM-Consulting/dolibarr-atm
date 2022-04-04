@@ -3,6 +3,12 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 
+## [10.0.0] - 30-03-2022
+- Correction : Ajout de la colonne réf/libellé de la facture fournisseur sur les pages de liaison des factures fournisseurs (#20128)
+
+## [9.0.0] - 23-03-2022
+- Correction : Ajout hook manquant et total des lignes sur extrafields manquant sur module reception (#20128)
+
 ## [8.0.1] - 15-03-2022
 - Correction : Problème de modification des comptes comptables dans les fiches produits protégés par droits avancés
 
@@ -79,6 +85,7 @@ Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 		ALTER TABLE llx_c_units ADD COLUMN sortorder smallint AFTER code;
 
 [Non Distribué]: 
+[9.0.0]: 
 [8.0.1]: 
 [8.0.0]: 
 [7.1.3]: 
