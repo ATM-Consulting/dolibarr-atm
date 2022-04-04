@@ -1,9 +1,0 @@
-# Dolibarr language file - fr_FR - eurocheflangue
-CHARSET=UTF-8
-Module501000Name = eurocheflangue
-Module501000Desc = Module spécifique Eurochef de chargement des langues
-
-#######################################################################
-# Configuration admin
-#######################################################################
-eurocheflangueSetup                            = Configuration du module eurocheflangue
