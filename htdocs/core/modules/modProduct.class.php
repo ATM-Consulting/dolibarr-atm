@@ -127,6 +127,13 @@ class modProduct extends DolibarrModules
 		$this->rights[$r][4] = 'creer';
 		$r++;
 
+        $this->rights[$r][0] = 33; // id de la permission
+        $this->rights[$r][1] = 'Modify product accountancy information'; // libelle de la permission
+        $this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+        $this->rights[$r][4] = 'product_accountancy_advance'; // Visible if option MAIN_USE_ADVANCED_PERMS is on
+        $this->rights[$r][5] = 'write';
+        $r++;
+
 		$this->rights[$r][0] = 34; // id de la permission
 		$this->rights[$r][1] = 'Delete products'; // libelle de la permission
 		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)
@@ -322,7 +329,7 @@ class modProduct extends DolibarrModules
 			$this->export_code[$r] = $this->rights_class.'_'.$r;
 			$this->export_label[$r] = "ProductsMultiPrice"; // Translation key (used only if key ExportDataset_xxx_z not found)
 			$this->export_permission[$r] = array(array("produit", "export"));
-			$this->export_fields_array[$r] = array('p.rowid'=>"Id", 'p.ref'=>"Ref",
+			$this->export_fields_array[$r] = array('p.rowid'=>"Id", 'p.ref'=>"Ref", 'p.label'=>"Label",
 				'pr.price_base_type'=>"PriceBase", 'pr.price_level'=>"PriceLevel",
 				'pr.price'=>"PriceLevelUnitPriceHT", 'pr.price_ttc'=>"PriceLevelUnitPriceTTC",
 				'pr.price_min'=>"MinPriceLevelUnitPriceHT", 'pr.price_min_ttc'=>"MinPriceLevelUnitPriceTTC",
@@ -337,7 +344,7 @@ class modProduct extends DolibarrModules
 			//	'p.price_base_type'=>"Text",'p.price'=>"Numeric",'p.price_ttc'=>"Numeric",'p.tva_tx'=>'Numeric','p.tosell'=>"Boolean",'p.tobuy'=>"Boolean",
 			//	'p.datec'=>'Date','p.tms'=>'Date'
 			//);
-			$this->export_entities_array[$r] = array('p.rowid'=>"product", 'p.ref'=>"product",
+			$this->export_entities_array[$r] = array('p.rowid'=>"product", 'p.ref'=>"product", 'p.label'=>"Label",
 				'pr.price_base_type'=>"product", 'pr.price_level'=>"product", 'pr.price'=>"product",
 				'pr.price_ttc'=>"product",
 				'pr.price_min'=>"product", 'pr.price_min_ttc'=>"product",
@@ -348,6 +355,8 @@ class modProduct extends DolibarrModules
 			$this->export_sql_end[$r]  = ' FROM '.MAIN_DB_PREFIX.'product as p';
 			$this->export_sql_end[$r] .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_price as pr ON p.rowid = pr.fk_product AND pr.entity = '.$conf->entity; // export prices only for the current entity
 			$this->export_sql_end[$r] .= ' WHERE p.entity IN ('.getEntity('product').')'; // For product and service profile
+			$this->export_sql_end[$r] .= ' AND pr.date_price = (SELECT MAX(pr2.date_price) FROM '.MAIN_DB_PREFIX.'product_price as pr2 WHERE pr2.fk_product = pr.fk_product AND pr2.entity IN ('.getEntity('product').'))'; // export only latest prices not full history
+			$this->export_sql_end[$r] .= ' ORDER BY p.ref, pr.price_level';
 		}
 
 		if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
@@ -356,7 +365,7 @@ class modProduct extends DolibarrModules
 			$this->export_code[$r] = $this->rights_class.'_'.$r;
 			$this->export_label[$r] = "ProductsPricePerCustomer"; // Translation key (used only if key ExportDataset_xxx_z not found)
 			$this->export_permission[$r] = array(array("produit", "export"));
-			$this->export_fields_array[$r] = array('p.rowid'=>"Id", 'p.ref'=>"Ref",
+			$this->export_fields_array[$r] = array('p.rowid'=>"Id", 'p.ref'=>"Ref", 'p.label'=>"Label",
 				's.nom'=>'ThirdParty',
 				'pr.price_base_type'=>"PriceBase",
 				'pr.price'=>"PriceUnitPriceHT", 'pr.price_ttc'=>"PriceUnitPriceTTC",
@@ -367,7 +376,7 @@ class modProduct extends DolibarrModules
 			if (is_object($mysoc) && $usenpr) {
 				$this->export_fields_array[$r]['pr.recuperableonly'] = 'NPR';
 			}
-			$this->export_entities_array[$r] = array('p.rowid'=>"product", 'p.ref'=>"product",
+			$this->export_entities_array[$r] = array('p.rowid'=>"product", 'p.ref'=>"product", 'p.label'=>"Label",
 				's.nom'=>'company',
 				'pr.price_base_type'=>"product", 'pr.price'=>"product",
 				'pr.price_ttc'=>"product",
@@ -472,19 +481,12 @@ class modProduct extends DolibarrModules
 			'p.ref' => "Ref*",
 			'p.label' => "Label*",
 			'p.fk_product_type' => "Type*",
-			'p.entity' => "Entity",
 			'p.tosell' => "OnSell*",
 			'p.tobuy' => "OnBuy*",
 			'p.description' => "Description",
 			'p.url' => "PublicUrl",
 			'p.customcode' => 'CustomCode',
 			'p.fk_country' => 'CountryCode',
-			'p.accountancy_code_sell' => "ProductAccountancySellCode",
-			'p.accountancy_code_sell_intra' => "ProductAccountancySellIntraCode",
-			'p.accountancy_code_sell_export' => "ProductAccountancySellExportCode",
-			'p.accountancy_code_buy' => "ProductAccountancyBuyCode",
-			'p.accountancy_code_buy_intra' => "ProductAccountancyBuyIntraCode",
-			'p.accountancy_code_buy_export' => "ProductAccountancyBuyExportCode",
 			'p.note_public' => "NotePublic",
 			'p.note' => "NotePrivate",
 			'p.weight' => "Weight",
@@ -510,6 +512,17 @@ class modProduct extends DolibarrModules
 			'p.datec' => 'DateCreation',
 			'p.cost_price' => "CostPrice",
 		);
+        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+            $this->import_fields_array[$r] = array(
+                'p.accountancy_code_sell' => "ProductAccountancySellCode",
+                'p.accountancy_code_sell_intra' => "ProductAccountancySellIntraCode",
+                'p.accountancy_code_sell_export' => "ProductAccountancySellExportCode",
+                'p.accountancy_code_buy' => "ProductAccountancyBuyCode",
+                'p.accountancy_code_buy_intra' => "ProductAccountancyBuyIntraCode",
+                'p.accountancy_code_buy_export' => "ProductAccountancyBuyExportCode",
+            );
+        }
+
 		$this->import_convertvalue_array[$r] = array(
 				'p.weight_units' => array(
 						'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
@@ -573,13 +586,18 @@ class modProduct extends DolibarrModules
 					'method' => 'fetch',
 					'dict' => 'DictionaryProductNature'
 				),
-				'p.accountancy_code_sell'=>array('rule'=>'accountingaccount'),
-				'p.accountancy_code_sell_intra'=>array('rule'=>'accountingaccount'),
-				'p.accountancy_code_sell_export'=>array('rule'=>'accountingaccount'),
-				'p.accountancy_code_buy'=>array('rule'=>'accountingaccount'),
-				'p.accountancy_code_buy_intra'=>array('rule'=>'accountingaccount'),
-				'p.accountancy_code_buy_export'=>array('rule'=>'accountingaccount'),
 		);
+        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+            $this->import_convertvalue_array[$r] = array(
+                'p.accountancy_code_sell'=>array('rule'=>'accountingaccount'),
+                'p.accountancy_code_sell_intra'=>array('rule'=>'accountingaccount'),
+                'p.accountancy_code_sell_export'=>array('rule'=>'accountingaccount'),
+                'p.accountancy_code_buy'=>array('rule'=>'accountingaccount'),
+                'p.accountancy_code_buy_intra'=>array('rule'=>'accountingaccount'),
+                'p.accountancy_code_buy_export'=>array('rule'=>'accountingaccount'),
+            );
+        }
+
 		$this->import_regex_array[$r] = array(
 			'p.ref' => '[^ ]',
 			'p.price_base_type' => '\AHT\z|\ATTC\z',
@@ -662,7 +680,6 @@ class modProduct extends DolibarrModules
 			'p.ref' => "ref:PREF123456",
 			'p.datec' => dol_print_date(dol_now(), '%Y-%m-%d'),
 			'p.label' => "Product name in default language",
-			'p.entity' => "(empty if you want to add product to active entity or int",
 			'p.description' => "Product description in default language",
 			'p.note_public' => "a public note (free text)",
 			'p.note' => "a private note (free text)",
@@ -679,12 +696,6 @@ class modProduct extends DolibarrModules
 			'p.fk_product_type' => "0 (product) / 1 (service)",
 			'p.duration' => "eg. 365d/12m/1y",
 			'p.url' => 'link to product (no https)',
-			'p.accountancy_code_sell' => "",
-			'p.accountancy_code_sell_intra' => "",
-			'p.accountancy_code_sell_export' => "",
-			'p.accountancy_code_buy' => "",
-			'p.accountancy_code_buy_intra' => "",
-			'p.accountancy_code_buy_export' => "",
 			'p.weight' => "",
 			'p.weight_units' => 'kg', // Use a unit of measure from the dictionary. g/Kg/T etc....matches field "Short label" for unit type "weight" in table "' . MAIN_DB_PREFIX . 'c_units',
 			'p.length' => "",
@@ -699,6 +710,26 @@ class modProduct extends DolibarrModules
 			'p.volume_units' => 'm3', //Use a unit of measure from the dictionary. m3/cm3/mm3 etc....matches field "Short label" for unit type "volume" in table "' . MAIN_DB_PREFIX . 'c_units',
 			'p.finished' => '0 (raw material) / 1 (finished goods), matches field "code" in dictionary table "'.MAIN_DB_PREFIX.'c_product_nature"'
 		);
+        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+            $import_sample = array(
+                'p.accountancy_code_sell' => "707",
+                'p.accountancy_code_sell_intra' => "",
+                'p.accountancy_code_sell_export' => "",
+                'p.accountancy_code_buy' => "607",
+                'p.accountancy_code_buy_intra' => "",
+                'p.accountancy_code_buy_export' => "",
+            );
+        } else {
+            $import_sample = array(
+                'ppe.accountancy_code_sell' => "707",
+                'ppe.accountancy_code_sell_intra' => "",
+                'ppe.accountancy_code_sell_export' => "",
+                'ppe.accountancy_code_buy' => "607",
+                'ppe.accountancy_code_buy_intra' => "",
+                'ppe.accountancy_code_buy_export' => "",
+            );
+        }
+
 		//clauses copied from import_fields_array
 		if (!empty($conf->stock->enabled)) {
 			$import_sample = array_merge($import_sample, array(
@@ -743,305 +774,9 @@ class modProduct extends DolibarrModules
 		}
 		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
 		$this->import_updatekeys_array[$r] = array('p.ref'=>'Ref');
-		if (!empty($conf->multicompany->enabled)) $this->import_updatekeys_array[$r] = array_merge($this->import_updatekeys_array[$r], array('p.entity'=>'Entity'));
 		if (!empty($conf->barcode->enabled)) {
 			$this->import_updatekeys_array[$r] = array_merge($this->import_updatekeys_array[$r], array('p.barcode'=>'BarCode')); //only show/allow barcode as update key if Barcode module enabled
 		}
-
-
-		// SPÉ EUROCHEF ------------------------------------------------
-		// import 2
-
-
-
-		// Import list of products Update by Rowid
-		$r++;
-		$this->import_code[$r] = $this->rights_class.'_'.$r;
-		$this->import_label[$r] = "ProductsRowid"; // Translation key
-		$this->import_icon[$r] = $this->picto;
-		$this->import_entities_array[$r] = array(); // We define here only fields that use a different icon from the one defined in import_icon
-		$this->import_tables_array[$r] = array('p'=>MAIN_DB_PREFIX.'product', 'extra'=>MAIN_DB_PREFIX.'product_extrafields');
-		$this->import_tables_creator_array[$r] = array('p'=>'fk_user_author'); // Fields to store import user id
-		$this->import_fields_array[$r] = array(
-			'p.rowid' => "Rowid*",
-			'p.ref' => "Ref",
-			'p.label' => "Label*",
-			'p.fk_product_type' => "Type*",
-			'p.tosell' => "OnSell*",
-			'p.tobuy' => "OnBuy*",
-			'p.description' => "Description",
-			'p.url' => "PublicUrl",
-			'p.customcode' => 'CustomCode',
-			'p.fk_country' => 'CountryCode',
-			'p.accountancy_code_sell' => "ProductAccountancySellCode",
-			'p.accountancy_code_sell_intra' => "ProductAccountancySellIntraCode",
-			'p.accountancy_code_sell_export' => "ProductAccountancySellExportCode",
-			'p.accountancy_code_buy' => "ProductAccountancyBuyCode",
-			'p.accountancy_code_buy_intra' => "ProductAccountancyBuyIntraCode",
-			'p.accountancy_code_buy_export' => "ProductAccountancyBuyExportCode",
-			'p.note_public' => "NotePublic",
-			'p.note' => "NotePrivate",
-			'p.weight' => "Weight",
-			'p.weight_units' => "WeightUnits",
-			'p.length' => "Length",
-			'p.length_units' => "LengthUnits",
-			'p.width' => "Width",
-			'p.width_units' => "WidthUnits",
-			'p.height' => "Height",
-			'p.height_units' => "HeightUnits",
-			'p.surface' => "Surface",
-			'p.surface_units' => "SurfaceUnits",
-			'p.volume' => "Volume",
-			'p.volume_units' => "VolumeUnits",
-			'p.duration' => "Duration", //duration of service
-			'p.finished' => 'Nature',
-			'p.price' => "SellingPriceHT", //without
-			'p.price_min' => "MinPrice",
-			'p.price_ttc' => "SellingPriceTTC", //with tax
-			'p.price_min_ttc' => "SellingMinPriceTTC",
-			'p.price_base_type' => "PriceBaseType", //price base: with-tax (TTC) or without (HT) tax. Displays accordingly in Product card
-			'p.tva_tx' => 'VATRate',
-			'p.datec' => 'DateCreation',
-			'p.cost_price' => "CostPrice",
-		);
-		$this->import_convertvalue_array[$r] = array(
-			'p.weight_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'weight',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.length_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'size',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.width_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'size',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.height_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'size',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.surface_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'surface',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.volume_units' => array(
-				'rule' => 'fetchscalefromcodeunits', // Switch this to fetchidfromcodeunits when we will store id instead of scale in product table
-				'classfile' => '/core/class/cunits.class.php',
-				'class' => 'CUnits',
-				'method' => 'fetch',
-				'units' => 'volume',
-				'dict' => 'DictionaryMeasuringUnits'
-			),
-			'p.fk_country' => array(
-				'rule' => 'fetchidfromcodeid',
-				'classfile' => '/core/class/ccountry.class.php',
-				'class' => 'Ccountry',
-				'method' => 'fetch',
-				'dict' => 'DictionaryCountry'
-			),
-			'p.finished'=> array(
-				'rule' => 'fetchidfromcodeorlabel',
-				'classfile' => '/core/class/cproductnature.class.php',
-				'class' => 'CProductNature',
-				'method' => 'fetch',
-				'dict' => 'DictionaryProductNature'
-			),
-			'p.accountancy_code_sell'=>array('rule'=>'accountingaccount'),
-			'p.accountancy_code_sell_intra'=>array('rule'=>'accountingaccount'),
-			'p.accountancy_code_sell_export'=>array('rule'=>'accountingaccount'),
-			'p.accountancy_code_buy'=>array('rule'=>'accountingaccount'),
-			'p.accountancy_code_buy_intra'=>array('rule'=>'accountingaccount'),
-			'p.accountancy_code_buy_export'=>array('rule'=>'accountingaccount'),
-		);
-		$this->import_regex_array[$r] = array(
-			'p.ref' => '[^ ]',
-			'p.price_base_type' => '\AHT\z|\ATTC\z',
-			'p.tosell' => '^[0|1]$',
-			'p.tobuy' => '^[0|1]$',
-			'p.fk_product_type' => '^[0|1]$',
-			'p.datec' => '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
-			'p.recuperableonly' => '^[0|1]$',
-		);
-
-		if (!empty($conf->stock->enabled)) {//if Stock module enabled
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array(
-				'p.fk_default_warehouse'=>'DefaultWarehouse',
-				'p.tobatch'=>'ManageLotSerial',
-				'p.seuil_stock_alerte' => 'StockLimit', //lower limit for warning
-				'p.pmp' => 'PMPValue', //weighted average price
-				'p.desiredstock' => 'DesiredStock'//desired stock for replenishment feature
-			));
-
-			$this->import_regex_array[$r] = array_merge($this->import_regex_array[$r], array(
-				'p.tobatch' => '^[0|1|2]$'
-			));
-
-			$this->import_convertvalue_array[$r] = array_merge($this->import_convertvalue_array[$r], array(
-				'p.fk_default_warehouse' => array(
-					'rule' => 'fetchidfromref',
-					'classfile' => '/product/stock/class/entrepot.class.php',
-					'class' => 'Entrepot',
-					'method' => 'fetch',
-					'element'=> 'Warehouse'
-				)
-			));
-		}
-
-		if ((!empty($conf->fournisseur->enabled) && empty($conf->global->MAIN_USE_NEW_SUPPLIERMOD)) || !empty($conf->supplier_order->enabled) || !empty($conf->supplier_invoice->enabled) || !empty($conf->margin->enabled)) {
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array('p.cost_price'=>'CostPrice'));
-		}
-		if (is_object($mysoc) && $usenpr) {
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array('p.recuperableonly'=>'NPR'));
-		}
-		if (is_object($mysoc) && $mysoc->useLocalTax(1)) {
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array('p.localtax1_tx'=>'LT1', 'p.localtax1_type'=>'LT1Type'));
-		}
-		if (is_object($mysoc) && $mysoc->useLocalTax(2)) {
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array('p.localtax2_tx'=>'LT2', 'p.localtax2_type'=>'LT2Type'));
-		}
-		if (!empty($conf->barcode->enabled)) {
-			$this->import_fields_array[$r] = array_merge($this->import_fields_array[$r], array('p.barcode'=>'BarCode'));
-		}
-		if (!empty($conf->global->PRODUCT_USE_UNITS)) {
-			$this->import_fields_array[$r]['p.fk_unit'] = 'Unit';
-		}
-
-		// Add extra fields
-		$import_extrafield_sample = array();
-		$sql = "SELECT name, label, fieldrequired FROM ".MAIN_DB_PREFIX."extrafields WHERE type <> 'separate' AND elementtype = 'product' AND entity IN (0, ".$conf->entity.")";
-		$resql = $this->db->query($sql);
-		if ($resql) {    // This can fail when class is used on old database (during migration for example)
-			while ($obj = $this->db->fetch_object($resql)) {
-				$fieldname = 'extra.'.$obj->name;
-				$fieldlabel = ucfirst($obj->label);
-				$this->import_fields_array[$r][$fieldname] = $fieldlabel.($obj->fieldrequired ? '*' : '');
-				$import_extrafield_sample[$fieldname] = $fieldlabel;
-			}
-		}
-		// End add extra fields
-		$this->import_fieldshidden_array[$r] = array('extra.fk_object'=>'lastrowid-'.MAIN_DB_PREFIX.'product'); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
-		$this->import_regex_array[$r] = array(
-			'p.price_base_type' => 'HT|TTC',
-			'p.tosell'=>'^[0|1]$',
-			'p.tobuy'=>'^[0|1]$',
-			'p.fk_product_type'=>'^[0|1]$',
-			'p.datec'=>'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
-			'p.recuperableonly' => '^[0|1]$',
-			'p.finished' => '^[0|1]$'
-		);
-		// field order as per structure of table llx_product
-		$import_sample = array(
-			'p.rowid' => "1115",
-			'p.ref' => "P1115 (empty if you don't want to update ref)",
-			'p.datec' => dol_print_date(dol_now(), '%Y-%m-%d'),
-			'p.label' => "Product name in default language",
-			'p.description' => "Product description in default language",
-			'p.note_public' => "a public note (free text)",
-			'p.note' => "a private note (free text)",
-			'p.customcode' => 'customs code',
-			'p.fk_country' => 'FR',
-			'p.price' => "100",
-			'p.price_min' => "100",
-			'p.price_ttc' => "110",
-			'p.price_min_ttc' => "110",
-			'p.price_base_type' => "HT (show/use price excl. tax) / TTC (show/use price incl. tax)",
-			'p.tva_tx' => '10', // tax rate eg: 10. Must match numerically one of the tax rates defined for your country'
-			'p.tosell' => "0 (not for sale to customer, eg. raw material) / 1 (for sale)",
-			'p.tobuy' => "0 (not for purchase from supplier, eg. virtual product) / 1 (for purchase)",
-			'p.fk_product_type' => "0 (product) / 1 (service)",
-			'p.duration' => "eg. 365d/12m/1y",
-			'p.url' => 'link to product (no https)',
-			'p.accountancy_code_sell' => "",
-			'p.accountancy_code_sell_intra' => "",
-			'p.accountancy_code_sell_export' => "",
-			'p.accountancy_code_buy' => "",
-			'p.accountancy_code_buy_intra' => "",
-			'p.accountancy_code_buy_export' => "",
-			'p.weight' => "",
-			'p.weight_units' => 'kg', // Use a unit of measure from the dictionary. g/Kg/T etc....matches field "Short label" for unit type "weight" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.length' => "",
-			'p.length_units' => 'm', // Use a unit of measure from the dictionary. m/cm/mm etc....matches field "Short label" for unit type "size" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.width' => "",
-			'p.width_units' => 'm', // Use a unit of measure from the dictionary. m/cm/mm etc....matches field "Short label" for unit type "size" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.height' => "",
-			'p.height_units' => 'm', // Use a unit of measure from the dictionary. m/cm/mm etc....matches field "Short label" for unit type "size" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.surface' => "",
-			'p.surface_units' => 'm2', // Use a unit of measure from the dictionary. m2/cm2/mm2 etc....matches field "Short label" for unit type "surface" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.volume' => "",
-			'p.volume_units' => 'm3', //Use a unit of measure from the dictionary. m3/cm3/mm3 etc....matches field "Short label" for unit type "volume" in table "' . MAIN_DB_PREFIX . 'c_units',
-			'p.finished' => '0 (raw material) / 1 (finished goods), matches field "code" in dictionary table "'.MAIN_DB_PREFIX.'c_product_nature"'
-		);
-		//clauses copied from import_fields_array
-		if (!empty($conf->stock->enabled)) {
-			$import_sample = array_merge($import_sample, array(
-				'p.tobatch'=>"0 (don't use) / 1 (use batch) / 2 (use serial number)",
-				'p.seuil_stock_alerte' => '',
-				'p.pmp' => '0',
-				'p.desiredstock' => ''
-			));
-		}
-		if ((!empty($conf->fournisseur->enabled) && empty($conf->global->MAIN_USE_NEW_SUPPLIERMOD)) || !empty($conf->supplier_order->enabled) || !empty($conf->supplier_invoice->enabled) || !empty($conf->margin->enabled)) {
-			$import_sample = array_merge($import_sample, array('p.cost_price'=>'90'));
-		}
-		if (is_object($mysoc) && $usenpr) {
-			$import_sample = array_merge($import_sample, array('p.recuperableonly'=>'0'));
-		}
-		if (is_object($mysoc) && $mysoc->useLocalTax(1)) {
-			$import_sample = array_merge($import_sample, array('p.localtax1_tx'=>'', 'p.localtax1_type'=>''));
-		}
-		if (is_object($mysoc) && $mysoc->useLocalTax(2)) {
-			$import_sample = array_merge($import_sample, array('p.localtax2_tx'=>'', 'p.localtax2_type'=>''));
-		}
-		if (!empty($conf->barcode->enabled)) {
-			$import_sample = array_merge($import_sample, array('p.barcode'=>''));
-		}
-		if (!empty($conf->global->PRODUCT_USE_UNITS)) {
-			$import_sample = array_merge(
-				$import_sample,
-				array(
-					'p.fk_unit' => 'use a unit of measure from the dictionary. G/KG/M2/M3 etc....matches field "code" in table "'.MAIN_DB_PREFIX.'c_units"'
-				)
-			);
-
-			$this->import_convertvalue_array[$r] = array_merge($this->import_convertvalue_array[$r], array(
-				'p.fk_unit' => array(
-					'rule' => 'fetchidfromcodeorlabel',
-					'classfile' => '/core/class/cunits.class.php',
-					'class' => 'CUnits',
-					'method' => 'fetch',
-					'dict' => 'DictionaryUnits'
-				)
-			));
-		}
-		$this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
-		$this->import_updatekeys_array[$r] = array('p.rowid'=>'rowid');
-		if (!empty($conf->barcode->enabled)) {
-			$this->import_updatekeys_array[$r] = array_merge($this->import_updatekeys_array[$r], array('p.barcode'=>'BarCode')); //only show/allow barcode as update key if Barcode module enabled
-		}
-
-
-		// FIN SPÉ EUROCHEF ------------------------------------------------
 
 		if ((!empty($conf->fournisseur->enabled) && empty($conf->global->MAIN_USE_NEW_SUPPLIERMOD)) || !empty($conf->supplier_order->enabled) || !empty($conf->supplier_invoice->enabled)) {
 			// Import suppliers prices (note: this code is duplicated in module Service)
@@ -1189,25 +924,6 @@ class modProduct extends DolibarrModules
 				'pr.tva_tx'=>'20',
 				'pr.recuperableonly'=>'0',
 				'pr.date_price'=>'2020-12-31');
-		}
-
-		if (!empty($conf->global->PRODUIT_SOUSPRODUITS))
-		{
-			// Imports virtual products
-			$r++;
-			$this->import_code[$r] = $this->rights_class.'_sousproduits';
-			$this->import_label[$r] = "AssociatedProducts"; // Translation key
-			$this->import_icon[$r] = $this->picto;
-			$this->import_entities_array[$r] = array(); // We define here only fields that use another icon that the one defined into import_icon
-			$this->import_tables_array[$r] = array('pr'=>MAIN_DB_PREFIX.'product_association');
-			$this->import_fields_array[$r] = array('pr.fk_product_pere'=>"ParentProduct", 'pr.fk_product_fils'=>"ComposedProduct", 'pr.qty'=>"Qty", 'pr.incdec'=>'ComposedProductIncDecStock');
-			$this->import_regex_array[$r] = array('s.incdec' => '^[0|1]');
-			$this->import_convertvalue_array[$r] = array(
-				'pr.fk_product_pere'=>array('rule'=>'fetchidfromref', 'classfile'=>'/product/class/product.class.php', 'class'=>'Product', 'method'=>'fetch', 'element'=>'Product'),
-				'pr.fk_product_fils'=>array('rule'=>'fetchidfromref', 'classfile'=>'/product/class/product.class.php', 'class'=>'Product', 'method'=>'fetch', 'element'=>'Product')
-			);
-			$this->import_examplevalues_array[$r] = array('pr.fk_product_pere'=>"PRODUCT_REF or id:123456", 'pr.fk_product_fils'=>"PRODUCT_REF or id:123456", 'pr.qty'=>"100", 'pr.incdec'=>"1=Increase/Decrease stock on parent change, 0=No action on child stock");
-			$this->import_updatekeys_array[$r] = array('l.fk_product_pere'=>'ParentProduct', 'l.fk_product_fils'=>'OneComposedProduct');
 		}
 
 		if (!empty($conf->global->MAIN_MULTILANGS)) {

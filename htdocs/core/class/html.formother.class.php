@@ -840,7 +840,7 @@ class FormOther
 		                  position:
 		                    {
 		                    x: \'screenCenter\', /* acceptable values "left", "center", "right", "screenCenter", or relative px value */
-		                    y: \'center\' /* acceptable values "top", "bottom", "center", or relative px value */
+							y: \'200px\' /* acceptable values "top", "bottom", "center", or relative px value */ /*InfraS change from center to 200px*/
 		                    },
 		                },
 		                images: {

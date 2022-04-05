@@ -4182,6 +4182,7 @@ class Societe extends CommonObject
 		} elseif ($localTaxNum == 2) {
 			$sql .= " AND t.localtax2_type <> '0'";
 		}
+		$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
