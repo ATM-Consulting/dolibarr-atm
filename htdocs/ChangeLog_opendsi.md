@@ -3,6 +3,9 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 
+## [11.0.0] - 06-04-2022
+- Backport 15.0 - Core : Add massaction to switch status on sale / on purchase of a product (https://github.com/Dolibarr/dolibarr/commit/259b7dfe5a44fa54896e547b3c86ee9bd5acb7ef) + Page substitutions
+
 ## [10.0.0] - 30-03-2022
 - Correction : Ajout de la colonne réf/libellé de la facture fournisseur sur les pages de liaison des factures fournisseurs (#20128)
 
@@ -85,6 +88,8 @@ Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 		ALTER TABLE llx_c_units ADD COLUMN sortorder smallint AFTER code;
 
 [Non Distribué]: 
+[11.0.0]: 
+[10.0.0]: 
 [9.0.0]: 
 [8.0.1]: 
 [8.0.0]: 
