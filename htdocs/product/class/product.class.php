@@ -425,6 +425,13 @@ class Product extends CommonObject
 	 */
 	public $is_object_used;
 
+	/**
+	 * 0=This service or product is not managed in stock, 1=This service or product is managed in stock
+	 *
+	 * @var boolean
+	 */
+	public $not_managed_in_stock = 1;
+
 
 	/**
 	 *  'type' if the field format ('integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter]]', 'varchar(x)', 'double(24,8)', 'real', 'price', 'text', 'html', 'date', 'datetime', 'timestamp', 'duration', 'mail', 'phone', 'url', 'password')
@@ -476,6 +483,7 @@ class Product extends CommonObject
 		'import_key'    =>array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>1, 'visible'=>-2, 'notnull'=>-1, 'index'=>0, 'position'=>1000),
 		//'tosell'       =>array('type'=>'integer',      'label'=>'Status',           'enabled'=>1, 'visible'=>1,  'notnull'=>1, 'default'=>0, 'index'=>1,  'position'=>1000, 'arrayofkeyval'=>array(0=>'Draft', 1=>'Active', -1=>'Cancel')),
 		//'tobuy'        =>array('type'=>'integer',      'label'=>'Status',           'enabled'=>1, 'visible'=>1,  'notnull'=>1, 'default'=>0, 'index'=>1,  'position'=>1000, 'arrayofkeyval'=>array(0=>'Draft', 1=>'Active', -1=>'Cancel')),
+		'not_managed_in_stock'	=>array('type'=>'integer', 'label'=>'not_managed_in_stock', 'enabled'=>1, 'visible'=>1, 'default'=>0, 'notnull'=>1, 'index'=>1, 'position'=>502),
 	);
 
 	/**
@@ -495,6 +503,12 @@ class Product extends CommonObject
 	 */
 	const TYPE_STOCKKIT = 3;
 
+	/**
+	 * Not managed in stock
+	 */
+	const NOT_MANAGED_IN_STOCK = 0;
+	const DISABLED_STOCK = 1;
+	const ENABLED_STOCK = 0;
 
 	/**
 	 *  Constructor
@@ -546,7 +560,7 @@ class Product extends CommonObject
 		$error = 0;
 
 		// Clean parameters
-		$this->ref = dol_sanitizeFileName(dol_string_nospecial(trim($this->ref)));
+		$this->ref = dol_sanitizeFileName(dol_string_nospecial2(trim($this->ref)));
 		$this->label = trim($this->label);
 		$this->price_ttc = price2num($this->price_ttc);
 		$this->price = price2num($this->price);
@@ -587,6 +601,10 @@ class Product extends CommonObject
 		}
 		if (empty($this->status_buy)) {
 			$this->status_buy = 0;
+		}
+
+		if (empty($this->not_managed_in_stock)) {
+			$this->not_managed_in_stock = 0;
 		}
 
 		$price_ht = 0;
@@ -709,14 +727,14 @@ class Product extends CommonObject
 					$sql .= ", tobatch";
 					$sql .= ", batch_mask";
 					$sql .= ", fk_unit";
+					$sql .= ", not_managed_in_stock";
 					$sql .= ") VALUES (";
 					$sql .= "'".$this->db->idate($now)."'";
 					if (empty($this->entity)){
-						$sql .= ", " . $conf->entity;
-					}else{
-						$sql .= ", ". $this->entity ;
+						$sql .= ", ".$conf->entity;
+					} else {
+						$sql .= ", ".$this->entity ;
 					}
-
 					$sql .= ", '".$this->db->escape($this->ref)."'";
 					$sql .= ", ".(!empty($this->ref_ext) ? "'".$this->db->escape($this->ref_ext)."'" : "null");
 					$sql .= ", ".price2num($price_min_ht);
@@ -742,6 +760,7 @@ class Product extends CommonObject
 					$sql .= ", ".((empty($this->status_batch) || $this->status_batch < 0) ? '0' : $this->status_batch);
 					$sql .= ", '".$this->db->escape($this->batch_mask)."'";
 					$sql .= ", ".(!$this->fk_unit ? 'NULL' : $this->fk_unit);
+					$sql .= ", ".((int) $this->not_managed_in_stock);
 					$sql .= ")";
 
 					dol_syslog(get_class($this)."::Create", LOG_DEBUG);
@@ -932,7 +951,7 @@ class Product extends CommonObject
 		}
 
 		// Clean parameters
-		$this->ref = dol_string_nospecial(trim($this->ref));
+		$this->ref = dol_string_nospecial2(trim($this->ref));
 		$this->label = trim($this->label);
 		$this->description = trim($this->description);
 		$this->note = (isset($this->note) ? trim($this->note) : null);
@@ -1000,6 +1019,10 @@ class Product extends CommonObject
 
 		if (empty($this->state_id)) {
 			$this->state_id = 0;
+		}
+
+		if (empty($this->not_managed_in_stock)) {
+			$this->not_managed_in_stock = 0;
 		}
 
 		// Barcode value
@@ -1145,6 +1168,7 @@ class Product extends CommonObject
 			$sql .= ", price_autogen = ".(!$this->price_autogen ? 0 : 1);
 			$sql .= ", fk_price_expression = ".($this->fk_price_expression != 0 ? (int) $this->fk_price_expression : 'NULL');
 			$sql .= ", fk_user_modif = ".($user->id > 0 ? $user->id : 'NULL');
+			$sql .= ", not_managed_in_stock = ".(int) $this->not_managed_in_stock;
 
 			// stock field is not here because it is a denormalized value from product_stock.
 			$sql .= " WHERE rowid = ".((int) $id);
@@ -2283,7 +2307,7 @@ class Product extends CommonObject
 			$sql .= " p.pmp,";
 		}
 		$sql .= " p.datec, p.tms, p.import_key, p.entity, p.desiredstock, p.tobatch, p.batch_mask, p.fk_unit,";
-		$sql .= " p.fk_price_expression, p.price_autogen, p.model_pdf,";
+		$sql .= " p.fk_price_expression, p.price_autogen, p.not_managed_in_stock, p.model_pdf,";
 		if ($separatedStock) {
 			$sql .= " SUM(sp.reel) as stock";
 		} else {
@@ -2422,6 +2446,7 @@ class Product extends CommonObject
 				$this->fk_price_expression            = $obj->fk_price_expression;
 				$this->fk_unit                        = $obj->fk_unit;
 				$this->price_autogen = $obj->price_autogen;
+				$this->not_managed_in_stock  		  = $obj->not_managed_in_stock;
 				$this->model_pdf = $obj->model_pdf;
 
 				$this->db->free($resql);

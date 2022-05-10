@@ -385,7 +385,7 @@ class FormProduct
 	 *  @param	string		$morecss			 More CSS
 	 *  @return string
 	 */
-	public function selectMeasuringUnits($name = 'measuring_units', $measuring_style = '', $default = '0', $adddefault = 0, $mode = 0, $morecss = 'maxwidth125')
+	public function selectMeasuringUnits($name = 'measuring_units', $measuring_style = '', $default = '0', $adddefault = '', $mode = 0, $morecss = 'maxwidth125')
 	{
 		global $langs, $conf, $mysoc, $db;
 
@@ -404,8 +404,8 @@ class FormProduct
 		}
 
 		$result = $measuringUnits->fetchAll(
-			'',
-			'',
+			'ASC',
+			'sortorder',
 			0,
 			0,
 			$filter

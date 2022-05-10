@@ -172,6 +172,7 @@ class CUnits // extends CommonObject
 		$sql = "SELECT";
 		$sql .= " t.rowid,";
 		$sql .= " t.code,";
+		$sql .= " t.sortorder,";
 		$sql .= " t.label,";
 		$sql .= " t.short_label,";
 		$sql .= " t.scale,";
@@ -231,7 +232,7 @@ class CUnits // extends CommonObject
 	 * @param  string      $filtermode   Filter mode (AND or OR)
 	 * @return array|int                 int <0 if KO, array of pages if OK
 	 */
-	public function fetchAll($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
+	public function fetchAll($sortorder = 'ASC', $sortfield = 'sortorder', $limit = 0, $offset = 0, array $filter = array(), $filtermode = 'AND')
 	{
 		global $conf;
 
@@ -244,7 +245,8 @@ class CUnits // extends CommonObject
 		$sql .= " t.short_label,";
 		$sql .= " t.unit_type,";
 		$sql .= " t.scale,";
-		$sql .= " t.active";
+		$sql .= " t.active,";
+		$sql .= " t.sortorder";
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'c_units as t';
 		// Manage filter
 		$sqlwhere = array();
@@ -280,8 +282,9 @@ class CUnits // extends CommonObject
 				while ($obj = $this->db->fetch_object($resql)) {
 					$record = new self($this->db);
 
-					$record->id    = $obj->rowid;
+					$record->id = $obj->rowid;
 					$record->code = $obj->code;
+					$record->sortorder = $obj->sortorder;
 					$record->label = $obj->label;
 					$record->short_label = $obj->short_label;
 					$record->unit_type = $obj->unit_type;
@@ -318,6 +321,9 @@ class CUnits // extends CommonObject
 		if (isset($this->code)) {
 			$this->code = trim($this->code);
 		}
+		if (isset($this->sortorder)) {
+			$this->sortorder = trim($this->sortorder);
+		}
 		if (isset($this->label)) {
 			$this->libelle = trim($this->label);
 		}
@@ -340,6 +346,7 @@ class CUnits // extends CommonObject
 		// Update request
 		$sql = "UPDATE ".MAIN_DB_PREFIX."c_units SET";
 		$sql .= " code=".(isset($this->code) ? "'".$this->db->escape($this->code)."'" : "null").",";
+		$sql .= " sortorder=".(isset($this->sortorder) ? "'".$this->db->escape($this->sortorder)."'" : "null").",";
 		$sql .= " label=".(isset($this->label) ? "'".$this->db->escape($this->label)."'" : "null").",";
 		$sql .= " short_label=".(isset($this->short_label) ? "'".$this->db->escape($this->short_label)."'" : "null").",";
 		$sql .= " unit_type=".(isset($this->unit_type) ? "'".$this->db->escape($this->unit_type)."'" : "null").",";

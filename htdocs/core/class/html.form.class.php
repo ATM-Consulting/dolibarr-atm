@@ -1380,7 +1380,8 @@ class Form
 				if ($i > 0) {
 					$sql .= " AND ";
 				}
-				$sql .= "(s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
+				//$sql .= "(s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
+				$sql .= "(s.name_alias LIKE '".$this->db->escape($prefix.$crit)."%')";
 				$i++;
 			}
 			if (count($scrit) > 1) {
@@ -3092,7 +3093,7 @@ class Form
 	public function select_produits_fournisseurs_list($socid, $selected = '', $htmlname = 'productid', $filtertype = '', $filtre = '', $filterkey = '', $statut = -1, $outputmode = 0, $limit = 100, $alsoproductwithnosupplierprice = 0, $morecss = '', $showstockinlist = 0, $placeholder = '')
 	{
 		// phpcs:enable
-		global $langs, $conf, $user;
+		global $langs, $conf, $db, $user;
 		global $hookmanager;
 
 		$out = '';
@@ -4340,7 +4341,7 @@ class Form
 	 *      @param  string  $unit_type      Restrict to one given unit type
 	 * 		@return	string                  HTML select
 	 */
-	public function selectUnits($selected = '', $htmlname = 'units', $showempty = 0, $unit_type = '')
+	public function selectUnits($selected = '', $htmlname = 'units', $showempty = 1, $unit_type = '')
 	{
 		global $langs;
 
@@ -4353,11 +4354,12 @@ class Form
 		if (!empty($unit_type)) {
 			$sql .= " AND unit_type = '".$this->db->escape($unit_type)."'";
 		}
+        $sql .= " ORDER BY sortorder";
 
 		$resql = $this->db->query($sql);
 		if ($resql && $this->db->num_rows($resql) > 0) {
 			if ($showempty) {
-				$return .= '<option value="none"></option>';
+				$return .= '<option value="">&nbsp;</option>';
 			}
 
 			while ($res = $this->db->fetch_object($resql)) {
@@ -4366,8 +4368,8 @@ class Form
 					$unitLabel = $langs->trans('unit'.$res->code) != $res->label ? $langs->trans('unit'.$res->code) : $res->label;
 				}
 
-				if ($selected == $res->rowid) {
-					$return .= '<option value="'.$res->rowid.'" selected>'.$unitLabel.'</option>';
+                if ($selected > 0 && $selected == $res->rowid) {
+					$return .= '<option value="'.$res->rowid.'" selected="selected">'.$unitLabel.'</option>';
 				} else {
 					$return .= '<option value="'.$res->rowid.'">'.$unitLabel.'</option>';
 				}
@@ -5738,6 +5740,7 @@ class Form
 		$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
 		$sql .= " WHERE t.fk_pays = c.rowid";
 		$sql .= " AND t.active > 0";
+		$sql .= " AND t.entity IN (".getEntity('c_tva').")";
 		$sql .= " AND c.code IN (".$this->db->sanitize($country_code, 1).")";
 		$sql .= " ORDER BY t.code ASC, t.taux ASC, t.recuperableonly ASC";
 

@@ -1334,6 +1334,81 @@ function show_contacts($conf, $langs, $db, $object, $backtopage = '')
 	return $i;
 }
 
+// InfraS add begin
+/**
+*	Show html area for list of addresses
+*
+*	@param	Conf		$conf		Object conf
+*	@param	Translate	$langs		Object langs
+*	@param	DoliDB		$db			Database handler
+*	@param	Societe		$object		Third party object
+*	@param	string		$backtopage	Url to go once address is created
+*	@return	void
+*/
+function show_addresses($conf, $langs, $db, $object, $backtopage = '')
+{
+	global $user;
+
+	dol_include_once('/infraspackplus/class/address.class.php');
+
+	$langs->load('infraspackplus@infraspackplus');
+
+	$addressstatic	= new Address($db);
+	$num			= $addressstatic->fetch_lines($object->id);
+	$newcardbutton	= '';
+	if ($user->rights->societe->creer)
+		$newcardbutton	= '	<a class = "butActionNew" href = "'.dol_buildpath('infraspackplus', 1).'/comm/address.php?socid='.$object->id.'&action=create&backtopage='.urlencode($backtopage).'"><span class = "valignmiddle">'.$langs->trans('AddAddress').'</span>
+								<span class = "fa fa-plus-circle valignmiddle"></span>
+							</a>';
+	print load_fiche_titre($langs->trans('AddressesForCompany'), $newcardbutton, '');
+	print '		<table class = "noborder" width = "100%">
+					<tr class = "liste_titre">
+						<td>'.$langs->trans('InfraSPlusParamAdressAlias').'</td>
+						<td>'.$langs->trans('CompanyName').'</td>
+						<td>'.$langs->trans('Town').'</td>
+						<td>'.$langs->trans('Country').'</td>
+						<td>'.$langs->trans('Phone').'</td>
+						<td>'.$langs->trans('Fax').'</td>
+						<td>'.$langs->trans('Email').'</td>
+						<td>'.$langs->trans('url').'</td>
+						<td>&nbsp;</td>
+					</tr>';
+	if ($num > 0)
+	{
+		foreach ($addressstatic->lines as $address)
+		{
+			$addressstatic->id		= $address->id;
+			$addressstatic->label	= $address->label;
+			$img					= picto_from_langcode($address->country_code);
+			print '	<tr class = "oddeven">
+						<td>'.$addressstatic->getNomUrl(1).'</td>
+						<td>'.$address->name.'</td>
+						<td>'.$address->town.'</td>
+						<td>'.($img ? $img.' ' : '').$address->country.'</td>
+						<td>';
+			print dol_print_phone($address->phone, $address->country_code, $address->id, $object->id,'AC_TEL');	// Lien click to dial
+			print '		</td>
+						<td>';
+			print dol_print_phone($address->fax, $address->country_code, $address->id, $object->id, 'AC_FAX');	// Lien click to dial
+			print '		</td>
+						<td>'.$address->email.'</td>
+						<td>'.$address->url.'</td>';
+			if ($user->rights->societe->creer)
+			{
+				print '	<td align = "right">
+							<a href = "'.dol_buildpath('infraspackplus', 1).'/comm/address.php?action=edit&id='.$address->id.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
+				print img_edit();
+				print '		</a>
+						</td>';
+			}	// if ($user->rights->societe->creer)
+			print '	</tr>';
+		}	// foreach ($addressstatic->lines as $address)
+	}	// if ($num > 0)
+	print '		</table>
+				<br>';
+	return $num;
+}	// function show_addresses($conf, $langs, $db, $object, $backtopage = '')
+// InfraS add end
 
 /**
  *    	Show html area with actions to do

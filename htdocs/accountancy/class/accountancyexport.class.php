@@ -61,6 +61,7 @@ class AccountancyExport
 	public static $EXPORT_TYPE_GESTIMUMV5 = 135;
 	public static $EXPORT_TYPE_FEC = 1000;
 	public static $EXPORT_TYPE_FEC2 = 1010;
+	public static $EXPORT_TYPE_FEC3 = 1020;
 
 
 	/**
@@ -123,6 +124,7 @@ class AccountancyExport
 			self::$EXPORT_TYPE_GESTIMUMV5 => $langs->trans('Modelcsv_Gestinumv5'),
 			self::$EXPORT_TYPE_FEC => $langs->trans('Modelcsv_FEC'),
 			self::$EXPORT_TYPE_FEC2 => $langs->trans('Modelcsv_FEC2'),
+			self::$EXPORT_TYPE_FEC3 => $langs->trans('Modelcsv_FEC3'),
 		);
 
 		ksort($listofexporttypes, SORT_NUMERIC);
@@ -158,6 +160,7 @@ class AccountancyExport
 			self::$EXPORT_TYPE_GESTIMUMV5 => 'gestimumv5',
 			self::$EXPORT_TYPE_FEC => 'fec',
 			self::$EXPORT_TYPE_FEC2 => 'fec2',
+			self::$EXPORT_TYPE_FEC3 => 'fec3',
 		);
 
 		return $formatcode[$type];
@@ -241,6 +244,10 @@ class AccountancyExport
 				),
 				self::$EXPORT_TYPE_FEC2 => array(
 					'label' => $langs->trans('Modelcsv_FEC2'),
+					'ACCOUNTING_EXPORT_FORMAT' => 'txt',
+				),
+				self::$EXPORT_TYPE_FEC3 => array(
+					'label' => $langs->trans('Modelcsv_FEC3'),
 					'ACCOUNTING_EXPORT_FORMAT' => 'txt',
 				),
 			),
@@ -333,6 +340,9 @@ class AccountancyExport
 				break;
 			case self::$EXPORT_TYPE_FEC2:
 				$this->exportFEC2($TData);
+				break;
+			case self::$EXPORT_TYPE_FEC3:
+				$this->exportFEC3($TData);
 				break;
 			default:
 				$this->errors[] = $langs->trans('accountancy_error_modelnotfound');
@@ -1078,6 +1088,134 @@ class AccountancyExport
 
 				// FEC_suppl:DateLimitReglmt
 				print $date_limit_payment;
+
+				print $end_line;
+			}
+		}
+	}
+
+	/**
+	 * Export format : FEC3
+	 *
+	 * @param array $objectLines data
+	 * @return void
+	 */
+	public function exportFEC3($objectLines)
+	{
+		global $langs;
+
+		$separator = "\t";
+		$end_line = "\r\n";
+
+		print "JournalCode".$separator;
+		print "JournalLib".$separator;
+		print "EcritureNum".$separator;
+		print "EcritureDate".$separator;
+		print "CompteNum".$separator;
+		print "CompteLib".$separator;
+		print "CompAuxNum".$separator;
+		print "CompAuxLib".$separator;
+		print "PieceRef".$separator;
+		print "PieceDate".$separator;
+		print "EcritureLib".$separator;
+		print "Debit".$separator;
+		print "Credit".$separator;
+		print "EcritureLet".$separator;
+		print "DateLet".$separator;
+		print "ValidDate".$separator;
+		print "Montantdevise".$separator;
+		print "Idevise".$separator;
+		print "DateLimitReglmt".$separator;
+		print "NumFacture";
+		print $end_line;
+
+		foreach ($objectLines as $line) {
+			if ($line->debit == 0 && $line->credit == 0) {
+				//unset($array[$line]);
+			} else {
+				$date_creation = dol_print_date($line->date_creation, '%Y%m%d');
+				$date_document = dol_print_date($line->doc_date, '%Y%m%d');
+				$date_lettering = dol_print_date($line->date_lettering, '%Y%m%d');
+				$date_validation = dol_print_date($line->date_validation, '%Y%m%d');
+				$date_limit_payment = dol_print_date($line->date_lim_reglement, '%Y%m%d');
+
+				$refInvoice = '';
+				if ($line->doc_type == 'customer_invoice') {
+					// Customer invoice
+					require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+					$invoice = new Facture($this->db);
+					$invoice->fetch($line->fk_doc);
+
+					$refInvoice = $invoice->ref;
+				} elseif ($line->doc_type == 'supplier_invoice') {
+					// Supplier invoice
+					require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
+					$invoice = new FactureFournisseur($this->db);
+					$invoice->fetch($line->fk_doc);
+
+					$refInvoice = $invoice->ref_supplier;
+				}
+
+				// FEC:JournalCode
+				print $line->code_journal . $separator;
+
+				// FEC:JournalLib
+				print dol_string_unaccent($langs->transnoentities($line->journal_label)) . $separator;
+
+				// FEC:EcritureNum
+				print $line->piece_num . $separator;
+
+				// FEC:EcritureDate
+				print $date_document . $separator;
+
+				// FEC:CompteNum
+				print length_accountg($line->numero_compte) . $separator;
+
+				// FEC:CompteLib
+				print dol_string_unaccent($line->label_compte) . $separator;
+
+				// FEC:CompAuxNum
+				print length_accounta($line->subledger_account) . $separator;
+
+				// FEC:CompAuxLib
+				print dol_string_unaccent($line->subledger_label) . $separator;
+
+				// FEC:PieceRef
+				print $line->doc_ref . $separator;
+
+				// FEC:PieceDate
+				print $date_creation . $separator;
+
+				// FEC:EcritureLib
+				print dol_string_unaccent($line->label_operation) . $separator;
+
+				// FEC:Debit
+				print price2fec($line->debit) . $separator;
+
+				// FEC:Credit
+				print price2fec($line->credit) . $separator;
+
+				// FEC:EcritureLet
+				print $line->lettering_code . $separator;
+
+				// FEC:DateLet
+				print $date_lettering . $separator;
+
+				// FEC:ValidDate
+				print $date_validation . $separator;
+
+				// FEC:Montantdevise
+				print $line->multicurrency_amount . $separator;
+
+				// FEC:Idevise
+				print $line->multicurrency_code . $separator;
+
+				// FEC_suppl:DateLimitReglmt
+				print $date_limit_payment . $separator;
+
+				// FEC_suppl:NumFacture
+				print dol_trunc(self::toAnsi($refInvoice), 17, 'right', 'UTF-8', 1);
+
 
 				print $end_line;
 			}
