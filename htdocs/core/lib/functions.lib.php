@@ -1082,6 +1082,31 @@ function dol_sanitizeFileName($str, $newstr = '_', $unaccent = 1)
 }
 
 /**
+ *	Clean a string to use it as a file name.
+ *  Replace also '--' and ' -' strings, they are used for parameters separation (Note: ' - ' is allowed).
+ *
+ *	@param	string	$str            String to clean
+ * 	@param	string	$newstr			String to replace bad chars with.
+ *  @param	int	    $unaccent		1=Remove also accent (default), 0 do not remove them
+ *	@return string          		String cleaned (a-zA-Z_)
+ *
+ * 	@see        	dol_string_nospecial(), dol_string_unaccent(), dol_sanitizePathName()
+ */
+function dol_sanitizeFileName2($str, $newstr = '_', $unaccent = 1)
+{
+    // List of special chars for filenames in windows are defined on page https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+    // Char '>' '<' '|' '$' and ';' are special chars for shells.
+    // Char '/' and '\' are file delimiters.
+    // -- car can be used into filename to inject special paramaters like --use-compress-program to make command with file as parameter making remote execution of command
+    //$filesystem_forbidden_chars = array('<', '>', '/', '\\', '?', '*', '|', '"', ':', '°', '$', ';');
+    $filesystem_forbidden_chars = array('<', '>', '\\', '?', '*', '|', '"', ':', '°', '$', ';');
+    $tmp = dol_string_nospecial($unaccent ? dol_string_unaccent($str) : $str, $newstr, $filesystem_forbidden_chars);
+    $tmp = preg_replace('/\-\-+/', '_', $tmp);
+    $tmp = preg_replace('/\s+\-([^\s])/', ' _$1', $tmp);
+    return $tmp;
+}
+
+/**
  *	Clean a string to use it as a path name.
  *  Replace also '--' and ' -' strings, they are used for parameters separation (Note: ' - ' is allowed).
  *

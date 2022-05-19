@@ -38,6 +38,7 @@ $total = 0;
 $ilink = 0;
 foreach ($linkedObjectBlock as $key => $objectlink) {
 	$ilink++;
+	$objectlink->fetch_thirdparty();
 
 	$trclass = 'oddeven';
 	if ($ilink == count($linkedObjectBlock) && empty($noMoreLinkedObjectBlockAfter) && count($linkedObjectBlock) <= 1) {
@@ -47,7 +48,7 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	<tr class="<?php echo $trclass; ?>">
 		<td><?php echo $langs->trans("SupplierOrder"); ?></td>
 		<td><a href="<?php echo DOL_URL_ROOT.'/fourn/commande/card.php?id='.$objectlink->id ?>"><?php echo img_object($langs->trans("ShowOrder"), "order").' '.$objectlink->ref; ?></a></td>
-		<td class="left"><?php echo $objectlink->ref_supplier; ?></td>
+		<td class="left"><?php echo $objectlink->ref_supplier . ' ' . $objectlink->thirdparty->getNomUrl(1); ?></td>
 		<td class="center"><?php echo dol_print_date($objectlink->date, 'day'); ?></td>
 		<td class="right"><?php
 		if ($user->rights->fournisseur->commande->lire) {

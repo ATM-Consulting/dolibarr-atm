@@ -487,6 +487,12 @@ class modProduct extends DolibarrModules
 			'p.url' => "PublicUrl",
 			'p.customcode' => 'CustomCode',
 			'p.fk_country' => 'CountryCode',
+			'p.accountancy_code_sell' => "ProductAccountancySellCode",
+			'p.accountancy_code_sell_intra' => "ProductAccountancySellIntraCode",
+			'p.accountancy_code_sell_export' => "ProductAccountancySellExportCode",
+			'p.accountancy_code_buy' => "ProductAccountancyBuyCode",
+			'p.accountancy_code_buy_intra' => "ProductAccountancyBuyIntraCode",
+			'p.accountancy_code_buy_export' => "ProductAccountancyBuyExportCode",
 			'p.note_public' => "NotePublic",
 			'p.note' => "NotePrivate",
 			'p.weight' => "Weight",
@@ -512,16 +518,6 @@ class modProduct extends DolibarrModules
 			'p.datec' => 'DateCreation',
 			'p.cost_price' => "CostPrice",
 		);
-        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
-            $this->import_fields_array[$r] = array(
-                'p.accountancy_code_sell' => "ProductAccountancySellCode",
-                'p.accountancy_code_sell_intra' => "ProductAccountancySellIntraCode",
-                'p.accountancy_code_sell_export' => "ProductAccountancySellExportCode",
-                'p.accountancy_code_buy' => "ProductAccountancyBuyCode",
-                'p.accountancy_code_buy_intra' => "ProductAccountancyBuyIntraCode",
-                'p.accountancy_code_buy_export' => "ProductAccountancyBuyExportCode",
-            );
-        }
 
 		$this->import_convertvalue_array[$r] = array(
 				'p.weight_units' => array(
@@ -586,17 +582,13 @@ class modProduct extends DolibarrModules
 					'method' => 'fetch',
 					'dict' => 'DictionaryProductNature'
 				),
+				'p.accountancy_code_sell'=>array('rule'=>'accountingaccount'),
+				'p.accountancy_code_sell_intra'=>array('rule'=>'accountingaccount'),
+				'p.accountancy_code_sell_export'=>array('rule'=>'accountingaccount'),
+				'p.accountancy_code_buy'=>array('rule'=>'accountingaccount'),
+				'p.accountancy_code_buy_intra'=>array('rule'=>'accountingaccount'),
+				'p.accountancy_code_buy_export'=>array('rule'=>'accountingaccount'),
 		);
-        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
-            $this->import_convertvalue_array[$r] = array(
-                'p.accountancy_code_sell'=>array('rule'=>'accountingaccount'),
-                'p.accountancy_code_sell_intra'=>array('rule'=>'accountingaccount'),
-                'p.accountancy_code_sell_export'=>array('rule'=>'accountingaccount'),
-                'p.accountancy_code_buy'=>array('rule'=>'accountingaccount'),
-                'p.accountancy_code_buy_intra'=>array('rule'=>'accountingaccount'),
-                'p.accountancy_code_buy_export'=>array('rule'=>'accountingaccount'),
-            );
-        }
 
 		$this->import_regex_array[$r] = array(
 			'p.ref' => '[^ ]',
@@ -696,6 +688,12 @@ class modProduct extends DolibarrModules
 			'p.fk_product_type' => "0 (product) / 1 (service)",
 			'p.duration' => "eg. 365d/12m/1y",
 			'p.url' => 'link to product (no https)',
+			'p.accountancy_code_sell' => "",
+			'p.accountancy_code_sell_intra' => "",
+			'p.accountancy_code_sell_export' => "",
+			'p.accountancy_code_buy' => "",
+			'p.accountancy_code_buy_intra' => "",
+			'p.accountancy_code_buy_export' => "",
 			'p.weight' => "",
 			'p.weight_units' => 'kg', // Use a unit of measure from the dictionary. g/Kg/T etc....matches field "Short label" for unit type "weight" in table "' . MAIN_DB_PREFIX . 'c_units',
 			'p.length' => "",
@@ -710,26 +708,6 @@ class modProduct extends DolibarrModules
 			'p.volume_units' => 'm3', //Use a unit of measure from the dictionary. m3/cm3/mm3 etc....matches field "Short label" for unit type "volume" in table "' . MAIN_DB_PREFIX . 'c_units',
 			'p.finished' => '0 (raw material) / 1 (finished goods), matches field "code" in dictionary table "'.MAIN_DB_PREFIX.'c_product_nature"'
 		);
-        if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
-            $import_sample = array(
-                'p.accountancy_code_sell' => "707",
-                'p.accountancy_code_sell_intra' => "",
-                'p.accountancy_code_sell_export' => "",
-                'p.accountancy_code_buy' => "607",
-                'p.accountancy_code_buy_intra' => "",
-                'p.accountancy_code_buy_export' => "",
-            );
-        } else {
-            $import_sample = array(
-                'ppe.accountancy_code_sell' => "707",
-                'ppe.accountancy_code_sell_intra' => "",
-                'ppe.accountancy_code_sell_export' => "",
-                'ppe.accountancy_code_buy' => "607",
-                'ppe.accountancy_code_buy_intra' => "",
-                'ppe.accountancy_code_buy_export' => "",
-            );
-        }
-
 		//clauses copied from import_fields_array
 		if (!empty($conf->stock->enabled)) {
 			$import_sample = array_merge($import_sample, array(
@@ -886,7 +864,7 @@ class modProduct extends DolibarrModules
 			}
 			if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
 				$this->import_examplevalues_array[$r] = array_merge($this->import_examplevalues_array[$r], array(
-					'sp.packaging'=>'10',
+					'sp.packagning'=>'1',
 				));
 			}
 

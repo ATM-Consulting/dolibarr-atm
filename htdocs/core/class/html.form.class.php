@@ -2551,32 +2551,41 @@ class Form
 				if ($i > 0) {
 					$sql .= " AND ";
 				}
-				$sql .= "(p.ref LIKE '".$this->db->escape($prefix.$crit)."%' OR p.label LIKE '".$this->db->escape($prefix.$crit)."%'";
-				if (!empty($conf->global->MAIN_MULTILANGS)) {
-					$sql .= " OR pl.label LIKE '".$this->db->escape($prefix.$crit)."%'";
-				}
-				if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES) && ! empty($socid)) {
-					$sql .= " OR pcp.ref_customer LIKE '".$this->db->escape($prefix.$crit)."%'";
-				}
-				if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ON_DESCRIPTION)) {
-					$sql .= " OR p.description LIKE '".$this->db->escape($prefix.$crit)."%'";
-					if (!empty($conf->global->MAIN_MULTILANGS)) {
-						$sql .= " OR pl.description LIKE '".$this->db->escape($prefix.$crit)."%'";
-					}
-				}
-				if (!empty($conf->global->MAIN_SEARCH_PRODUCT_BY_FOURN_REF)) {
-					$sql .= " OR pfp.ref_fourn LIKE '".$this->db->escape($prefix.$crit)."%'";
-				}
-				$sql .= ")";
-				$i++;
+                if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ONLY_REF)) {
+                    $sql .= "(p.ref LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ALSO_LABEL)) {
+                        $sql .= " OR p.label LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    }
+                    $sql .= ")";
+                    $i++;
+                } else {
+                    $sql .= "(p.ref LIKE '".$this->db->escape($prefix.$crit)."%' OR p.label LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    if (!empty($conf->global->MAIN_MULTILANGS)) {
+                        $sql .= " OR pl.label LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    }
+                    if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES) && ! empty($socid)) {
+                        $sql .= " OR pcp.ref_customer LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    }
+                    if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ON_DESCRIPTION)) {
+                        $sql .= " OR p.description LIKE '".$this->db->escape($prefix.$crit)."%'";
+                        if (!empty($conf->global->MAIN_MULTILANGS)) {
+                            $sql .= " OR pl.description LIKE '".$this->db->escape($prefix.$crit)."%'";
+                        }
+                    }
+                    if (!empty($conf->global->MAIN_SEARCH_PRODUCT_BY_FOURN_REF)) {
+                        $sql .= " OR pfp.ref_fourn LIKE '".$this->db->escape($prefix.$crit)."%'";
+                    }
+                    if (!empty($conf->barcode->enabled)) {
+                        $sql .= " OR p.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
+                    }
+                    $sql .= ")";
+                    $i++;
+                }
 			}
 			if (count($scrit) > 1) {
 				$sql .= ")";
 			}
-			if (!empty($conf->barcode->enabled)) {
-				$sql .= " OR p.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
-			}
-			$sql .= ')';
+            $sql .= ')';
 		}
 		if (count($warehouseStatusArray)) {
 			$sql .= ' GROUP BY'.$selectFields;
@@ -2590,7 +2599,7 @@ class Form
 		} else {
 			$sql .= $this->db->order("p.ref");
 		}
-
+        $limit = isset($conf->global->SEARCH_LIMIT_AJAX) ? $conf->global->SEARCH_LIMIT_AJAX : $limit;
 		$sql .= $this->db->plimit($limit, 0);
 
 		// Build output string
@@ -3162,23 +3171,38 @@ class Form
 				if ($i > 0) {
 					$sql .= " AND ";
 				}
-				$sql .= "(pfp.ref_fourn LIKE '".$this->db->escape($prefix.$crit)."%' OR p.ref LIKE '".$this->db->escape($prefix.$crit)."%' OR p.label LIKE '".$this->db->escape($prefix.$crit)."%'";
-				if (!empty($conf->global->PRODUIT_FOURN_TEXTS)) {
-					$sql .= " OR pfp.desc_fourn LIKE '".$this->db->escape($prefix.$crit)."%'";
-				}
-				$sql .= ")";
-				$i++;
+                if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ONLY_REF)) {
+                    $sql .= "(p.ref LIKE '" . $this->db->escape($prefix . $crit) . "%'";
+                    if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ALSO_REFSUPPLIER)) {
+                        $sql .= " OR pfp.ref_fourn LIKE '" . $this->db->escape($prefix . $crit) . "%'";
+                    }
+                    if (!empty($conf->global->PRODUCT_AJAX_SEARCH_ALSO_LABEL)) {
+                        $sql .= " OR p.label LIKE '" . $this->db->escape($prefix . $crit) . "%'";
+                    }
+                    $sql .= ")";
+                    $i++;
+                } else {
+                    $sql .= "(pfp.ref_fourn LIKE '" . $this->db->escape($prefix . $crit) . "%' OR p.ref LIKE '" . $this->db->escape($prefix . $crit) . "%' OR p.label LIKE '" . $this->db->escape($prefix . $crit) . "%'";
+                    if (!empty($conf->global->PRODUIT_FOURN_TEXTS)) {
+                        $sql .= " OR pfp.desc_fourn LIKE '" . $this->db->escape($prefix . $crit) . "%'";
+                    }
+                    if (!empty($conf->barcode->enabled)) {
+                        $sql .= " OR p.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
+                        $sql .= " OR pfp.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
+                    }
+                    $sql .= ")";
+                    $i++;
+                }
 			}
 			if (count($scrit) > 1) {
 				$sql .= ")";
 			}
-			if (!empty($conf->barcode->enabled)) {
-				$sql .= " OR p.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
-				$sql .= " OR pfp.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
-			}
+
 			$sql .= ')';
 		}
 		$sql .= " ORDER BY pfp.ref_fourn DESC, pfp.quantity ASC";
+
+        $limit = isset($conf->global->SEARCH_LIMIT_AJAX) ? $conf->global->SEARCH_LIMIT_AJAX : $limit;
 		$sql .= $this->db->plimit($limit, 0);
 
 		// Build output string
@@ -3420,7 +3444,7 @@ class Form
 						'value'=>$outref,
 						'label'=>$outval,
 						'qty'=>$outqty,
-						'price_ht'=>price2num($objp->unitprice, 'MU'),
+						'price_ht'=>price2num($objp->unitprice, 'MT'),
 						'discount'=>$outdiscount,
 						'type'=>$outtype,
 						'duration_value'=>$outdurationvalue,

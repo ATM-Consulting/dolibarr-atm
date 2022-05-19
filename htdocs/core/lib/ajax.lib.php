@@ -46,6 +46,8 @@
  */
 function ajax_autocompleter($selected, $htmlname, $url, $urloption = '', $minLength = 2, $autoselect = 0, $ajaxoptions = array(), $moreparams = '')
 {
+    global $conf;
+
 	if (empty($minLength)) {
 		$minLength = 1;
 	}
@@ -59,6 +61,8 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption = '', $minLen
 	if (defined('JS_QUERY_AUTOCOMPLETE_ITEM')) {
 		$dataforitem = constant('JS_QUERY_AUTOCOMPLETE_ITEM');
 	}
+
+	$nbSec	= isset($conf->global->SEARCH_PRODUCT_DELAY) ? $conf->global->SEARCH_PRODUCT_DELAY : 800;
 
 	// Input search_htmlname is original field
 	// Input htmlname is a second input field used when using ajax autocomplete.
@@ -236,7 +240,7 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption = '', $minLen
 
     						$("#search_'.$htmlname.'").trigger("change");	// We have changed value of the combo select, we must be sure to trigger all js hook binded on this event. This is required to trigger other javascript change method binded on original field by other code.
     					}
-    					,delay: 500
+    					,delay: '.$nbSec.'
 					}).data("'.$dataforrenderITem.'")._renderItem = function( ul, item ) {
 						return $("<li>")
 						.data( "'.$dataforitem.'", item ) // jQuery UI > 1.10.0

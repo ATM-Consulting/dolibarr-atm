@@ -3,8 +3,51 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 
+## [12.1.7] - 18-05-2022
+- Retour à une version antérieure sur l'import des produits/services car problème sur l'import des comptes comptables.
+- Ajout du tiers dans les commandes fournisseurs dans les objets liées
+
+## [12.1.6] - 16-05-2022
+- Correction actions en masse sur liste des produits (pages substitutions) pour mise Hors ventes / hors achats
+- Correction de l'affichage dans les objects liés de la référence des réceptions
+
+## [12.1.5] - 11-05-2022
+- Correction Erreur SQL génération des écritures comptables d'achats. (Backport: v15 comptes auxiliaires par entité non complet) 
+- Pour des tests détaillés, la constante PRODUCT_AJAX_SEARCH_ONLY peut être accompagné de la constante PRODUCT_AJAX_SEARCH_ALSO_REFSUPPLIER pour les recherches sur les ref fournisseurs sur les achats
+- Pour des tests détaillés, introduction de la constante SEARCH_LIMIT_AJAX pour limiter la liste renvoyée par Ajax
+
+Requête SQL à exécuter :
+	ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_customer varchar(24) AFTER entity;    -- equivalent to code_compta in llx_societe
+	ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_supplier varchar(24) AFTER accountancy_code_customer; -- equivalent to code_compta_supplier in llx_societe
+
+## [12.1.4] - 11-05-2022
+- Correction d'une erreur sur la requête SQL introduit en 12.1.2 si toutes les entités n'utilisent pas la recherche par ref uniquement 
+- Prise en compte de la recherche ajax des produits du côté des fournisseurs (Facture, commande,demande prix)
+- Correction prise en compte de la constante SEARCH_PRODUCT_DELAY et passage par défaut à 800ms.
+- Pour des tests détaillés, la constante PRODUCT_AJAX_SEARCH_ONLY_REF peut être accompagné de la constante PRODUCT_AJAX_SEARCH_ALSO_LABEL
+
+## [12.1.3] - 10-05-2022
+- Correction d'une erreur sur la requête SQL
+
+## [12.1.2] - 10-05-2022
+- Ajout d'une constante pour définir qu'on recherche uniquement sur la référence sur la recherche ajax des produits PRODUCT_AJAX_SEARCH_ONLY_REF 
+
+## [12.1.1] - 10-05-2022
+- Ajout d'une constante pour définir le délai en ms avant de lancer une recherche SEARCH_PRODUCT_DELAY (500ms par défaut)
+
+## [12.0.1] - 07-05-2022
+- Correction - Administration comptable des produits/services - Ajout interface massaction pour préselectionner/enregistrer l'affectation comptable - Compatibilité full_group_by
+
+## [12.0.0] - 04-05-2022
+- Nouveau - Backport 16.0 - Workflow - Classer les réceptions en "facturées" lorsqu'une commande fournisseur liée est validée
+- Nouveau - Backport 16.0 - Lettrage automatique + nouvelle interface massaction sur comptabilité
+- Nouveau - Backport 16.0 - Administration comptable des produits/services - Ajout interface massaction pour préselectionner/enregistrer l'affectation comptable
+- Modification pour autoriser le "/" dans les références des produits/services (Attention aux documentations rattachées avec un / dans la référence, bug de génération du pdf).
+- Ajout sur le grand livre + grand livre auxiliaire d'un filtre de recherche sur intervalle des montants
+- Correction de l'affichage de la loupe de visualisation des documents dans les éléments liés. La loupe passe devant plutôt que d'être coupé à l'affichage.
+
 ## [11.0.0] - 06-04-2022
-- Backport 15.0 - Core : Add massaction to switch status on sale / on purchase of a product (https://github.com/Dolibarr/dolibarr/commit/259b7dfe5a44fa54896e547b3c86ee9bd5acb7ef) + Page substitutions
+- Backport 15.0 - Core : Add massaction to switch status on sale / on purchase of a product (https://github.com/Dolibarr/dolibarr/commit/259b7dfe5a44fa54896e547b3c86ee9bd5acb7ef)
 
 ## [10.0.0] - 30-03-2022
 - Correction : Ajout de la colonne réf/libellé de la facture fournisseur sur les pages de liaison des factures fournisseurs (#20128)
@@ -87,7 +130,16 @@ Open-DSI Dolibarr v14 - MAJ Projet Eurochef
 	
 		ALTER TABLE llx_c_units ADD COLUMN sortorder smallint AFTER code;
 
-[Non Distribué]: 
+[Non Distribué]:
+[12.1.7]:
+[12.1.6]:
+[12.1.5]:
+[12.1.4]: 
+[12.1.3]: 
+[12.1.2]: 
+[12.1.1]: 
+[12.0.1]: 
+[12.0.0]: 
 [11.0.0]: 
 [10.0.0]: 
 [9.0.0]: 

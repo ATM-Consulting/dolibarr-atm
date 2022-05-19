@@ -528,7 +528,7 @@ class Product extends CommonObject
 	 */
 	public function check()
 	{
-		$this->ref = dol_sanitizeFileName(stripslashes($this->ref));
+		$this->ref = dol_sanitizeFileName2(stripslashes($this->ref));
 
 		$err = 0;
 		if (dol_strlen(trim($this->ref)) == 0) {
@@ -560,7 +560,7 @@ class Product extends CommonObject
 		$error = 0;
 
 		// Clean parameters
-		$this->ref = dol_sanitizeFileName(dol_string_nospecial2(trim($this->ref)));
+		$this->ref = dol_sanitizeFileName2(dol_string_nospecial2(trim($this->ref)));
 		$this->label = trim($this->label);
 		$this->price_ttc = price2num($this->price_ttc);
 		$this->price = price2num($this->price);
@@ -2049,7 +2049,7 @@ class Product extends CommonObject
 
 
 	/**
-	 * Modify customer price of a product/Service for a given level
+	 *    Modify customer price of a product/Service
 	 *
 	 * @param  double $newprice          New price
 	 * @param  string $newpricebase      HT or TTC
@@ -2221,8 +2221,7 @@ class Product extends CommonObject
 				$this->db->commit();
 			} else {
 				$this->db->rollback();
-				$this->error = $this->db->lasterror();
-				return -1;
+				dol_print_error($this->db);
 			}
 		}
 
