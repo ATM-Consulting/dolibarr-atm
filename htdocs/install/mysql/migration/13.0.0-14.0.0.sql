@@ -658,3 +658,11 @@ ALTER TABLE llx_c_socialnetworks ADD UNIQUE INDEX idx_c_socialnetworks_code_enti
 
 ALTER TABLE llx_product_association ADD COLUMN import_key varchar(14);
 ALTER TABLE llx_propaldet ADD COLUMN import_key varchar(14);
+
+-- Spécifique Eurochef E-connect
+ALTER TABLE llx_c_units ADD COLUMN sortorder smallint AFTER code;
+ALTER TABLE llx_c_tva ADD COLUMN entity integer DEFAULT 1 NOT NULL AFTER rowid;
+ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (entity, fk_pays, code, taux, recuperableonly);
+ALTER TABLE llx_reception MODIFY COLUMN ref_supplier varchar(128);
+ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_customer varchar(24) AFTER entity;
+ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_supplier varchar(24) AFTER accountancy_code_customer;

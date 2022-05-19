@@ -30,7 +30,7 @@ create table llx_reception
   
   ref_ext               varchar(30),					-- reference into an external system (not used by dolibarr)
   ref_int				        varchar(30),					-- reference into an internal system (deprecated)
-  ref_supplier          varchar(30),					-- customer number
+  ref_supplier          varchar(128),					-- customer number
   
   date_creation         datetime,						-- date de creation
   fk_user_author        integer,						-- author of creation

@@ -16,6 +16,6 @@
 --
 -- ========================================================================
 
-ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (fk_pays, code, taux, recuperableonly);
+ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (entity, fk_pays, code, taux, recuperableonly);
 
 -- ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (fk_pays, code, recuperableonly); -- Not yet possible for compatibility reason, where old code is ''
