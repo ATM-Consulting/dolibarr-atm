@@ -2686,8 +2686,12 @@ div.login_block a {
 	display: inline-block;
 }
 div.login_block span.aversion {
-	color: var(--colortextbackhmenu);
-	filter: contrast(0.7);
+	<?php if(!empty($conf->global->DISABLE_VIEW_VERSION)) { ?>
+        display: none !important;
+    <?php } else { ?>
+		color: var(--colortextbackhmenu);
+		filter: contrast(0.7);
+	<?php } ?>
 }
 div.login_block table {
 	display: inline;
