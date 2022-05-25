@@ -908,7 +908,7 @@ class BookKeeping extends CommonObject
 
 		$sql .= $this->db->order($sortfield, $sortorder);
 		if (!empty($limit)) {
-			$sql .= $this->db->plimit($limit + 1, $offset);
+			$sql .= ' '.$this->db->plimit($limit + 1, $offset);
 		}
 
 		$resql = $this->db->query($sql);
@@ -1060,7 +1060,7 @@ class BookKeeping extends CommonObject
 			$sql .= $this->db->order($sortfield, $sortorder);
 		}
 		if (!empty($limit)) {
-			$sql .= $this->db->plimit($limit + 1, $offset);
+			$sql .= ' '.$this->db->plimit($limit + 1, $offset);
 		}
 		$this->lines = array();
 
@@ -1180,7 +1180,7 @@ class BookKeeping extends CommonObject
 			$sql .= $this->db->order($sortfield, $sortorder);
 		}
 		if (!empty($limit)) {
-			$sql .= $this->db->plimit($limit + 1, $offset);
+			$sql .= ' '.$this->db->plimit($limit + 1, $offset);
 		}
 
 		$resql = $this->db->query($sql);
@@ -1871,7 +1871,7 @@ class BookKeeping extends CommonObject
 			$sql .= ' doc_ref, fk_doc, fk_docdet, entity, thirdparty_code, subledger_account, subledger_label,';
 			$sql .= ' numero_compte, label_compte, label_operation, debit, credit,';
 			$sql .= ' montant, sens, fk_user_author, import_key, code_journal, journal_label, '.((int) $next_piecenum).", '".$this->db->idate($now)."'";
-			$sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.'_tmp WHERE piece_num = '.((int) $piece_num).' AND entity = ' .((int) $conf->entity);
+			$sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.'_tmp WHERE piece_num = '.((int) $piece_num).' AND numero_compte IS NOT NULL AND entity = ' .((int) $conf->entity);
 			$resql = $this->db->query($sql);
 			if (!$resql) {
 				$error++;
