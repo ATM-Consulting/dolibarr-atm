@@ -87,7 +87,7 @@ if (GETPOST('newcompany') || GETPOST('socid', 'int') || GETPOST('id_fourn', 'int
 		$socid = GETPOST('id_fourn', 'int');
 	}
 
-	$sql = "SELECT rowid, nom";
+	$sql = "SELECT rowid, nom, name_alias";
 	$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql .= " WHERE s.entity IN (".getEntity('societe').")";
 	if ($socid) {
@@ -95,10 +95,12 @@ if (GETPOST('newcompany') || GETPOST('socid', 'int') || GETPOST('id_fourn', 'int
 		// Add criteria on name/code
 		if (!empty($conf->global->COMPANY_DONOTSEARCH_ANYWHERE)) {   // Can use index
 			$sql .= "nom LIKE '".$db->escape($socid)."%'";
+			$sql .= " OR name_alias LIKE '".$db->escape($socid)."%'";
 			$sql .= " OR code_client LIKE '".$db->escape($socid)."%'";
 			$sql .= " OR code_fournisseur LIKE '".$db->escape($socid)."%'";
 		} else {
 			$sql .= "nom LIKE '%".$db->escape($socid)."%'";
+			$sql .= " OR name_alias LIKE '%".$db->escape($socid)."%'";
 			$sql .= " OR code_client LIKE '%".$db->escape($socid)."%'";
 			$sql .= " OR code_fournisseur LIKE '%".$db->escape($socid)."%'";
 		}
@@ -114,12 +116,12 @@ if (GETPOST('newcompany') || GETPOST('socid', 'int') || GETPOST('id_fourn', 'int
 	$resql = $db->query($sql);
 	if ($resql) {
 		while ($row = $db->fetch_array($resql)) {
-			$label = $row['nom'];
+			$label = $row['nom'].' ('.$row['name_alias'].')';
 			if ($socid) {
 				$label = preg_replace('/('.preg_quote($socid, '/').')/i', '<strong>$1</strong>', $label, 1);
 			}
 			$row_array['label'] = $label;
-			$row_array['value'] = $row['nom'];
+			$row_array['value'] = $row['nom'].' ('. $row['name_alias'].')';
 			$row_array['key'] = $row['rowid'];
 
 			array_push($return_arr, $row_array);

@@ -625,12 +625,14 @@ class FormCompany extends Form
 
 			$socid = 0;
 			$name = '';
+			$name_alias = '';
 			if ($selected > 0) {
 				$tmpthirdparty = new Societe($this->db);
 				$result = $tmpthirdparty->fetch($selected);
 				if ($result > 0) {
 					$socid = $selected;
 					$name = $tmpthirdparty->name;
+					$name_alias = $tmpthirdparty->name_alias;
 				}
 			}
 
@@ -695,12 +697,12 @@ class FormCompany extends Form
 			}
 
 			print "\n".'<!-- Input text for third party with Ajax.Autocompleter (selectCompaniesForNewContact) -->'."\n";
-			print '<input type="text" size="30" id="search_'.$htmlname.'" name="search_'.$htmlname.'" value="'.$name.'" />';
+			print '<input type="text" size="50" id="search_'.$htmlname.'" name="search_'.$htmlname.'" value="'.$name.' ('.$name_alias.')" />';
 			print ajax_autocompleter(($socid ? $socid : -1), $htmlname, DOL_URL_ROOT.'/societe/ajax/ajaxcompanies.php', '', $minLength, 0);
 			return $socid;
 		} else {
 			// Search to list thirdparties
-			$sql = "SELECT s.rowid, s.nom as name FROM";
+			$sql = "SELECT s.rowid, s.nom as name, s.name_alias FROM";
 			$sql .= " ".MAIN_DB_PREFIX."societe as s";
 			$sql .= " WHERE s.entity IN (".getEntity('societe').")";
 			// For ajax search we limit here. For combo list, we limit later
@@ -740,14 +742,14 @@ class FormCompany extends Form
 							if ($disabled) {
 								print ' disabled';
 							}
-							print ' selected>'.dol_trunc($obj->name, 24).'</option>';
+							print ' selected>'.dol_trunc($obj->name, 24).' ('.$obj->name_alias.')</option>';
 							$firstCompany = $obj->rowid;
 						} else {
 							print '<option value="'.$obj->rowid.'"';
 							if ($disabled) {
 								print ' disabled';
 							}
-							print '>'.dol_trunc($obj->name, 24).'</option>';
+							print '>'.dol_trunc($obj->name, 24).' ('.$obj->name_alias.')</option>';
 						}
 						$i++;
 					}
