@@ -633,6 +633,12 @@ class FormCompany extends Form
 					$socid = $selected;
 					$name = $tmpthirdparty->name;
 					$name_alias = $tmpthirdparty->name_alias;
+
+					if (!empty($name_alias)) {
+						$nameAlias = ' ('.$name_alias.')';
+					} else {
+						$nameAlias = '';
+					}
 				}
 			}
 
@@ -697,7 +703,7 @@ class FormCompany extends Form
 			}
 
 			print "\n".'<!-- Input text for third party with Ajax.Autocompleter (selectCompaniesForNewContact) -->'."\n";
-			print '<input type="text" size="50" id="search_'.$htmlname.'" name="search_'.$htmlname.'" value="'.$name.' ('.$name_alias.')" />';
+			print '<input type="text" size="50" id="search_'.$htmlname.'" name="search_'.$htmlname.'" value="'.$name.$nameAlias.'" />';
 			print ajax_autocompleter(($socid ? $socid : -1), $htmlname, DOL_URL_ROOT.'/societe/ajax/ajaxcompanies.php', '', $minLength, 0);
 			return $socid;
 		} else {
@@ -737,19 +743,24 @@ class FormCompany extends Form
 						if (is_array($limitto) && count($limitto) && !in_array($obj->rowid, $limitto)) {
 							$disabled = 1;
 						}
+						if (!empty($obj->name_alias)) {
+							$nameAlias = ' ('.$obj->name_alias.')';
+						} else {
+							$nameAlias = '';
+						}
 						if ($selected > 0 && $selected == $obj->rowid) {
 							print '<option value="'.$obj->rowid.'"';
 							if ($disabled) {
 								print ' disabled';
 							}
-							print ' selected>'.dol_trunc($obj->name, 24).' ('.$obj->name_alias.')</option>';
+							print ' selected>'.dol_trunc($obj->name, 24).$nameAlias.'</option>';
 							$firstCompany = $obj->rowid;
 						} else {
 							print '<option value="'.$obj->rowid.'"';
 							if ($disabled) {
 								print ' disabled';
 							}
-							print '>'.dol_trunc($obj->name, 24).' ('.$obj->name_alias.')</option>';
+							print '>'.dol_trunc($obj->name, 24).$nameAlias.'</option>';
 						}
 						$i++;
 					}
