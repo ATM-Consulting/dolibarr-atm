@@ -116,16 +116,16 @@ if (GETPOST('newcompany') || GETPOST('socid', 'int') || GETPOST('id_fourn', 'int
 	$resql = $db->query($sql);
 	if ($resql) {
 		while ($row = $db->fetch_array($resql)) {
-			$label = $row['nom'].' ('.$row['name_alias'].')';
-			if ($socid) {
-				$label = preg_replace('/('.preg_quote($socid, '/').')/i', '<strong>$1</strong>', $label, 1);
-			}
-			$row_array['label'] = $label;
 			if (!empty($row['name_alias'])) {
 				$nameAlias = ' ('.$row['name_alias'].')';
 			} else {
 				$nameAlias = '';
 			}
+			$label = $row['nom'].$nameAlias;
+			if ($socid) {
+				$label = preg_replace('/('.preg_quote($socid, '/').')/i', '<strong>$1</strong>', $label, 1);
+			}
+			$row_array['label'] = $label;
 			$row_array['value'] = $row['nom'].$nameAlias;
 			$row_array['key'] = $row['rowid'];
 
