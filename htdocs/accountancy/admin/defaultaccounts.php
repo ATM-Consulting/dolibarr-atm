@@ -93,6 +93,9 @@ if ($conf->loan->enabled) {
 	$list_account[] = 'LOAN_ACCOUNTING_ACCOUNT_INTEREST';
 	$list_account[] = 'LOAN_ACCOUNTING_ACCOUNT_INSURANCE';
 }
+if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY)) {
+	$list_account[] = 'ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY';
+}
 if ($conf->societe->enabled) {
 	$list_account[] = 'ACCOUNTING_ACCOUNT_CUSTOMER_DEPOSIT';
 }
