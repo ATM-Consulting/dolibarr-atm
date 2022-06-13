@@ -59,6 +59,14 @@ if ($this->element == 'supplier_proposal' || $this->element == 'order_supplier' 
 	print '<td class="linerefsupplier maxwidth125"><span id="title_fourn_ref">'.$langs->trans("SupplierRef").'</span></td>';
 }
 
+// Eurochef - Prix de vente et meilleur prix achat
+if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pv) {
+	print '<td class="linerefsupplier maxwidth125"><span id="selling_price">'.$langs->trans("SellingPrice").'</span></td>';
+}
+if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pa) {
+	print '<td class="linerefsupplier maxwidth125"><span id="purchase_price">'.$langs->trans("BuyingPriceMinShort").'</span></td>';
+}
+
 // VAT
 print '<td class="linecolvat right" style="width: 80px">';
 if (!empty($conf->global->FACTURE_LOCAL_TAX1_OPTION) || !empty($conf->global->FACTURE_LOCAL_TAX2_OPTION)) {
