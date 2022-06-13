@@ -21,7 +21,7 @@
 create table llx_c_tva
 (
   rowid             integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  entity            integer DEFAULT 1 NOT NULL
+  entity            integer DEFAULT 1 NOT NULL,
   fk_pays           integer NOT NULL,
   code              varchar(10) DEFAULT '',                         -- a key to describe vat entry, for example FR20
   taux              double  NOT NULL,
