@@ -5989,6 +5989,32 @@ class Product extends CommonObject
 			dol_print_error($this->db);
 		}
 	}
+
+	/**
+	 *  Load information for tab info
+	 *
+	 * @param  int $id Id of thirdparty to load
+	 * @return void
+	 */
+	public function fetchProductFournisseurPrice($product_id)
+	{
+		$sql = "SELECT MIN(unitprice) AS product_supplier_price_min, MAX(unitprice) AS product_supplier_price_max";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "product_fournisseur_price";
+		$sql .= " WHERE fk_product = " . ((int) $product_id);
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$result = $this->db->query($sql);
+		if ($result) {
+			if ($obj = $this->db->fetch_object($result)) {
+				$this->product_supplier_price_min = $obj->product_supplier_price_min;
+				$this->product_supplier_price_max = $obj->product_supplier_price_max;
+			}
+			$this->db->free($result);
+		} else {
+			dol_print_error($this->db);
+		}
+	}
 }
 
 

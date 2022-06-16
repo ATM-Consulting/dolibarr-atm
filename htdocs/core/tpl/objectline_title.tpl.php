@@ -59,12 +59,13 @@ if ($this->element == 'supplier_proposal' || $this->element == 'order_supplier' 
 	print '<td class="linerefsupplier maxwidth125"><span id="title_fourn_ref">'.$langs->trans("SupplierRef").'</span></td>';
 }
 
-// Eurochef - Prix de vente et meilleur prix achat
-if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pv) {
-	print '<td class="linerefsupplier maxwidth125"><span id="selling_price">'.$langs->trans("SellingPrice").'</span></td>';
+// Eurochef - Catalogue - Prix de vente et prix achat
+$langs->loadLangs(array('eurochefprojet@eurochefprojet'));
+if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pv && $object->status == $object::STATUS_VALIDATED) {
+	print '<td class="linerefsupplier maxwidth125"><span id="selling_price">'.$langs->trans("EurochefProjetSellingPriceCatalogue").'</span></td>';
 }
-if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pa) {
-	print '<td class="linerefsupplier maxwidth125"><span id="purchase_price">'.$langs->trans("BuyingPriceMinShort").'</span></td>';
+if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pa && $object->status == $object::STATUS_VALIDATED) {
+	print '<td class="linerefsupplier maxwidth125"><span id="purchase_price">'.$langs->trans("EurochefProjetPurchasePriceCatalogue").'</span></td>';
 }
 
 // VAT

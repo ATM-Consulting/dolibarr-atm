@@ -660,6 +660,7 @@ ALTER TABLE llx_product_association ADD COLUMN import_key varchar(14);
 ALTER TABLE llx_propaldet ADD COLUMN import_key varchar(14);
 
 -- Spécifique Eurochef E-connect
+ALTER TABLE llx_product ADD COLUMN not_managed_in_stock INTEGER NULL;
 ALTER TABLE llx_c_units ADD COLUMN sortorder smallint AFTER code;
 ALTER TABLE llx_c_tva ADD COLUMN entity integer DEFAULT 1 NOT NULL AFTER rowid;
 ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (entity, fk_pays, code, taux, recuperableonly);
