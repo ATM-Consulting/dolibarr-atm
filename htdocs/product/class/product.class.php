@@ -6000,7 +6000,7 @@ class Product extends CommonObject
 	{
 		$sql = "SELECT price AS product_customer_price";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "product";
-		$sql .= " WHERE fk_product = " . ((int) $product_id);
+		$sql .= " WHERE rowid = " . ((int) $product_id);
 
 		dol_syslog(__METHOD__, LOG_DEBUG);
 
