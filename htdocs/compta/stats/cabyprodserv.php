@@ -295,9 +295,13 @@ if ($modecompta == 'CREANCES-DETTES') {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON l.fk_product = p.rowid";
 	if ($selected_cat === -2) {	// Without any category
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product";
-	}
+	}elseif ($selected_cat) { 	// Into a specific category
+		//$sql .= ", ".MAIN_DB_PREFIX."categorie as c, ".MAIN_DB_PREFIX."categorie_product as cp";
+		// VOIR TICKET 20444
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON (cp.fk_product = p.rowid) INNER JOIN ".MAIN_DB_PREFIX."categorie as c ON (cp.fk_categorie = c.rowid)";
 
-	$parameters = array();
+
+		$parameters = array();
 	$hookmanager->executeHooks('printFieldListFrom', $parameters);
 	$sql .= $hookmanager->resPrint;
 
@@ -329,15 +333,16 @@ if ($modecompta == 'CREANCES-DETTES') {
 				$listofcatsql .= $cat['rowid'];
 			}
 		}
+		//VOIR TICKET 20444
+		$sql .= " AND ";
 
-		$sql .= " AND (p.rowid IN ";
-		$sql .= " (SELECT fk_product FROM ".MAIN_DB_PREFIX."categorie_product cp WHERE ";
+
 		if ($subcat) {
 			$sql .= "cp.fk_categorie IN (".$db->sanitize($listofcatsql).")";
 		} else {
 			$sql .= "cp.fk_categorie = ".((int) $selected_cat);
 		}
-		$sql .= "))";
+
 	}
 	if ($selected_soc > 0) {
 		$sql .= " AND soc.rowid=".((int) $selected_soc);

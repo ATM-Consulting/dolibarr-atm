@@ -90,7 +90,7 @@ $canedit = 1;
 if (empty($user->rights->agenda->myactions->read)) {
 	accessforbidden();
 }
-if (empty($user->rights->agenda->allactions->read)) {
+if (empty($user->rights->agenda->myactions->read)) {
 	$canedit = 0;
 }
 if (empty($user->rights->agenda->allactions->read) || $filter == 'mine') {  // If no permission to see all, we show only affected to me
