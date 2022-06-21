@@ -5996,6 +5996,31 @@ class Product extends CommonObject
 	 * @param  int $id Id of thirdparty to load
 	 * @return void
 	 */
+	public function fetchProductClientPrice($product_id)
+	{
+		$sql = "SELECT price AS product_customer_price";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "product";
+		$sql .= " WHERE fk_product = " . ((int) $product_id);
+
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$result = $this->db->query($sql);
+		if ($result) {
+			if ($obj = $this->db->fetch_object($result)) {
+				$this->product_customer_price = $obj->product_customer_price;
+			}
+			$this->db->free($result);
+		} else {
+			dol_print_error($this->db);
+		}
+	}
+
+	/**
+	 *  Load information for tab info
+	 *
+	 * @param  int $id Id of thirdparty to load
+	 * @return void
+	 */
 	public function fetchProductFournisseurPrice($product_id)
 	{
 		$sql = "SELECT MIN(unitprice) AS product_supplier_price_min, MAX(unitprice) AS product_supplier_price_max";

@@ -236,14 +236,16 @@ if ($object->element == 'invoice_supplier' && $conf->global->MAIN_MODULE_INFRASP
 
 // Eurochef - Prix de vente et meilleur prix achat
 if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pv && $object->status == $object::STATUS_VALIDATED) {
-	print '<td class="linerefsupplier maxwidth125"><span id="selling_price">'.price($line->subprice).'</span></td>';
+	$productstatic = new Product($this->db);
+	$productstatic->fetchProductClientPrice($line->fk_product);
+	print '<td class="linerefsupplier maxwidth125"><span id="selling_price">'.price($productstatic->product_customer_price).'</span></td>';
 }
 if (in_array($object->element, array('propal', 'commande', 'facture')) && !empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pa && $object->status == $object::STATUS_VALIDATED) {
-	$productstatic = new Product($this->db);
-	$productstatic->fetchProductFournisseurPrice($line->fk_product);
+	$productstatic2 = new Product($this->db);
+	$productstatic2->fetchProductFournisseurPrice($line->fk_product);
 	print '<td class="linerefsupplier maxwidth125">';
-	print '<span id="purchase_price">'.$langs->trans("EurochefProjetPurchaseMinimumShort").' '.price($productstatic->product_supplier_price_min);
-	print '<br>'.$langs->trans("EurochefProjetPurchaseMaximumShort").' '.price($productstatic->product_supplier_price_max).'</span>';
+	print '<span id="purchase_price">'.$langs->trans("EurochefProjetPurchaseMinimumShort").' '.price($productstatic2->product_supplier_price_min);
+	print '<br>'.$langs->trans("EurochefProjetPurchaseMaximumShort").' '.price($productstatic2->product_supplier_price_max).'</span>';
 	print '</td>';
 }
 
