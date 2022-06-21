@@ -92,7 +92,7 @@ if ($action == 'add_prod' && ($user->rights->produit->creer || $user->rights->se
 	for ($i = 0; $i < $maxprod; $i++) {
 		$qty = price2num(GETPOST("prod_qty_".$i, 'alpha'), 'MS');
 		if ($qty > 0) {
-			if ($object->add_sousproduit($id, GETPOST("prod_id_".$i, 'int'), $qty, GETPOST("prod_incdec_".$i, 'int'), $_POST["prod_optional_".$i]) > 0)
+			if ($object->add_sousproduit($id, GETPOST("prod_id_".$i, 'int'), $qty, GETPOST("prod_incdec_".$i, 'int'), $_POST["prod_optional_".$i]) > 0){
 				//var_dump($i.' '.GETPOST("prod_id_".$i, 'int'), $qty, GETPOST("prod_incdec_".$i, 'int'));
 				$action = 'edit';
 			} else {
@@ -710,7 +710,6 @@ if ($id > 0 || !empty($ref)) {
 							//print '<input type="checkbox" disabled name="prod_optional_'.$i.'" value="1">';
 						}
 						print '</td>';
-
 						print '</tr>';
 					}
 					$i++;
