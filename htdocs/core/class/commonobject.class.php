@@ -507,6 +507,8 @@ abstract class CommonObject
 	 */
 	public $alreadypaid;
 
+public $linkedObjectsFullLoaded = false;
+
 	/**
 	 * @var array	List of child tables. To test if we can delete object.
 	 */
@@ -3743,6 +3745,8 @@ abstract class CommonObject
 		$withtargettype = false;
 		$withsourcetype = false;
 
+if ($this->linkedObjectsFullLoaded) return 1;
+
 		$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
 		// Hook for explicitly set the targettype if it must be differtent than $this->element
 		$reshook = $hookmanager->executeHooks('setLinkedObjectSourceTargetType', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
@@ -3796,6 +3800,9 @@ abstract class CommonObject
 		} else {
 			$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
 			$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
+			if ($sourceid == $this->id && $sourcetype == $this->element && $targetid == $this->id && $targettype == $this->element && $clause == 'OR') {
+				$this->linkedObjectsFullLoaded = true;
+			}
 		}
 		$sql .= ' ORDER BY '.$orderby;
 
