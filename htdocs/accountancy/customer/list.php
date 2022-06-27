@@ -225,7 +225,7 @@ if (empty($chartaccountcode)) {
 }
 
 // Customer Invoice lines
-$sql = "SELECT f.rowid as facid, f.ref, f.datef, f.type as ftype,";
+$sql = "SELECT f.rowid as facid, f.ref, f.datef, f.type as ftype, f.fk_facture_source,";
 $sql .= " l.rowid, l.fk_product, l.description, l.total_ht, l.fk_code_ventilation, l.product_type as type_l, l.tva_tx as tva_tx_line, l.vat_src_code,";
 $sql .= " p.rowid as product_id, p.ref as product_ref, p.label as product_label, p.fk_product_type as type, p.tva_tx as tva_tx_prod,";
 if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
@@ -645,6 +645,21 @@ if ($result) {
 				$objp->code_sell_p = '';
 				$objp->code_sell_t = '';
 				$objp->aarowid_suggest = $accountdeposittoventilated->rowid;
+			}
+
+			// For credit note invoice, if origin invoice is a deposit invoice, force also on specific customer deposit account
+			if (!empty($objp->fk_facture_source)) {
+				$invoiceSource = new Facture($db);
+				$invoiceSource->fetch($objp->fk_facture_source);
+
+				if ($objp->ftype == $facture_static::TYPE_CREDIT_NOTE && $invoiceSource->type == $facture_static::TYPE_DEPOSIT) {
+					$accountdeposittoventilated = new AccountingAccount($db);
+					$accountdeposittoventilated->fetch('', $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_DEPOSIT, 1);
+					$objp->code_sell_l = $accountdeposittoventilated->ref;
+					$objp->code_sell_p = '';
+					$objp->code_sell_t = '';
+					$objp->aarowid_suggest = $accountdeposittoventilated->rowid;
+				}
 			}
 		}
 
