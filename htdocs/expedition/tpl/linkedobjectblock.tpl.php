@@ -48,7 +48,8 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 		<td><?php echo $langs->trans("Shipment"); ?></td>
 		<td><?php echo $objectlink->getNomUrl(1); ?></td>
 		<td></td>
-		<td class="center"><?php echo dol_print_date($objectlink->date_delivery, 'day'); ?></td>
+		<!-- Eurochef - spécifique - date_creation remplace date_delivery -->
+		<td class="center"><?php echo dol_print_date($objectlink->date_creation, 'day'); ?></td>
 		<td class="right"><?php
 		if ($user->rights->expedition->lire) {
 			$total = $total + $objectlink->total_ht;
