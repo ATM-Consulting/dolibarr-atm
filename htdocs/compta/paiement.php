@@ -842,6 +842,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 			dol_print_error($db);
 		}
 
+		$formconfirm = '';
 
 		// Save button
 		if ($action != 'add_paiement') {
@@ -886,6 +887,17 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 			$formconfirm .= '<div id="please_wait" style="display: none;">'. info_admin('<span class="fa fa-spinner fa-spin"></span> ' . $langs->trans('PleaseBePatient'), 0, 0, 'warning') . '</div>';
 		}
 
+		// Call Hook formConfirm
+		$parameters = array('formConfirm' => $formconfirm);
+		$reshook = $hookmanager->executeHooks('formConfirm', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+		if (empty($reshook)) {
+			$formconfirm .= $hookmanager->resPrint;
+		} elseif ($reshook > 0) {
+			$formconfirm = $hookmanager->resPrint;
+		}
+
+		// Print form confirm
+		print $formconfirm;
 		print "</form>\n";
 	}
 }
