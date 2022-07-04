@@ -57,7 +57,8 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 		</td>
 		<td class="linkedcol-name nowraponall" ><?php echo $objectlink->getNomUrl(1); ?></td>
 		<td class="linkedcol-ref tdoverflowmax100" title="<?php echo dol_escape_htmltag($objectlink->ref_supplier); ?>"><?php echo dol_escape_htmltag($objectlink->ref_supplier); ?>
-		<td class="linkedcol-date center"><?php echo dol_print_date($objectlink->date_delivery, 'day'); ?></td>
+		<!-- Eurochef - spécifique - date_creation remplace date_delivery -->
+		<td class="linkedcol-date center"><?php echo dol_print_date($objectlink->date_creation, 'day'); ?></td>
 		<td class="linkedcol-amount right"><?php
 		if ($user->rights->reception->lire) {
 			$total = $total + $objectlink->total_ht;
