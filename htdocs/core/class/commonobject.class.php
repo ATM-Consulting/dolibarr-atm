@@ -5361,15 +5361,20 @@ abstract class CommonObject
 					// Success in building document. We build meta file.
 					dol_meta_create($this);
 
-					if ($conf->global->PDF_COMPRESSION) {
+					if ($conf->global->PDF_COMPRESSION && file_exists('/usr/bin/gs')) {
 						ini_set('max_execution_time', 0);
+
 						$cmd = '/usr/bin/gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile="%s" "%s"';
 						$cmd = sprintf($cmd, $obj->result['fullpath'].'.compressed', $obj->result['fullpath']);
 
-						exec($cmd);
+						$output = [];
+						$status = -1;
+						exec($cmd; $output, $status);
 
-						unlink($obj->result['fullpath']);
-						rename($obj->result['fullpath'].'.compressed', $obj->result['fullpath']);
+						if ($status === 0) {
+							unlink($obj->result['fullpath']);
+							rename($obj->result['fullpath'].'.compressed', $obj->result['fullpath']);
+						}
 					}
 
 					return 1;
