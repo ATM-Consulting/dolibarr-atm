@@ -365,9 +365,9 @@ class ImportXlsx extends ModeleImports
 		$this->warnings = array();
 
 		//dol_syslog("import_csv.modules maxfields=".$maxfields." importid=".$importid);
-		/** ************************** SPECIFIQUE EUROCHEF  */
-		if ($objimport->array_import_code[0] == 'produit_1'){
-			$keyEntity = -1;
+        /** ************************** SPECIFIQUE EUROCHEF  */
+        $keyEntity = -1;
+        if ($objimport->array_import_code[0] == 'produit_1'){
 			foreach ($array_match_file_to_database as $key => $value){
 				if ($value == "p.entity"){
 					$keyEntity =  $key-1;
