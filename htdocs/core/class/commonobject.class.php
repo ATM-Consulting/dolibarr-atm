@@ -5369,7 +5369,7 @@ abstract class CommonObject
 
 						$output = [];
 						$status = -1;
-						exec($cmd; $output, $status);
+						exec($cmd, $output, $status);
 
 						if ($status === 0) {
 							unlink($obj->result['fullpath']);
