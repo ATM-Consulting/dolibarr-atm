@@ -5362,6 +5362,7 @@ abstract class CommonObject
 					dol_meta_create($this);
 
 					if ($conf->global->PDF_COMPRESSION) {
+						ini_set('max_execution_time', 0);
 						$cmd = '/usr/bin/gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile="%s" "%s"';
 						$cmd = sprintf($cmd, $obj->result['fullpath'].'.compressed', $obj->result['fullpath']);
 
