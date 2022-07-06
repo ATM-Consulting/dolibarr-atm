@@ -1614,6 +1614,7 @@ class AccountancyExport
 	 */
 	public function exportCharlemagne($objectLines)
 	{
+		global $db;
 		global $langs;
 		$langs->load('compta');
 
@@ -1642,6 +1643,25 @@ class AccountancyExport
 		print $end_line;
 
 		foreach ($objectLines as $line) {
+			$analytique1 = '';
+			$analytique1Label = '';
+			/* ——————————— SPÉ ISETA ——————————— */
+			// pour l'analytique, on est obligé de fetcher la facture ce qui est très dommage
+			$analytique1Label = 'Code Analytique';
+			if ($line->doc_type === 'customer_invoice') {
+				if (empty($line->fk_docdet) && !empty($line->fk_doc)) {
+					$sqlAnalytique1 = 'SELECT lef.cd_analytique AS analytique1 FROM ' . MAIN_DB_PREFIX . 'facturedet_extrafields lef'
+					. ' INNER JOIN ' . MAIN_DB_PREFIX . 'facturedet l ON lef.fk_object = l.rowid'
+					. ' WHERE l.fk_facture = ' . intval($line->fk_doc);
+				} elseif (!empty($line->fk_docdet)) {
+					$sqlAnalytique1 = 'SELECT lef.cd_analytique AS analytique1 FROM ' . MAIN_DB_PREFIX . 'facturedet_extrafields lef'
+						. ' WHERE lef.fk_object = ' . intval($line->fk_docdet);
+				}
+				$res = $db->getRow($sqlAnalytique1);
+				if ($res) $analytique1 = $res->analytique1;
+			}
+			/* ——————————— FIN SPÉ ISETA ——————————— */
+
 			$date = dol_print_date($line->doc_date, '%Y%m%d');
 			print $date.$separator; //Date
 
@@ -1658,13 +1678,15 @@ class AccountancyExport
 			print self::trunc($line->doc_ref, 20).$separator; //Piece
 			print self::trunc($line->label_operation, 60).$separator; //Operation label
 			print price(abs($line->debit - $line->credit)).$separator; //Amount
-			print $line->sens.$separator; //Direction
-			print $separator; //Analytic
-			print $separator; //Analytic
-			print $separator; //Analytic
-			print $separator; //Analytic
-			print $separator; //Analytic
-			print $separator; //Analytic
+			print $line->sens.$separator;         //Direction
+			print $analytique1 . $separator;      //Analytique 1
+			print $analytique1Label . $separator; //Libellé Analytique 1
+			print $separator;                     //Analytique 2
+			print $separator;                     //Libellé Analytique 2
+			print $separator;                     //Analytique 3
+			print $separator;                     //Libellé Analytique 3
+			print $separator;                     //Date
+			print $separator;                     //Date
 			print $end_line;
 		}
 	}
