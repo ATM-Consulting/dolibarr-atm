@@ -2629,12 +2629,12 @@ if ($action != 'create' && $action != 'edit' && $action != 'editline') {
 		/** ******************* SPE ARCOOP ****************** */
 		/** ************************************************* */
 
-		if (( /** SPE ARCOOP */ !$userIsEntrepreneur && /** FIN SPE ARCOOP */ in_array($object->fk_user_author, $user->getAllChildIds(1))) || !empty($user->rights->expensereport->writeall_advance)) {
+		if (( /** SPE ARCOOP */ !$userIsEntrepreneur && /** FIN SPE ARCOOP */ in_array($object->fk_user_author, $user->getAllChildIds(1))) || !empty($user->rights->expensereport->writeall_advance) || ($user->id == $object->fk_user_author && $object->status == ExpenseReport::STATUS_DRAFT)) {
 			// Modify
 			print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&id='.$object->id.'">'.$langs->trans('Modify').'</a></div>';
 
 			// Validate
-			if (count($object->lines) > 0) {
+			if (count($object->lines) > 0 && !$userIsEntrepreneur) {
 				print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=save&id='.$object->id.'">'.$langs->trans('ValidateAndSubmit').'</a></div>';
 			}
 		}

@@ -42,6 +42,10 @@ dolibarr/htdocs/expensereport/class/expensereport.class.php
     l 1259 - 1268 - 1269 - 1276 =>  Fix la validation d'une NDF créée depuis une entité
                                     avec l'entité maître.
 
+dolibarr/htdocs/expensereport/card.php
+    l 2632 - 2637 =>    Fix la modification d'une NDF par une entity si la NDF est au status
+                        brouillon
+                        
 dolibarr/htdocs/compta/class/facture.class.php
-l 2873 - 2885 - 2886 =>  Fix la validation d'une facture créée depuis une entité
-avec l'entité maître.
+    l 2873 - 2885 - 2886 =>   Fix la validation d'une facture créée depuis une entité
+                              avec l'entité maître.
