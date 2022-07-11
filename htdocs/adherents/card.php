@@ -302,7 +302,7 @@ if (empty($reshook)) {
 			$object->public      = GETPOST("public", 'alpha');
 
 			// Fill array 'array_options' with data from add form
-			$ret = $extrafields->setOptionalsFromPost(null, $object);
+			$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 			if ($ret < 0) {
 			    $error++;
 			}
@@ -789,8 +789,8 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			$object->country = $tmparray['label'];
 		}
 
+		$soc = new Societe($db);
 		if (!empty($socid)) {
-			$soc = new Societe($db);
 			if ($socid > 0) $soc->fetch($socid);
 
 			if (!($soc->id > 0)) {

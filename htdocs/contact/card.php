@@ -403,7 +403,7 @@ if (empty($reshook))
 			$object->roles = GETPOST("roles", 'array');		// Note GETPOSTISSET("role") is null when combo is empty
 
 			// Fill array 'array_options' with data from add form
-			$ret = $extrafields->setOptionalsFromPost(null, $object);
+			$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 			if ($ret < 0) $error++;
 
 			if (!$error)
@@ -477,6 +477,29 @@ if (empty($reshook))
 		$object->stcomm_id = dol_getIdFromCode($db, GETPOST('stcomm', 'alpha'), 'c_stcommcontact');
 		$result = $object->update($object->id, $user);
 		if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+	}
+
+	// Update extrafields
+	if ($action == 'update_extras' && ! empty($user->rights->societe->contact->creer)) {
+		$object->oldcopy = dol_clone($object);
+
+		// Fill array 'array_options' with data from update form
+		$ret = $extrafields->setOptionalsFromPost(null, $object, GETPOST('attribute', 'restricthtml'));
+		if ($ret < 0) {
+			$error++;
+		}
+
+		if (!$error) {
+			$result = $object->insertExtraFields('CONTACT_MODIFY');
+			if ($result < 0) {
+				setEventMessages($object->error, $object->errors, 'errors');
+				$error++;
+			}
+		}
+
+		if ($error) {
+			$action = 'edit_extras';
+		}
 	}
 
 	// Actions to send emails
