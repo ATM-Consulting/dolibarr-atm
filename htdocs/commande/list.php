@@ -337,15 +337,15 @@ if ($action == 'shipped' && $permissiontoadd) {
 		$error = 0;
 		foreach ($toselect as $checked) {
 			if ($objecttmp->fetch($checked)) {
-				if ($objecttmp->statut == 1) {
+				if ($objecttmp->statut == 1 || $objecttmp->statut == 2) {
 					if ($objecttmp->cloture($user)) {
-						setEventMessage($objecttmp->ref." ".$langs->trans('PassedInOpenStatus'), 'mesgs');
+						setEventMessage($objecttmp->ref." ".$langs->trans('PassedInShippedStatus'), 'mesgs');
 					} else {
-						setEventMessage($langs->trans('CantBeValidated'), 'errors');
+						setEventMessage($langs->trans('YouCantShipThis'), 'errors');
 						$error++;
 					}
 				} else {
-					setEventMessage($objecttmp->ref." ".$langs->trans('IsNotADraft'), 'errors');
+					setEventMessage($objecttmp->ref." ".$langs->trans('MustBeValidatedBefore'), 'errors');
 					$error++;
 				}
 			} else {
@@ -627,6 +627,11 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters); // Note that $action and $object may have been modified by hook
 $sql .= $hookmanager->resPrint;
+
+// Add HAVING from hooks
+$parameters = array();
+$reshook = $hookmanager->executeHooks('printFieldListHaving', $parameters, $object); // Note that $action and $object may have been modified by hook
+$sql .= !empty($hookmanager->resPrint) ? (' HAVING 1=1 ' . $hookmanager->resPrint) : '';
 
 $sql .= $db->order($sortfield, $sortorder);
 

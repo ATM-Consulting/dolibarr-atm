@@ -107,7 +107,7 @@ if ($action == 'update' && !GETPOST("cancel") && $user->rights->projet->creer) {
 		$object->progress = price2num(GETPOST('progress', 'alphanohtml'));
 
 		// Fill array 'array_options' with data from add form
-		$ret = $extrafields->setOptionalsFromPost(null, $object);
+		$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 		if ($ret < 0) {
 			$error++;
 		}
@@ -116,7 +116,10 @@ if ($action == 'update' && !GETPOST("cancel") && $user->rights->projet->creer) {
 			$result = $object->update($user);
 			if ($result < 0) {
 				setEventMessages($object->error, $object->errors, 'errors');
+				$action='edit';
 			}
+		} else {
+			$action = 'edit';
 		}
 	} else {
 		$action = 'edit';

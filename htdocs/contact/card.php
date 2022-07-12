@@ -420,7 +420,7 @@ if (empty($reshook)) {
 			$object->roles = GETPOST("roles", 'array'); // Note GETPOSTISSET("role") is null when combo is empty
 
 			// Fill array 'array_options' with data from add form
-			$ret = $extrafields->setOptionalsFromPost(null, $object);
+			$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 			if ($ret < 0) {
 				$error++;
 			}
@@ -499,6 +499,29 @@ if (empty($reshook)) {
 			$action = 'view';
 		} else {
 			setEventMessages($object->error, $object->errors, 'errors');
+			$action = 'edit_extras';
+		}
+	}
+
+	// Update extrafields
+	if ($action == 'update_extras' && ! empty($user->rights->societe->contact->creer)) {
+		$object->oldcopy = dol_clone($object);
+
+		// Fill array 'array_options' with data from update form
+		$ret = $extrafields->setOptionalsFromPost(null, $object, GETPOST('attribute', 'restricthtml'));
+		if ($ret < 0) {
+			$error++;
+		}
+
+		if (!$error) {
+			$result = $object->insertExtraFields('CONTACT_MODIFY');
+			if ($result < 0) {
+				setEventMessages($object->error, $object->errors, 'errors');
+				$error++;
+			}
+		}
+
+		if ($error) {
 			$action = 'edit_extras';
 		}
 	}
@@ -850,7 +873,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
 			// Other attributes
-			$parameters = array('socid' => $socid, 'objsoc' => $objsoc, 'colspan' => ' colspan="3"', 'cols' => 3);
+			$parameters = array('socid' => $socid, 'objsoc' => $objsoc, 'colspan' => ' colspan="3"', 'cols' => 3, 'colspanvalue' => 3);
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
 
 			print "</table><br>";
@@ -1161,7 +1184,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
 			// Other attributes
-			$parameters = array('colspan' => ' colspan="3"', 'cols'=> '3');
+			$parameters = array('colspan' => ' colspan="3"', 'cols'=> '3', 'colspanvalue'=> '3');
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_edit.tpl.php';
 
 			$object->load_ref_elements();
