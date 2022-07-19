@@ -667,3 +667,4 @@ ALTER TABLE llx_c_tva ADD UNIQUE INDEX uk_c_tva_id (entity, fk_pays, code, taux,
 ALTER TABLE llx_reception MODIFY COLUMN ref_supplier varchar(128);
 ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_customer varchar(24) AFTER entity;
 ALTER TABLE llx_societe_perentity ADD COLUMN accountancy_code_supplier varchar(24) AFTER accountancy_code_customer;
+ALTER TABLE llx_c_departements ADD COLUMN fk_tva integer DEFAULT NULL AFTER nom;
