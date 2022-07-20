@@ -1443,6 +1443,56 @@ foreach ($listofreferent as $key => $value) {
 				print '</tr>';
 
 				if ($qualifiedfortotal) {
+					// Eurochef - on retire du total HT et total TTC de chaque bloc les montants avec un statut particulier
+					if ($key == 'propal') {
+						if ($element->status != Propal::STATUS_SIGNED && $element->status != Propal::STATUS_BILLED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'order') {
+						if ($element->status != Commande::STATUS_VALIDATED && $element->status != Commande::STATUS_SHIPMENTONPROCESS && $element->status != Commande::STATUS_CLOSED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'invoice') {
+						if ($element->status != Facture::STATUS_VALIDATED && $element->status != Facture::STATUS_CLOSED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'proposal_supplier') {
+						if ($element->status != SupplierProposal::STATUS_SIGNED && $element->status != SupplierProposal::STATUS_CLOSE) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'order_supplier') {
+						if ($element->status != CommandeFournisseur::STATUS_RECEIVED_COMPLETELY) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'invoice_supplier') {
+						if ($element->status != FactureFournisseur::STATUS_VALIDATED && $element->status != FactureFournisseur::STATUS_CLOSED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'contract') {
+						if ($element->status != Contrat::STATUS_VALIDATED && $element->status != Contrat::STATUS_CLOSED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+					if ($key == 'shipping') {
+						if ($element->status != Expedition::STATUS_VALIDATED && $element->status != Expedition::STATUS_CLOSED) {
+							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
+						}
+					}
+
 					$total_ht = $total_ht + $total_ht_by_line;
 					$total_ttc = $total_ttc + $total_ttc_by_line;
 
