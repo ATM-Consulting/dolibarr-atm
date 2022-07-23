@@ -1399,7 +1399,7 @@ function show_addresses($conf, $langs, $db, $object, $backtopage = '')
 				print img_edit();
 				print '</a>';
 				if ($user->rights->societe->supprimer) {
-					$backtopage = DOL_URL_ROOT.'/societe/contact.php?socid='.$object->id;
+					//$backtopage = DOL_URL_ROOT.'/societe/contact.php?socid='.$object->id;
 					print '<a class="marginleftonly" href="'.dol_buildpath('infraspackplus', 1).'/comm/address.php?action=delete&token='.newToken().'&id='.$address->id.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
 					print img_delete();
 					print '</a>';
