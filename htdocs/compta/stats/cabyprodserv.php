@@ -299,6 +299,7 @@ if ($modecompta == 'CREANCES-DETTES') {
 		//$sql .= ", ".MAIN_DB_PREFIX."categorie as c, ".MAIN_DB_PREFIX."categorie_product as cp";
 		// VOIR TICKET 20444
 		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON (cp.fk_product = p.rowid) INNER JOIN ".MAIN_DB_PREFIX."categorie as c ON (cp.fk_categorie = c.rowid)";
+	}
 
 
 		$parameters = array();
