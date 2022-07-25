@@ -2004,37 +2004,37 @@ class FactureFournisseurLigneRec extends CommonObjectLine
 
         $sql = 'UPDATE ' . MAIN_DB_PREFIX . 'facture_fourn_det_rec SET';
         $sql .= ' fk_facture_fourn = ' . $this->fk_facture_fourn;
-        $sql .= ', fk_parent_line = ' . $this->fk_parent;
+        $sql .= ', fk_parent_line = ' . ($this->fk_parent ? "'".$this->db->escape($this->fk_parent)."'" : 'null');
         $sql .= ', fk_product = ' . $this->fk_product;
-        $sql .= ', ref = ' . (! empty($this->ref) ? "'" . $this->db->escape($this->ref) . "'" : 'null') . "'";
-        $sql .= ", label ='" . (! empty($this->label) ? "'" . $this->db->escape($this->label) . "'" : 'null') . "'";
-        $sql .= ", description ='" . $this->db->escape($this->description) . "'";
-        $sql .= ', pu_ht =' . price2num($this->pu_ht);
-        $sql .= ', pu_ttc =' . price2num($this->pu_ttc);
-        $sql .= ', qty =' . price2num($this->qty);
-        $sql .= ", remise_percent ='" . price2num($this->remise_percent) . "'";
-        $sql .= ', fk_remise_except =' . $this->fk_remise_except;
-        $sql .= ", vat_src_code ='" . $this->db->escape($this->vat_src_code) . "'";
-        $sql .= ', tva_tx =' . price2num($this->tva_tx);
-        $sql .= ', localtax1_tx =' . price2num($this->localtax1_tx);
-        $sql .= ", localtax1_type ='" . $this->db->escape($this->localtax1_type) . "'";
-        $sql .= ', localtax2_tx =' . price2num($this->localtax2_tx);
-        $sql .= ", localtax2_type ='" . $this->db->escape($this->localtax2_type) . "'";
+        $sql .= ', ref = ' . (! empty($this->ref) ? "'" . $this->db->escape($this->ref) . "'" : 'null');
+        $sql .= ', label = ' . (! empty($this->label) ? "'" . $this->db->escape($this->label) . "'" : 'null');
+        $sql .= ", description = '" . $this->db->escape($this->description) . "'";
+        $sql .= ', pu_ht = ' . price2num($this->pu_ht);
+        $sql .= ', pu_ttc = ' . price2num($this->pu_ttc);
+        $sql .= ', qty = ' . price2num($this->qty);
+        $sql .= ", remise_percent = '" . price2num($this->remise_percent) . "'";
+        $sql .= ', fk_remise_except = ' . ($this->fk_remise_except ? "'".$this->db->escape($this->fk_remise_except)."'" : 'null');
+        $sql .= ", vat_src_code = '" . $this->db->escape($this->vat_src_code) . "'";
+        $sql .= ', tva_tx = ' . price2num($this->tva_tx);
+        $sql .= ', localtax1_tx = ' . price2num($this->localtax1_tx);
+        $sql .= ", localtax1_type = '" . $this->db->escape($this->localtax1_type) . "'";
+        $sql .= ', localtax2_tx = ' . price2num($this->localtax2_tx);
+        $sql .= ", localtax2_type = '" . $this->db->escape($this->localtax2_type) . "'";
         if (empty($this->skip_update_total)) {
-            $sql .= ', total_ht =' . price2num($this->total_ht);
-            $sql .= ', total_tva =' . price2num($this->total_tva);
-            $sql .= ', total_localtax1 =' . price2num($this->total_localtax1);
-            $sql .= ', total_localtax2 =' . price2num($this->total_localtax2);
-            $sql .= ', total_ttc =' . price2num($this->total_ttc);
+            $sql .= ', total_ht = ' . price2num($this->total_ht);
+            $sql .= ', total_tva = ' . price2num($this->total_tva);
+            $sql .= ', total_localtax1 = ' . price2num($this->total_localtax1);
+            $sql .= ', total_localtax2 = ' . price2num($this->total_localtax2);
+            $sql .= ', total_ttc = ' . price2num($this->total_ttc);
         }
-        $sql .= ', product_type =' . $this->product_type;
-        $sql .= ', date_start =' . (int) $this->date_start;
-        $sql .= ', date_end =' . (int) $this->date_end;
-        $sql .= ", info_bits ='" . price2num($this->info_bits) . "'";
-        $sql .= ', special_code =' . (int) $this->special_code;
-        $sql .= ', rang =' . (int) $this->rang;
-        $sql .= ', fk_unit =' .($this->fk_unit ? "'".$this->db->escape($this->fk_unit)."'" : 'null');
-        $sql .= ', fk_user_modif =' . (int) $user;
+        $sql .= ', product_type = ' . $this->product_type;
+        $sql .= ', date_start = ' . (int) $this->date_start;
+        $sql .= ', date_end = ' . (int) $this->date_end;
+        $sql .= ", info_bits = '" . price2num($this->info_bits) . "'";
+        $sql .= ', special_code = ' . (int) $this->special_code;
+        $sql .= ', rang = ' . (int) $this->rang;
+        $sql .= ', fk_unit = ' .($this->fk_unit ? "'".$this->db->escape($this->fk_unit)."'" : 'null');
+        $sql .= ', fk_user_modif = ' . (int) $user;
 
         $sql .= ' WHERE rowid = ' . $this->id;
 
