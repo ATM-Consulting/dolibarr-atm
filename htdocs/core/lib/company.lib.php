@@ -1296,7 +1296,7 @@ function show_contacts($conf, $langs, $db, $object, $backtopage = '')
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_print_fields.tpl.php';
 
 			// Actions
-			print '<td align="right">';
+			print '<td class="right">';
 
 			// Add to agenda
 			if (!empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create) {
@@ -1393,15 +1393,20 @@ function show_addresses($conf, $langs, $db, $object, $backtopage = '')
 			print '		</td>
 						<td>'.$address->email.'</td>
 						<td>'.$address->url.'</td>';
-			if ($user->rights->societe->creer)
-			{
-				print '	<td align = "right">
-							<a href = "'.dol_buildpath('infraspackplus', 1).'/comm/address.php?action=edit&id='.$address->id.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
+			if ($user->rights->societe->creer) {
+				print '<td class = "right">';
+				print '<a href = "'.dol_buildpath('infraspackplus', 1).'/comm/address.php?action=edit&token='.newToken().'&id='.$address->id.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
 				print img_edit();
-				print '		</a>
-						</td>';
+				print '</a>';
+				if ($user->rights->societe->supprimer) {
+					//$backtopage = DOL_URL_ROOT.'/societe/contact.php?socid='.$object->id;
+					print '<a class="marginleftonly" href="'.dol_buildpath('infraspackplus', 1).'/comm/address.php?action=delete&token='.newToken().'&id='.$address->id.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
+					print img_delete();
+					print '</a>';
+				}
+				print '</td>';
 			}	// if ($user->rights->societe->creer)
-			print '	</tr>';
+			print '</tr>';
 		}	// foreach ($addressstatic->lines as $address)
 	}	// if ($num > 0)
 	print '		</table>
