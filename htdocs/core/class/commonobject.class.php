@@ -507,7 +507,7 @@ abstract class CommonObject
 	 */
 	public $alreadypaid;
 
-public $linkedObjectsFullLoaded = false;
+    public $linkedObjectsFullLoaded = array();
 
 	/**
 	 * @var array	List of child tables. To test if we can delete object.
@@ -3737,6 +3737,11 @@ public $linkedObjectsFullLoaded = false;
 	{
 		global $conf, $hookmanager, $action;
 
+        if ($this->id > 0 && $this->linkedObjectsFullLoaded[$this->id])
+        {
+            return 1;
+        }
+
 		$this->linkedObjectsIds = array();
 		$this->linkedObjects = array();
 
@@ -3744,8 +3749,6 @@ public $linkedObjectsFullLoaded = false;
 		$justtarget = false;
 		$withtargettype = false;
 		$withsourcetype = false;
-
-if ($this->linkedObjectsFullLoaded) return 1;
 
 		$parameters = array('sourcetype'=>$sourcetype, 'sourceid'=>$sourceid, 'targettype'=>$targettype, 'targetid'=>$targetid);
 		// Hook for explicitly set the targettype if it must be differtent than $this->element
@@ -3800,8 +3803,8 @@ if ($this->linkedObjectsFullLoaded) return 1;
 		} else {
 			$sql .= "(fk_source = ".((int) $sourceid)." AND sourcetype = '".$this->db->escape($sourcetype)."')";
 			$sql .= " ".$clause." (fk_target = ".((int) $targetid)." AND targettype = '".$this->db->escape($targettype)."')";
-			if ($sourceid == $this->id && $sourcetype == $this->element && $targetid == $this->id && $targettype == $this->element && $clause == 'OR') {
-				$this->linkedObjectsFullLoaded = true;
+            if ($this->id > 0 && $sourceid == $this->id && $sourcetype == $this->element && $targetid == $this->id && $targettype == $this->element && $clause == 'OR') {
+                $this->linkedObjectsFullLoaded[$this->id] = true;
 			}
 		}
 		$sql .= ' ORDER BY '.$orderby;
