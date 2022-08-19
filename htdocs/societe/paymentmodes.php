@@ -293,7 +293,7 @@ if (empty($reshook))
 			if (! $error)
 			{
 				$result = $companybankaccount->create($user);
-				if ($result < 0)
+				if ($result <= 0)
 				{
 					$error++;
 					setEventMessages($companybankaccount->error, $companybankaccount->errors, 'errors');
