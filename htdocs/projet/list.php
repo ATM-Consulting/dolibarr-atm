@@ -458,7 +458,7 @@ if ($search_label) {
 	$sql .= natural_search('p.title', $search_label);
 }
 if ($search_societe) {
-	$sql .= natural_search('s.nom', $search_societe);
+	$sql .= natural_search(array("s.nom","s.name_alias"), $search_societe);
 }
 if ($search_opp_amount) {
 	$sql .= natural_search('p.opp_amount', $search_opp_amount, 1);
@@ -1265,7 +1265,7 @@ while ($i < min($num, $limit)) {
 			if ($obj->socid) {
 				print $companystatic->getNomUrl(1);
 				//print '<br>';
-				
+
 				if (!empty($conf->categorie->enabled) && !empty($user->rights->categorie->lire)) {
 					// Customer
 					if ($obj->prospect || $obj->client || !empty($conf->global->THIRDPARTY_CAN_HAVE_CUSTOMER_CATEGORY_EVEN_IF_NOT_CUSTOMER_PROSPECT)) {
