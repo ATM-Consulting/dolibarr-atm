@@ -1469,7 +1469,10 @@ foreach ($listofreferent as $key => $value) {
 						}
 					}
 					if ($key == 'order_supplier') {
-						if ($element->status != CommandeFournisseur::STATUS_RECEIVED_COMPLETELY) {
+						if ($element->status != CommandeFournisseur::STATUS_RECEIVED_COMPLETELY
+							&& $element->status != CommandeFournisseur::STATUS_ORDERSENT
+							&& $element->status != CommandeFournisseur::STATUS_RECEIVED_PARTIALLY
+							) {
 							$total_ht_by_line = 0; // Only signed proposal must not be included in total
 							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
 						}
