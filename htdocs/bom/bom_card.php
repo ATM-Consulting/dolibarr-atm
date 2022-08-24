@@ -621,6 +621,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 				if (empty($reshook))
 					$object->formAddObjectLine(1, $mysoc, null, '/bom/tpl');
+				}
 			}
 		}
 
