@@ -143,7 +143,7 @@ if (empty($reshook)) {
 			}
 		}
 
-		// Create with status validated immediatly
+		// Create with status validated immediately
 		if (!empty($conf->global->PROJECT_CREATE_NO_DRAFT)) {
 			$status = Project::STATUS_VALIDATED;
 		}
@@ -524,7 +524,9 @@ if ($action == 'create' && $user->rights->projet->creer) {
 
 	// Ref
 	$suggestedref = (GETPOST("ref") ? GETPOST("ref") : $defaultref);
-	print '<tr><td class="titlefieldcreate"><span class="fieldrequired">'.$langs->trans("Ref").'</span></td><td><input size="12" type="text" name="ref" value="'.dol_escape_htmltag($suggestedref).'">';
+	// Spécifique Eurochef - Ne pas pouvoir modifier le champ réf du projet
+	//print '<tr><td class="titlefieldcreate"><span class="fieldrequired">'.$langs->trans("Ref").'</span></td><td><input size="12" type="text" name="ref" value="'.dol_escape_htmltag($suggestedref).'">';
+	print '<tr><td class="titlefieldcreate"><span class="fieldrequired">'.$langs->trans("Ref").'</span></td><td><input size="12" type="text" name="ref" value="'.dol_escape_htmltag($suggestedref).'" readonly="readonly">';
 	print ' '.$form->textwithpicto('', $langs->trans("YouCanCompleteRef", $suggestedref));
 	print '</td></tr>';
 
@@ -809,7 +811,9 @@ if ($action == 'create' && $user->rights->projet->creer) {
 		// Ref
 		$suggestedref = $object->ref;
 		print '<tr><td class="titlefield fieldrequired">'.$langs->trans("Ref").'</td>';
-		print '<td><input size="12" name="ref" value="'.$suggestedref.'">';
+		// Spécifique Eurochef - Ne pas pouvoir modifier le champ réf du projet
+		//print '<td><input size="12" name="ref" value="'.$suggestedref.'">';
+		print '<td><input size="12" name="ref" value="'.$suggestedref.'" readonly="readonly">';
 		print ' '.$form->textwithpicto('', $langs->trans("YouCanCompleteRef", $suggestedref));
 		print '</td></tr>';
 
