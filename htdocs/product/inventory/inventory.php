@@ -575,7 +575,7 @@ if ($object->id > 0) {
 		if (empty($reshook)) {
 			if ($object->status == Inventory::STATUS_DRAFT) {
 				if ($permissiontoadd) {
-					print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken().'">'.$langs->trans("Validate").' ('.$langs->trans("Start").')</a>'."\n";
+                    print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken().'">'.$langs->trans("Validate").' ('.$langs->trans("Start").')</a>';
 				} else {
 					print '<a class="butActionRefused classfortooltip" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans('Validate').' ('.$langs->trans("Start").')</a>'."\n";
 				}
@@ -608,7 +608,7 @@ if ($object->id > 0) {
 		if (!empty($conf->use_javascript_ajax)) {
 			if ($permissiontoadd) {
 				// Link to launch scan tool
-				if (!empty($conf->barcode->enabled) || !empty($conf->productbatch->enabled)) {
+				if (isModEnabled('barcode') || !empty($conf->productbatch->enabled)) {
 					print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=updatebyscaning" class="marginrightonly paddingright marginleftonly paddingleft">'.img_picto('', 'barcode', 'class="paddingrightonly"').$langs->trans("UpdateByScaning").'</a>';
 				}
 

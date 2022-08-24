@@ -182,6 +182,8 @@ if (empty($reshook)) {
 		}
 
 		$action = '';
+		// Redirect to refresh the tab information
+		header("Location: ".$_SERVER["PHP_SELF"].'?id='.$object->id);
 	}
 
 	if (in_array($action, array('confirm_consumeorproduce', 'confirm_consumeandproduceall')) && $permissiontoproduce) {
@@ -804,6 +806,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '</td>';
 			print '<td></td>';
 		}
+
+		// Split
+		print '<td></td>';
+
+		// SplitAll
+		print '<td></td>';
+
 		print '</tr>';
 
 		if ($action == 'addproduceline') {
@@ -865,7 +874,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					print '<input id="qty_ordered'.$suffix.'" type="hidden" value="'.$line->qty.'">';
 					print '<input id="qty_dispatched'.$suffix.'" type="hidden" value="'.$alreadyproduced.'">';
 
-					print '<tr>';
+
+					print '<tr data-line-id="'.$line->id.'">';
+					// Product
+
 					print '<td>'.$tmpproduct->getNomUrl(1);
 					print '<br><span class="opacitymedium small">'.$tmpproduct->label.'</span>';
 					print '</td>';
@@ -916,6 +928,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					print '<td>'; // Warehouse
 					print '</td>';
 					if (isModEnabled('productbatch')) {
+
 						print '<td></td>'; // Lot
 					}
 
@@ -924,12 +937,24 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						$href .= '?id='.$object->id;
 						$href .= '&action=deleteline';
 						$href .= '&lineid='.$line->id;
+
+						if ($conf->productbatch->enabled) {
+							print '<td></td>';
+						}					
+
 						print '<td class="center">';
 						print '<a class="reposition" href="'.$href.'">';
 						print img_picto($langs->trans('TooltipDeleteAndRevertStockMovement'), "delete");
 						print '</a>';
 						print '</td>';
 					}
+
+					// Split
+					print '<td></td>';
+
+					// Split All
+					print '<td></td>';
+
 					print '</tr>';
 
 					// Show detailed of already consumed with js code to collapse
@@ -969,11 +994,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					}
 
 					if (in_array($action, array('consumeorproduce', 'consumeandproduceall'))) {
+
 						print '<!-- Enter line to produce -->'."\n";
 						print '<tr name="batch_'.$line->id.'_'.$i.'">';
 						print '<td><span class="opacitymedium">'.$langs->trans("ToProduce").'</span></td>';
 						$preselected = (GETPOSTISSET('qtytoproduce-'.$line->id.'-'.$i) ? GETPOST('qtytoproduce-'.$line->id.'-'.$i) : max(0, $line->qty - $alreadyproduced));
 						if ($action == 'consumeorproduce' && !GETPOSTISSET('qtytoproduce-'.$line->id.'-'.$i)) {
+
 							$preselected = 0;
 						}
 						print '<td class="right"><input type="text" class="width50 right" id="qtytoproduce-'.$line->id.'-'.$i.'" name="qtytoproduce-'.$line->id.'-'.$i.'" value="'.$preselected.'"></td>';
@@ -990,12 +1017,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 								}
 							}
 
+
 							if ($tmpproduct->type == Product::TYPE_PRODUCT || !empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
 								$preselected = (GETPOSTISSET('pricetoproduce-'.$line->id.'-'.$i) ? GETPOST('pricetoproduce-'.$line->id.'-'.$i) : ($manufacturingcost ? price($manufacturingcost) : ''));
 								print '<td class="right"><input type="text" class="width50 right" name="pricetoproduce-'.$line->id.'-'.$i.'" value="'.$preselected.'"></td>';
 							} else {
 								print '<td><input type="hidden" class="width50 right" name="pricetoproduce-'.$line->id.'-'.$i.'" value="'.($manufacturingcost ? $manufacturingcost : '').'"></td>';
 							}
+
 						}
 						print '<td></td>';
 						print '<td>';
@@ -1014,10 +1043,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							}
 							print '</td>';
 							// Batch number in same column than the stock movement picto
-							print '<td>';
+							
 							if ($tmpproduct->status_batch) {
 								$type = 'batch';
-								print img_picto($langs->trans('AddStockLocationLine'), 'split.png', 'class="splitbutton" onClick="addDispatchLine('.$line->id.', \''.$type.'\', \'qtymissing\')"');
+
+								print '<td align="right" class="split">';
+								print ' '.img_picto($langs->trans('AddStockLocationLine'), 'split.png', 'class="splitbutton" onClick="addDispatchLine('.((int) $line->id).', \''.dol_escape_js($type).'\', \'qtymissingconsume\')"');
+								print '</td>';
+								print '<td align="right" class="splitall">';
+								if (($action == 'consumeorproduce' || $action == 'consumeandproduceall')) print img_picto($langs->trans('SplitAllQuantity'), 'split.png', 'class="splitbutton splitallbutton field-error-icon" data-max-qty="1" onClick="addDispatchLine('.$line->id.', \'batch\', \'allmissingconsume\')"');
+								print '</td>';
+
 							}
 							print '</td>';
 						}
@@ -1093,6 +1129,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '<td>';
 			if ($collapse || in_array($action, array('consumeorproduce', 'consumeandproduceall'))) {
 				print $langs->trans("Batch");
+
+				// Split
+				print '<td></td>';
+
+				// Split All
+				print '<td></td>';
 			}
 			print '</td>';
 		}
@@ -1271,6 +1313,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						// Lot
 						if (isModEnabled('productbatch')) {
 							print '<td></td>';
+
+							// Split
+							print '<td></td>';
+
+							// Split All
+							print '<td></td>';
 						}
 						// Action delete line
 						if ($permissiontodelete) {
@@ -1282,6 +1330,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							print '</td>';
 						}
 						print '</tr>';
+
 
 						// Show detailed of already consumed with js code to collapse
 						foreach ($arrayoflines as $line2) {
@@ -1372,6 +1421,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 							// Warehouse
 							print '<td>';
+
 							if ($tmpproduct->type == Product::TYPE_PRODUCT || !empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
 								if (empty($line->disable_stock_change)) {
 									$preselected = (GETPOSTISSET('idwarehouse-' . $line->id . '-' . $i) ? GETPOST('idwarehouse-' . $line->id . '-' . $i) : ($tmpproduct->fk_default_warehouse > 0 ? $tmpproduct->fk_default_warehouse : 'ifone'));
@@ -1659,10 +1709,115 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 
 		print '</div>';
-	}
 
-	if (in_array($action, array('consumeorproduce', 'consumeandproduceall', 'addconsumeline','addconsumelineService'))) {
-		print "</form>\n";
+
+		if (in_array($action, array('consumeorproduce', 'consumeandproduceall', 'addconsumeline'))) {
+			print "</form>\n";
+		}
+
+		?>
+
+		<script  type="text/javascript" language="javascript">
+
+			$(document).ready(function() {
+				//Consumption : When a warehouse is selected, only the lot/serial numbers that are available in it are offered
+				updateselectbatchbywarehouse();
+				//Consumption : When a lot/serial number is selected and it is only available in one warehouse, the warehouse is automatically selected
+				updateselectwarehousebybatch();
+			});
+
+			function updateselectbatchbywarehouse() {
+				var element = $("select[name*='idwarehouse']");
+
+				element.change(function () {
+
+					var selectwarehouse = $(this);
+
+					var selectbatch_name = selectwarehouse.attr('name').replace('idwarehouse', 'batch');
+					var selectbatch = $("datalist[id*='" + selectbatch_name + "']");
+					var selectedbatch = selectbatch.val();
+
+					var product_element_name = selectwarehouse.attr('name').replace('idwarehouse', 'product');
+
+					$.ajax({
+						type: "POST",
+						url: "<?php echo DOL_URL_ROOT . '/mrp/ajax/interface.php'; ?>",
+						data: {
+							action: "updateselectbatchbywarehouse",
+							permissiontoproduce: <?php echo $permissiontoproduce ?>,
+							warehouse_id: $(this).val(),
+							product_id: $("input[name='" + product_element_name + "']").val()
+						}
+					}).done(function (data) {
+
+						selectbatch.empty();
+
+						var data = JSON.parse(data);
+
+						selectbatch.append($('<option>', {
+							value: '',
+						}));
+
+						$.each(data, function (key, value) {
+
+							if(selectwarehouse.val() == -1) {
+								var label = " (<?php echo $langs->trans('Stock total') ?> : " + value + ")";
+							} else {
+								var label =  " (<?php echo $langs->trans('Stock') ?> : " + value + ")";
+							}
+
+							if(key === selectedbatch) {
+								var option ='<option value="'+key+'" selected>'+ label +'</option>';
+							} else {
+								var option ='<option value="'+key+'">'+ label +'</option>';
+							}
+
+							selectbatch.append(option);
+						});
+					});
+				});
+			}
+
+			function updateselectwarehousebybatch() {
+
+				$(document).on('change', 'input[name*=batch]', function(){
+
+					var selectbatch = $(this);
+
+					var selectwarehouse_name = selectbatch.attr('name').replace('batch', 'idwarehouse');
+					var selectwarehouse = $("select[name*='" + selectwarehouse_name + "']");
+					var selectedwarehouse = selectwarehouse.val();
+
+					if(selectedwarehouse != -1){
+						return;
+					}
+
+					var product_element_name = selectbatch.attr('name').replace('batch', 'product');
+
+					$.ajax({
+						type: "POST",
+						url: "<?php echo DOL_URL_ROOT . '/mrp/ajax/interface.php'; ?>",
+						data: {
+							action: "updateselectwarehousebybatch",
+							permissiontoproduce: <?php echo $permissiontoproduce ?>,
+							batch: $(this).val(),
+							product_id: $("input[name='" + product_element_name + "']").val()
+						}
+					}).done(function (data) {
+
+						var data = JSON.parse(data);
+
+						if(data != 0){
+							selectwarehouse.val(data).change();
+						}
+					});
+				});
+			}
+
+		</script>
+
+		<?php
+
 	}
 }
 
