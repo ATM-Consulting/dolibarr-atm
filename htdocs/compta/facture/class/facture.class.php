@@ -1668,19 +1668,20 @@ class Facture extends CommonInvoice
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
 
-				$this->id = $obj->rowid;
-				$this->entity = $obj->entity;
+				$this->id					= $obj->rowid;
+				$this->entity				= $obj->entity;
 
-				$this->ref = $obj->ref;
-				$this->ref_client = $obj->ref_client;
+				$this->ref					= $obj->ref;
+				$this->ref_client			= $obj->ref_client;
+				$this->ref_customer			= $obj->ref_client;
 				$this->ref_ext				= $obj->ref_ext;
 				$this->type					= $obj->type;
 				$this->date					= $this->db->jdate($obj->df);
 				$this->date_pointoftax		= $this->db->jdate($obj->date_pointoftax);
-				$this->date_creation = $this->db->jdate($obj->datec);
+				$this->date_creation		= $this->db->jdate($obj->datec);
 				$this->date_validation		= $this->db->jdate($obj->datev);
-				$this->date_modification = $this->db->jdate($obj->datem);
-				$this->datem = $this->db->jdate($obj->datem);
+				$this->date_modification	= $this->db->jdate($obj->datem);
+				$this->datem				= $this->db->jdate($obj->datem);
 				$this->remise_percent		= $obj->remise_percent;
 				$this->remise_absolue		= $obj->remise_absolue;
 				$this->total_ht				= $obj->total_ht;
@@ -1688,41 +1689,41 @@ class Facture extends CommonInvoice
 				$this->total_localtax1		= $obj->localtax1;
 				$this->total_localtax2		= $obj->localtax2;
 				$this->total_ttc			= $obj->total_ttc;
-				$this->revenuestamp = $obj->revenuestamp;
-				$this->paye = $obj->paye;
+				$this->revenuestamp			= $obj->revenuestamp;
+				$this->paye					= $obj->paye;
 				$this->close_code			= $obj->close_code;
 				$this->close_note			= $obj->close_note;
 
-				$this->socid = $obj->fk_soc;
-				$this->thirdparty = null; // Clear if another value was already set by fetch_thirdparty
+				$this->socid				= $obj->fk_soc;
+				$this->thirdparty			= null; // Clear if another value was already set by fetch_thirdparty
 
-				$this->fk_project = $obj->fk_project;
-				$this->project = null; // Clear if another value was already set by fetch_projet
+				$this->fk_project			= $obj->fk_project;
+				$this->project				= null; // Clear if another value was already set by fetch_projet
 
-				$this->statut = $obj->fk_statut;
-				$this->status = $obj->fk_statut;
+				$this->statut				= $obj->fk_statut;
+				$this->status				= $obj->fk_statut;
 
-				$this->date_lim_reglement = $this->db->jdate($obj->dlr);
+				$this->date_lim_reglement	= $this->db->jdate($obj->dlr);
 				$this->mode_reglement_id	= $obj->fk_mode_reglement;
 				$this->mode_reglement_code	= $obj->mode_reglement_code;
 				$this->mode_reglement		= $obj->mode_reglement_libelle;
 				$this->cond_reglement_id	= $obj->fk_cond_reglement;
 				$this->cond_reglement_code	= $obj->cond_reglement_code;
 				$this->cond_reglement		= $obj->cond_reglement_libelle;
-				$this->cond_reglement_doc = $obj->cond_reglement_libelle_doc;
-				$this->fk_account = ($obj->fk_account > 0) ? $obj->fk_account : null;
+				$this->cond_reglement_doc	= $obj->cond_reglement_libelle_doc;
+				$this->fk_account			= ($obj->fk_account > 0) ? $obj->fk_account : null;
 				$this->fk_facture_source	= $obj->fk_facture_source;
 				$this->fk_fac_rec_source	= $obj->fk_fac_rec_source;
-				$this->note = $obj->note_private; // deprecated
-				$this->note_private = $obj->note_private;
+				$this->note					= $obj->note_private; // deprecated
+				$this->note_private			= $obj->note_private;
 				$this->note_public			= $obj->note_public;
 				$this->user_author			= $obj->fk_user_author; // deprecated
 				$this->user_valid           = $obj->fk_user_valid; // deprecated
-				$this->fk_user_author = $obj->fk_user_author;
+				$this->fk_user_author		= $obj->fk_user_author;
 				$this->fk_user_valid        = $obj->fk_user_valid;
-				$this->model_pdf = $obj->model_pdf;
-				$this->modelpdf = $obj->model_pdf; // deprecated
-				$this->last_main_doc = $obj->last_main_doc;
+				$this->model_pdf			= $obj->model_pdf;
+				$this->modelpdf				= $obj->model_pdf; // deprecated
+				$this->last_main_doc		= $obj->last_main_doc;
 				$this->situation_cycle_ref  = $obj->situation_cycle_ref;
 				$this->situation_counter    = $obj->situation_counter;
 				$this->situation_final      = $obj->situation_final;
