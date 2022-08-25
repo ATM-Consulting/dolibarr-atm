@@ -55,6 +55,8 @@ ALTER TABLE llx_user DROP COLUMN idpers3;
 
 -- v17
 
+UPDATE llx_const set name = 'ADHERENT_MAILMAN_ADMIN_PASSWORD' WHERE name = 'ADHERENT_MAILMAN_ADMINPW';
+
 ALTER TABLE llx_oauth_token ADD COLUMN state text after tokenstring;
 
 ALTER TABLE llx_adherent ADD COLUMN default_lang VARCHAR(6) DEFAULT NULL AFTER datefin;
@@ -99,7 +101,17 @@ ALTER TABLE llx_ticket ADD COLUMN ip varchar(250);
 
 ALTER TABLE llx_ticket ADD email_date datetime after email_msgid;
 
+
+
 ALTER TABLE llx_cronjob ADD COLUMN pid integer;
+
+ALTER TABLE llx_mrp_mo ADD COLUMN predicted_cost double(24, 8) DEFAULT 0 AFTER qty;
+
+ALTER TABLE llx_mrp_mo ADD COLUMN real_cost double(24, 8) DEFAULT 0 AFTER qty;
+
+
+INSERT INTO llx_const (name, entity, value, type, visible) VALUES ('MAIN_SECURITY_MAX_IMG_IN_HTML_CONTENT', 1, 1000, 'int', 0);
+
 
 INSERT INTO llx_c_hrm_public_holiday (code, entity, fk_country, dayrule, year, month, day, active) VALUES('BE-VICTORYDAY',  0, 2, '', 0,  5,  8, 1);
 INSERT INTO llx_c_hrm_public_holiday (code, entity, fk_country, dayrule, year, month, day, active) VALUES('BE-NATIONALDAY', 0, 2, '', 0,  7, 21, 1);
