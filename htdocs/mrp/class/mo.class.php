@@ -59,6 +59,11 @@ class Mo extends CommonObject
 	 */
 	public $picto = 'mrp';
 
+	/** @var double cost of the object related to toconsume  role in lines  	*/
+	public $predicted_cost;
+
+	/** @var double cost of the object related to consumed  role in lines  	*/
+	public $real_cost;
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1; // To produce
@@ -66,6 +71,11 @@ class Mo extends CommonObject
 	const STATUS_PRODUCED = 3;
 	const STATUS_CANCELED = 9;
 
+	/** PRODUCTION ROLE const  */
+	const PRODUCTION_ROLE_TO_CONSUME ='toconsume';
+	const PRODUCTION_ROLE_CONSUMED ='consumed';
+	const PRODUCTION_ROLE_TO_PRODUCE ='toproduce';
+	const PRODUCTION_ROLE_PRODUCED ='produced';
 
 	/**
 	 *  'type' field format ('integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter]]', 'sellist:TableName:LabelFieldName[:KeyFieldName[:KeyFieldParent[:Filter]]]', 'varchar(x)', 'double(24,8)', 'real', 'price', 'text', 'text:none', 'html', 'date', 'datetime', 'timestamp', 'duration', 'mail', 'phone', 'url', 'password')
@@ -105,7 +115,7 @@ class Mo extends CommonObject
 		'mrptype' => array('type'=>'integer', 'label'=>'Type', 'enabled'=>1, 'visible'=>1, 'position'=>34, 'notnull'=>1, 'default'=>'0', 'arrayofkeyval'=>array(0=>'Manufacturing', 1=>'Disassemble'), 'css'=>'minwidth150', 'csslist'=>'minwidth150 center'),
 		'fk_product' => array('type'=>'integer:Product:product/class/product.class.php:0', 'label'=>'Product', 'enabled'=>'$conf->product->enabled', 'visible'=>1, 'position'=>35, 'notnull'=>1, 'index'=>1, 'comment'=>"Product to produce", 'css'=>'maxwidth300', 'csslist'=>'tdoverflowmax100', 'picto'=>'product'),
 		'qty' => array('type'=>'real', 'label'=>'QtyToProduce', 'enabled'=>1, 'visible'=>1, 'position'=>40, 'notnull'=>1, 'comment'=>"Qty to produce", 'css'=>'width75', 'default'=>1, 'isameasure'=>1),
-		'label' => array('type'=>'varchar(255)', 'label'=>'Label', 'enabled'=>1, 'visible'=>1, 'position'=>42, 'notnull'=>-1, 'searchall'=>1, 'showoncombobox'=>'2', 'css'=>'maxwidth300', 'csslist'=>'tdoverflowmax200'),
+		'label' => array('type'=>'varchar(255)', 'label'=>'Label', 'enabled'=>1, 'visible'=>1, 'position'=>43, 'notnull'=>-1, 'searchall'=>1, 'showoncombobox'=>'2', 'css'=>'maxwidth300', 'csslist'=>'tdoverflowmax200'),
 		'fk_soc' => array('type'=>'integer:Societe:societe/class/societe.class.php:1', 'label'=>'ThirdParty', 'picto'=>'company', 'enabled'=>'$conf->societe->enabled', 'visible'=>-1, 'position'=>50, 'notnull'=>-1, 'index'=>1, 'css'=>'maxwidth400', 'csslist'=>'tdoverflowmax150'),
 		'fk_project' => array('type'=>'integer:Project:projet/class/project.class.php:1:fk_statut=1', 'label'=>'Project', 'picto'=>'project', 'enabled'=>'$conf->project->enabled', 'visible'=>-1, 'position'=>51, 'notnull'=>-1, 'index'=>1, 'css'=>'minwidth200 maxwidth400', 'csslist'=>'tdoverflowmax100'),
 		'fk_warehouse' => array('type'=>'integer:Entrepot:product/stock/class/entrepot.class.php:0', 'label'=>'WarehouseForProduction', 'picto'=>'stock', 'enabled'=>'$conf->stock->enabled', 'visible'=>1, 'position'=>52, 'css'=>'maxwidth400', 'csslist'=>'tdoverflowmax200'),
@@ -122,6 +132,8 @@ class Mo extends CommonObject
 		'model_pdf' =>array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>1, 'visible'=>0, 'position'=>1010),
 		'status' => array('type'=>'integer', 'label'=>'Status', 'enabled'=>1, 'visible'=>2, 'position'=>1000, 'default'=>0, 'notnull'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Draft', '1'=>'Validated', '2'=>'InProgress', '3'=>'StatusMOProduced', '9'=>'Canceled')),
 		'fk_parent_line' => array('type'=>'integer:MoLine:mrp/class/mo.class.php', 'label'=>'ParentMo', 'enabled'=>1, 'visible'=>0, 'position'=>1020, 'default'=>0, 'notnull'=>0, 'index'=>1,'showoncombobox'=>0),
+		'predicted_cost' => array('type'=>'real', 'label'=>'predictedCost', 'enabled'=>1, 'visible'=>1, 'position'=>1041, 'notnull'=>1, 'comment'=>"real cost for of", 'css'=>'width75', 'default'=>1),
+		'real_cost' => array('type'=>'real', 'label'=>'realCost', 'enabled'=>1, 'visible'=>1, 'position'=>1042, 'notnull'=>1, 'comment'=>"real cost for of", 'css'=>'width75', 'default'=>1),
 	);
 	public $rowid;
 	public $entity;
@@ -405,6 +417,7 @@ class Mo extends CommonObject
 		$result = $this->fetchCommon($id, $ref);
 		if ($result > 0 && !empty($this->table_element_line)) {
 			$this->fetchLines();
+			$this->calculateCostLines();
 		}
 		return $result;
 	}
@@ -1552,6 +1565,135 @@ class Mo extends CommonObject
 			return -1;
 		} else {
 			return $MoParent;
+		}
+	}
+
+	/**
+	 * * return the product cost
+	 *
+	 * Rules
+	 *  COST PRICE
+	 *  OTHERWISE PMP
+	 *  OTHERWISE LOWEST SUPPLIER PRICE
+	 *
+	 * @param $tmpProduct temp product
+	 *
+	 * @return float|int
+	 */
+	public  function getProductUnitCost(&$tmpProduct)
+	{
+		global  $langs;
+
+		$uCost =  (!empty($tmpProduct->cost_price)) ? $tmpProduct->cost_price : $tmpProduct->pmp;
+		if (empty($uCost)) {
+			$productFournisseur = new ProductFournisseur($this->db);
+			if (is_a($productFournisseur, 'ProductFournisseur')) {
+				if ($productFournisseur->find_min_price_product_fournisseur($tmpProduct->id) > 0) {
+					$uCost = $productFournisseur->fourn_unitprice;
+				}
+			} else {
+				setEventMessage($langs->trans('errorLoadProductSupplierClass'));
+			}
+		}
+
+		return $uCost;
+	}
+
+
+
+	/**
+	 * calculate the real_cost and predicted_cost for the object
+	 * @return void
+	 */
+	public function calculateCostLines()
+	{
+		global $db, $langs;
+		// foreach lines
+		if (is_array($this->lines) && count($this->lines)) {
+			require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+			$tmpproduct = new Product($db);
+			$Tpredicted = array();
+			$Treal = array();
+			$totalRealCost = 0;
+			$totalPredictedCost = 0;
+			if (is_array($this->lines) && !empty($this->lines)) {
+				foreach ($this->lines as &$line) {
+					$result = $tmpproduct->fetch($line->fk_product, '', '', '', 0, 1, 1);    // We discard selling price and language loading
+					if ($result > 0) {
+						// PRODUCT
+						if ($tmpproduct->type == $tmpproduct::TYPE_PRODUCT) {
+							$productunitCost = $this->getProductUnitCost($tmpproduct);
+
+							if ($line->role == SELF::PRODUCTION_ROLE_TO_CONSUME) {
+								// sql
+								$sql = 'SELECT SUM(m.qty) as Allqty FROM ' . $this->db->prefix() . 'mrp_production as m';
+								$sql .= ' WHERE m.fk_mo = ' . (int)$this->id;
+								$sql .= ' AND  m.fk_product = ' . (int)$line->fk_product;
+								$sql .= ' AND  m.role = "' . SELF::PRODUCTION_ROLE_TO_CONSUME . '"';
+
+								$resql = $this->db->query($sql);
+
+								if ($resql) {
+									$obj = $this->db->fetch_object($resql);
+
+									if (!$Tpredicted[$line->fk_product]) {
+										$Tpredicted[$line->fk_product]['predictedCost'] = $productunitCost * $obj->Allqty;
+										$Tpredicted[$line->fk_product]['Allqty'] = $obj->Allqty;
+										$Tpredicted[$line->fk_product]['productunitCost'] = $productunitCost;
+									}
+								}
+							}
+
+							if ($line->role == SELF::PRODUCTION_ROLE_CONSUMED) {
+								$sqlConsumed = 'SELECT SUM(m.qty) as Allqty FROM ' . $this->db->prefix() . 'mrp_production as m';
+								$sqlConsumed .= ' WHERE m.fk_mo = ' . (int)$this->id;
+								$sqlConsumed .= ' AND  m.fk_product = ' . (int)$line->fk_product;
+								$sqlConsumed .= ' AND  m.role = "' . SELF::PRODUCTION_ROLE_CONSUMED . '"';
+								$resql = $this->db->query($sqlConsumed);
+
+								if ($resql) {
+									$obj = $this->db->fetch_object($resql);
+
+									if (!$Treal[$line->fk_product]) {
+										$Treal[$line->fk_product]['realCost'] = $productunitCost * $obj->Allqty;
+									}
+								}
+							}
+
+							// SERVICE
+						} elseif ($tmpproduct->type == $tmpproduct::TYPE_SERVICE) {
+							//@todo  This part is to be considered in a later development.
+						}
+					}
+				}
+			}
+			if (is_array($Tpredicted) && !empty($Tpredicted)) {
+				foreach ($Tpredicted as $cost) {
+					$totalPredictedCost += $cost['predictedCost'];
+				}
+			}
+			if (is_array($Treal) && !empty($Treal)) {
+				foreach ($Treal as $cost) {
+					$totalRealCost += $cost['realCost'];
+				}
+			}
+
+
+			// we could use the update function here. via
+			// $this->predicted_cost = price2num($totalPredictedCost,'MT');
+			// $this->real_cost = price2num($totalRealCost,'MT');
+			// but we should first check the status and change it on the fly if necessary to restore it after the update.
+			// we prefer to go directly through a request to avoid this.
+			$sql = "UPDATE ".MAIN_DB_PREFIX."mrp_mo";
+			$sql .= " SET predicted_cost = ".doubleval(price2num($totalPredictedCost, 'MT')). " ,";
+			$sql .= " real_cost = ".doubleval(price2num($totalRealCost, 'MT'));
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			$resql = $this->db->query($sql);
+
+			if (!$resql) {
+				setEventMessage($langs->trans("errorCostUpdatingInDb"));
+			}
 		}
 	}
 }
