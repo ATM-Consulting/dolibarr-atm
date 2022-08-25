@@ -1616,64 +1616,67 @@ class Mo extends CommonObject
 			$Treal = array();
 			$totalRealCost = 0;
 			$totalPredictedCost = 0;
+			if (is_array($this->lines) && !empty($this->lines)) {
+				foreach ($this->lines as &$line) {
+					$result = $tmpproduct->fetch($line->fk_product, '', '', '', 0, 1, 1);    // We discard selling price and language loading
+					if ($result > 0) {
+						// PRODUCT
+						if ($tmpproduct->type == $tmpproduct::TYPE_PRODUCT) {
+							$productunitCost = $this->getProductUnitCost($tmpproduct);
 
-			foreach ($this->lines as &$line) {
-				$result = $tmpproduct->fetch($line->fk_product, '', '', '', 0, 1, 1);	// We discard selling price and language loading
-				if ($result > 0) {
-					// PRODUCT
-					if ($tmpproduct->type == $tmpproduct::TYPE_PRODUCT) {
-						$productunitCost = $this->getProductUnitCost($tmpproduct);
+							if ($line->role == SELF::PRODUCTION_ROLE_TO_CONSUME) {
+								// sql
+								$sql = 'SELECT SUM(m.qty) as Allqty FROM ' . $this->db->prefix() . 'mrp_production as m';
+								$sql .= ' WHERE m.fk_mo = ' . (int)$this->id;
+								$sql .= ' AND  m.fk_product = ' . (int)$line->fk_product;
+								$sql .= ' AND  m.role = "' . SELF::PRODUCTION_ROLE_TO_CONSUME . '"';
 
-						if ($line->role == SELF::PRODUCTION_ROLE_TO_CONSUME) {
-							// sql
-							$sql  = 'SELECT SUM(m.qty) as Allqty FROM '.$this->db->prefix().'mrp_production as m';
-							$sql .= ' WHERE m.fk_mo = '.(int) $this->id;
-							$sql .= ' AND  m.fk_product = '.(int) $line->fk_product;
-							$sql .= ' AND  m.role = "'.SELF::PRODUCTION_ROLE_TO_CONSUME.'"';
+								$resql = $this->db->query($sql);
 
-							$resql = $this->db->query($sql);
+								if ($resql) {
+									$obj = $this->db->fetch_object($resql);
 
-							if ($resql) {
-								$obj = $this->db->fetch_object($resql);
-
-								if (!$Tpredicted[$line->fk_product]) {
-									$Tpredicted[$line->fk_product]['predictedCost'] = $productunitCost * $obj->Allqty;
-									$Tpredicted[$line->fk_product]['Allqty'] = $obj->Allqty;
-									$Tpredicted[$line->fk_product]['productunitCost'] = $productunitCost;
+									if (!$Tpredicted[$line->fk_product]) {
+										$Tpredicted[$line->fk_product]['predictedCost'] = $productunitCost * $obj->Allqty;
+										$Tpredicted[$line->fk_product]['Allqty'] = $obj->Allqty;
+										$Tpredicted[$line->fk_product]['productunitCost'] = $productunitCost;
+									}
 								}
 							}
-						}
 
-						if ($line->role == SELF::PRODUCTION_ROLE_CONSUMED) {
-							$sqlConsumed = 'SELECT SUM(m.qty) as Allqty FROM ' . $this->db->prefix() . 'mrp_production as m';
-							$sqlConsumed .= ' WHERE m.fk_mo = ' . (int) $this->id;
-							$sqlConsumed .= ' AND  m.fk_product = ' . (int) $line->fk_product;
-							$sqlConsumed .= ' AND  m.role = "' . SELF::PRODUCTION_ROLE_CONSUMED . '"';
-							$resql = $this->db->query($sqlConsumed);
+							if ($line->role == SELF::PRODUCTION_ROLE_CONSUMED) {
+								$sqlConsumed = 'SELECT SUM(m.qty) as Allqty FROM ' . $this->db->prefix() . 'mrp_production as m';
+								$sqlConsumed .= ' WHERE m.fk_mo = ' . (int)$this->id;
+								$sqlConsumed .= ' AND  m.fk_product = ' . (int)$line->fk_product;
+								$sqlConsumed .= ' AND  m.role = "' . SELF::PRODUCTION_ROLE_CONSUMED . '"';
+								$resql = $this->db->query($sqlConsumed);
 
-							if ($resql) {
-								$obj = $this->db->fetch_object($resql);
+								if ($resql) {
+									$obj = $this->db->fetch_object($resql);
 
-								if (!$Treal[$line->fk_product]) {
-									$Treal[$line->fk_product]['realCost'] = $productunitCost * $obj->Allqty;
+									if (!$Treal[$line->fk_product]) {
+										$Treal[$line->fk_product]['realCost'] = $productunitCost * $obj->Allqty;
+									}
 								}
 							}
-						}
 
-						// SERVICE
-					} elseif ($tmpproduct->type == $tmpproduct::TYPE_SERVICE) {
-						// This part is to be considered in a later development.
+							// SERVICE
+						} elseif ($tmpproduct->type == $tmpproduct::TYPE_SERVICE) {
+							//@todo  This part is to be considered in a later development.
+						}
 					}
 				}
 			}
-
-			foreach ($Tpredicted as $cost) {
-				$totalPredictedCost += $cost['predictedCost'];
+			if (is_array($Tpredicted) && !empty($Tpredicted)) {
+				foreach ($Tpredicted as $cost) {
+					$totalPredictedCost += $cost['predictedCost'];
+				}
 			}
-			foreach ($Treal as $cost) {
-				$totalRealCost += $cost['realCost'];
+			if (is_array($Treal) && !empty($Treal)) {
+				foreach ($Treal as $cost) {
+					$totalRealCost += $cost['realCost'];
+				}
 			}
-
 
 
 			// we could use the update function here. via
