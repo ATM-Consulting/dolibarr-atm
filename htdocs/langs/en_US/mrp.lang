@@ -116,3 +116,5 @@ predictedCost= Predicted cost
 realCost= Real cost
 errorCostUpdatingInDb= error on updating costs in db
 errorLoadProductSupplierClass=error on load product Supplier class
+TooltipDeleteAndRevertTimeSpent= Revert time spent on this service
+TooltipDeleteService= Delete Service from production
