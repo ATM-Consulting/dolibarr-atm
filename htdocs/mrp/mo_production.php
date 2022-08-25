@@ -397,7 +397,7 @@ if (empty($reshook)) {
 								}
 							}
 
-	
+
 							if ($alreadyconsumed < $line->qty) {
 								$consumptioncomplete = false;
 							}
@@ -1344,7 +1344,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 							// Already consumed
 							print '<td></td>';
-	
+
 							// Qty
 							print '<td class="right">'.$line2['qty'].'</td>';
 
@@ -1716,7 +1716,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		}
 		//--------------------------------------END-------------------------------------------------------------
 
-	
+
 		print '</div>';
 	}
 
@@ -1826,7 +1826,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		</script>
 
 		<?php
-	}
+
 }
 
 // End of page
