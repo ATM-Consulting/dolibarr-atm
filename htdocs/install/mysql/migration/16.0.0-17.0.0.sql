@@ -101,8 +101,6 @@ ALTER TABLE llx_ticket ADD COLUMN ip varchar(250);
 
 ALTER TABLE llx_ticket ADD email_date datetime after email_msgid;
 
-
-
 ALTER TABLE llx_cronjob ADD COLUMN pid integer;
 
 ALTER TABLE llx_mrp_mo ADD COLUMN predicted_cost double(24, 8) DEFAULT 0 AFTER qty;
@@ -124,3 +122,11 @@ INSERT INTO llx_c_hrm_public_holiday (code, entity, fk_country, dayrule, year, m
 
 ALTER TABLE llx_product ADD COLUMN fk_default_workstation integer DEFAULT NULL;
 ALTER TABLE llx_bom_bomline ADD COLUMN fk_unit integer DEFAULT NULL;
+
+ALTER TABLE llx_societe_rib ADD COLUMN state_id integer AFTER default_rib;
+ALTER TABLE llx_societe_rib ADD COLUMN fk_country integer AFTER state_id;
+ALTER TABLE llx_societe_rib ADD COLUMN currency_code varchar(3) AFTER fk_country;
+
+ALTER TABLE llx_user_rib ADD COLUMN state_id integer AFTER owner_address;
+ALTER TABLE llx_user_rib ADD COLUMN fk_country integer AFTER state_id;
+ALTER TABLE llx_user_rib ADD COLUMN currency_code varchar(3) AFTER fk_country;
