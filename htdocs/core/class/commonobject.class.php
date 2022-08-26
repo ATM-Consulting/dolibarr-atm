@@ -9238,6 +9238,7 @@ abstract class CommonObject
 		// Triggers
 		if (!$error && !$notrigger) {
 			// Call triggers
+
 			$result = $this->call_trigger(strtoupper(get_class($this)).'_CREATE', $user);
 			if ($result < 0) {
 				$error++;

@@ -1046,6 +1046,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 								print img_picto($langs->trans('AddStockLocationLine'), 'split.png', 'class="splitbutton" onClick="addDispatchLine('.$line->id.', \''.$type.'\', \'qtymissing\')"');
 								print '</td>';
 
+								var_dump('hey');
 								print '<td align="right"  class="splitall">';
 								if (($action == 'consumeorproduce' || $action == 'consumeandproduceall') && $tmpproduct->status_batch == 2) print img_picto($langs->trans('SplitAllQuantity'), 'split.png', 'class="splitbutton splitallbutton field-error-icon" onClick="addDispatchLine('.$line->id.', \'batch\', \'alltoproduce\')"'); //
 								print '</td>';
@@ -1502,10 +1503,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			print '<tr class="liste_titre">';
 			print '<td>'.$langs->trans("Service").'</td>';
 			// expected workload
-			print '<td class="right">'.$langs->trans("expectedworkload").'</td>';
+			print '<td class="right linecolexpectedworkload">'.$langs->trans("expectedworkload").'</td>';
 
 			// consumed times
-			print '<td class="right">'.$langs->trans("consumedTimes").'</td>';
+			print '<td class="right linecolconsumedtimes">'.$langs->trans("consumedTimes").'</td>';
 
 			// --
 			print '<td class="right" colspan="3"></td>';
@@ -1525,12 +1526,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '</td>';
 
 				// Qty
-				print '<td class="right">';
+				print '<td class="right linecolexpectedworkload">';
 				print $form->select_duration('timespent_duration_expected_workload-', 0);
 				print '</td>';
 
 				// Qty already consumed
-				print '<td colspan="4">';
+				print '<td class="linecolconsumedtimes" colspan="4">';
 
 				print '<input type="submit" class="button buttongen button-add" name="addconsumelineServicebutton" value="'.$langs->trans("Add").'">';
 				print '<input type="submit" class="button buttongen button-cancel" name="canceladdconsumelineServicebutton" value="'.$langs->trans("Cancel").'">';
@@ -1577,13 +1578,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							//$qty rempalcé par time
 							// Duration - Time spent
 							print '<input id="qty_dispatched' . $suffix . '" type="hidden" value="' . $alreadyconsumed . '">';
-							print '<tr>';
+							print '<tr  class="liste_line" data-line-id="'.$line->id.'">';
 							// Product
-							print '<td>' . $tmpproduct->getNomUrl(1);
+							print '<td class="linecolservice">' . $tmpproduct->getNomUrl(1);
 							print '<br><span class="opacitymedium small">' . $tmpproduct->label . '</span>';
 							print '</td>';
 							// Qty  ExpectedWorkload
-							print '<td class="right nowraponall">';
+							print '<td class="right nowraponall linecolexpectedworkload">';
 							$help = '';
 							if ($help) {
 								print $form->textwithpicto($line->qty, $help, -1);
@@ -1593,12 +1594,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							print '</td>';
 							// consumedTimes
 							if ($permissiontoupdatecost && !empty($conf->global->MRP_SHOW_COST_FOR_CONSUMPTION)) {
-								print '<td class="right nowraponall1">';
+								print '<td class="right nowraponall">';
 								print price($linecost);
 								print '</td>';
 							}
 							// Already consumed (consumedTimes)
-							print '<td class="right">';
+							print '<td class="right linecolconsumedtimes">';
 							if ($alreadyconsumed) {
 								print '<script>';
 								print 'jQuery(document).ready(function() {
