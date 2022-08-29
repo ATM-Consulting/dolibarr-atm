@@ -1637,7 +1637,7 @@ function print_left_eldy_menu($db, $menu_array_before, $menu_array_after, &$tabM
 
 				$newmenu->add("/product/stock/massstockmove.php", $langs->trans("MassStockTransferShort"), 1, $user->rights->stock->mouvement->creer);
 				if ($conf->supplier_order->enabled) {
-					if (empty($conf->global->DISABLE_STOCK_REPLENISH) {
+					if (empty($conf->global->DISABLE_STOCK_REPLENISH)) {
 						$newmenu->add("/product/stock/replenish.php", $langs->trans("Replenishment"), 1, $user->rights->stock->mouvement->creer && $user->rights->fournisseur->lire);
 					}
 				}

@@ -560,7 +560,7 @@ llxHeader('', $title, $helpurl, '');
 
 $head = array();
 
-if (empty($conf->global->DISABLE_STOCK_REPLENISH) {
+if (empty($conf->global->DISABLE_STOCK_REPLENISH)) {
 	$head[0][0] = DOL_URL_ROOT.'/product/stock/replenish.php';
 	$head[0][1] = $title;
 	$head[0][2] = 'replenish';
