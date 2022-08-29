@@ -1643,8 +1643,7 @@ class AccountancyExport
 		print self::trunc($langs->transnoentitiesnoconv('Analytic').' 3', 15).$separator;
 		print self::trunc($langs->transnoentitiesnoconv('AnalyticLabel').' 3', 60).$separator;
 		print self::trunc($langs->transnoentitiesnoconv('SupplierPaymentMethod'), 60).$separator;
-		print self::trunc($langs->transnoentitiesnoconv('SupplierDueDate'), 60).$separator;
-		print $separator;
+		print self::trunc($langs->transnoentitiesnoconv('SupplierDueDate'), 60);
 		print $end_line;
 
 		foreach ($objectLines as $line) {
@@ -1691,8 +1690,6 @@ class AccountancyExport
 			print $separator;                     //Analytique 3
 			print $separator;                     //Libellé Analytique 3
 			print $separator;                     //Date
-			print $separator;                     //Date
-			print $separator;                     //Colonne vide
 			print $end_line;
 		}
 
