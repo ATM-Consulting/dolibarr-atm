@@ -4844,6 +4844,8 @@ class Product extends CommonObject
 				$label .= "<br>".$labelsurfacevolume;
 			}
 		}
+		// Spécifique Eurochef - Ne plus afficher le PMP et comptabilité
+		/*
 		if (!empty($this->pmp) && $this->pmp) {
 			$label .= "<br><b>".$langs->trans("PMPValue").'</b>: '.price($this->pmp, 0, '', 1, -1, -1, $conf->currency);
 		}
@@ -4860,6 +4862,20 @@ class Product extends CommonObject
 			$label .= '<br><b>'.$langs->trans('ProductAccountancyBuyIntraCode').':</b> '.length_accountg($this->accountancy_code_buy_intra);
 			$label .= '<br><b>'.$langs->trans('ProductAccountancyBuyExportCode').':</b> '.length_accountg($this->accountancy_code_buy_export);
 		}
+		*/
+		/* A corriger
+		// Eurochef - Prix de vente et meilleur prix achat
+		if (!empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pv) {
+			$productstatic = new Product($this->db);
+			$productstatic->fetchProductClientPrice($this->rowid);
+			$label .= '<br><b>'.$langs->trans('EurochefProjetSellingPriceCatalogue').':</b> '.price($productstatic->product_customer_price);
+		}
+		if (!empty($conf->eurochefprojet->enabled) && $user->rights->eurochefprojet->lire_pa) {
+			$productstatic2 = new Product($this->db);
+			$productstatic2->fetchProductFournisseurPrice($this->rowid);
+			$label .= '<br><b>'.$langs->trans('EurochefProjetPurchasePriceCatalogue').':</b> '.$langs->trans("EurochefProjetPurchaseMinimumShort")." : ".price($productstatic2->product_supplier_price_min)." | ".$langs->trans("EurochefProjetPurchaseMaximumShort")." : ".price($productstatic2->product_supplier_price_max);
+		}
+		*/
 
 		$linkclose = '';
 		if (empty($notooltip)) {
