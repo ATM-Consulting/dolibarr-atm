@@ -1621,6 +1621,10 @@ class AccountancyExport
 		$separator = "\t";
 		$end_line = "\n";
 
+		/*  ——————————— SPÉ ISETA ——————————— */
+		ob_start();
+		/*  ——————————— FIN SPÉ ISETA ——————— */
+
 		/*
 		 * Charlemagne export need header
 		 */
@@ -1691,6 +1695,12 @@ class AccountancyExport
 			print $separator;                     //Colonne vide
 			print $end_line;
 		}
+
+
+		/*  ——————————— SPÉ ISETA ——————————— */
+		// conversion en ISO-8859-1
+		print mb_convert_encoding(ob_get_clean(), 'ISO-8859-1', 'UTF-8');
+		/*  ——————————— FIN SPÉ ISETA ——————— */
 	}
 
 	/**
