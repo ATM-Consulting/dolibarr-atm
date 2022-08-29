@@ -58,6 +58,9 @@ ALTER TABLE llx_user DROP COLUMN idpers3;
 -- VMYSQL4.3 ALTER TABLE llx_partnership MODIFY COLUMN fk_user_creat integer NULL;
 -- VPGSQL8.2 ALTER TABLE llx_partnership ALTER COLUMN fk_user_creat DROP NOT NULL;
 
+ALTER TABLE llx_partnership ADD COLUMN ip varchar(250);
+ALTER TABLE llx_adherent ADD COLUMN ip varchar(250);
+
 UPDATE llx_const set name = 'ADHERENT_MAILMAN_ADMIN_PASSWORD' WHERE name = 'ADHERENT_MAILMAN_ADMINPW';
 
 ALTER TABLE llx_oauth_token ADD COLUMN state text after tokenstring;
@@ -66,6 +69,10 @@ ALTER TABLE llx_adherent ADD COLUMN default_lang VARCHAR(6) DEFAULT NULL AFTER d
 
 ALTER TABLE llx_adherent_type ADD COLUMN caneditamount integer DEFAULT 0 AFTER amount;
 
+ALTER TABLE llx_holiday CHANGE COLUMN date_approve date_approval datetime;
+
+UPDATE llx_holiday SET date_approval = date_valid WHEN statut = 3 AND date_approval IS NULL;
+UPDATE llx_holiday SET fk_user_approve = fk_user_valid WHEN statut = 3 AND fk_user_approve IS NULL;
 
 ALTER TABLE llx_inventory ADD COLUMN categories_product VARCHAR(255) DEFAULT NULL AFTER fk_product;
 
