@@ -170,7 +170,45 @@ if (empty($reshook)) {
 
 			$db->begin();
 
-			$object->ref             = GETPOST('ref', 'alphanohtml');
+			// add SPÉ CLIENT
+			// je pense qu'il manque cette declaration  societe pour que cela fonctionne
+			// ajouté par jpb
+			$thirdparty = new Societe($db);
+			if ($socid > 0) {
+				$thirdparty->fetch($socid);
+			}
+			// SPÉ CLIENT
+			$defaultref='';
+			$modele = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
+
+			// Search template files
+			$file=''; $classname=''; $filefound=0;
+			$dirmodels=array_merge(array('/'),(array) $conf->modules_parts['models']);
+			foreach($dirmodels as $reldir)
+			{
+				$file=dol_buildpath($reldir."core/modules/project/".$modele.'.php',0);
+				if (file_exists($file))
+				{
+					$filefound=1;
+					$classname = $modele;
+					break;
+				}
+			}
+
+			if ($filefound)
+			{
+				$result=dol_include_once($reldir."core/modules/project/".$modele.'.php');
+				$modProject = new $classname;
+
+				$object->ref = $modProject->getNextValue($thirdparty,$object);
+			}
+			else{
+				$object->ref             = GETPOST('ref','alpha');
+			}
+
+			//echo $object->ref; exit;
+			// FIN SPÉ CLIENT
+
 			$object->title           = GETPOST('title', 'alphanohtml');
 			$object->socid           = GETPOST('socid', 'int');
 			$object->description     = GETPOST('description', 'restricthtml'); // Do not use 'alpha' here, we want field as it is

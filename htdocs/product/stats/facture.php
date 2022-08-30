@@ -30,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+if(! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT .'/projet/class/project.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array('companies', 'bills', 'products', 'supplier_proposal'));
@@ -156,11 +157,13 @@ if ($id > 0 || !empty($ref)) {
 			$sql = "SELECT DISTINCT s.nom as name, s.rowid as socid, s.code_client,";
 			$sql .= " f.ref, f.datef, f.paye, f.type, f.fk_statut as statut, f.rowid as facid,";
 			$sql .= " d.rowid, d.total_ht as total_ht, d.qty"; // We must keep the d.rowid here to not loose record because of the distinct used to ignore duplicate line when link on societe_commerciaux is used
+			if($conf->projet->enabled) $sql .= ', f.fk_projet, p.ref as project_ref';
 			if (empty($user->rights->societe->client->voir) && !$socid) {
 				$sql .= ", sc.fk_soc, sc.fk_user ";
 			}
 			$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
 			$sql .= ", ".MAIN_DB_PREFIX."facture as f";
+			if($conf->projet->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = f.fk_projet ';
 			$sql .= ", ".MAIN_DB_PREFIX."facturedet as d";
 			if (empty($user->rights->societe->client->voir) && !$socid) {
 				$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -246,6 +249,9 @@ if ($id > 0 || !empty($ref)) {
 				print '<tr class="liste_titre">';
 				print_liste_field_titre("Ref", $_SERVER["PHP_SELF"], "s.rowid", "", $option, '', $sortfield, $sortorder);
 				print_liste_field_titre("Company", $_SERVER["PHP_SELF"], "s.nom", "", $option, '', $sortfield, $sortorder);
+				if(!empty($conf->projet->enabled)){
+					print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$option,'',$sortfield,$sortorder);
+				}
 				print_liste_field_titre("CustomerCode", $_SERVER["PHP_SELF"], "s.code_client", "", $option, '', $sortfield, $sortorder);
 				print_liste_field_titre("DateInvoice", $_SERVER["PHP_SELF"], "f.datef", "", $option, 'align="center"', $sortfield, $sortorder);
 				print_liste_field_titre("Qty", $_SERVER["PHP_SELF"], "d.qty", "", $option, 'align="center"', $sortfield, $sortorder);
@@ -274,6 +280,14 @@ if ($id > 0 || !empty($ref)) {
 						print $invoicestatic->getNomUrl(1);
 						print "</td>\n";
 						print '<td>'.$societestatic->getNomUrl(1).'</td>';
+						//Ref projet
+						if(! empty($conf->projet->enabled)){
+							$projet = new Project($db);
+							$projet->fetch($objp->fk_projet);
+							print '<td>';
+							print $projet->getNomUrl(1);
+							print '</td>';
+						}
 						print "<td>".$objp->code_client."</td>\n";
 						print '<td class="center">';
 						print dol_print_date($db->jdate($objp->datef), 'dayhour')."</td>";
