@@ -42,6 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
@@ -1273,6 +1274,9 @@ if ($resql) {
 	if (!empty($arrayfields['f.total_ttc']['checked'])) {
 		print_liste_field_titre($arrayfields['f.total_ttc']['label'], $_SERVER['PHP_SELF'], 'f.total_ttc', '', $param, '', $sortfield, $sortorder, 'right ');
 	}
+	if(!empty($conf->margin->enabled)){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	if (!empty($arrayfields['u.login']['checked'])) {
 		print_liste_field_titre($arrayfields['u.login']['label'], $_SERVER["PHP_SELF"], 'u.login', '', $param, 'align="center"', $sortfield, $sortorder);
 	}
@@ -1616,6 +1620,13 @@ if ($resql) {
 				}
 				$totalarray['val']['f.total_ttc'] += $obj->total_ttc;
 			}
+
+			//Marge
+			$facture = new Facture($db);
+			$facture->fetch($objp->facid);
+			$formmargin = new FormMargin($db);
+			$marginInfo = $formmargin->getMarginInfosArray($facture);
+			print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
 
 			$userstatic->id = $obj->fk_user_author;
 			$userstatic->login = $obj->login;

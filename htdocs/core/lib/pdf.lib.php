@@ -1258,6 +1258,8 @@ function pdf_pagefoot(&$pdf, $outputlangs, $paramfreetext, $fromcompany, $marge_
  */
 function pdf_writeLinkedObjects(&$pdf, $object, $outputlangs, $posx, $posy, $w, $h, $align, $default_font_size)
 {
+	// Ticket 4533 : en attendant point avec Geoffrey
+	if($object->element == 'order_supplier') return;
 	$linkedobjects = pdf_getLinkedObjects($object, $outputlangs);
 	if (!empty($linkedobjects)) {
 		foreach ($linkedobjects as $linkedobject) {
