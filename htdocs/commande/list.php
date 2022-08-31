@@ -44,6 +44,7 @@ require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("orders", 'sendings', 'deliveries', 'companies', 'compta', 'bills', 'stocks', 'products'));
@@ -180,6 +181,7 @@ $arrayfields = array(
 	'c.total_ht'=>array('label'=>"AmountHT", 'checked'=>1, 'position'=>75),
 	'c.total_vat'=>array('label'=>"AmountVAT", 'checked'=>0, 'position'=>80),
 	'c.total_ttc'=>array('label'=>"AmountTTC", 'checked'=>0, 'position'=>85),
+	'margin'=>array('label'=>$langs->trans("Margin"), 'checked'=>0),
 	'c.multicurrency_code'=>array('label'=>'Currency', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>90),
 	'c.multicurrency_tx'=>array('label'=>'CurrencyRate', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>95),
 	'c.multicurrency_total_ht'=>array('label'=>'MulticurrencyAmountHT', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>100),
@@ -1145,6 +1147,7 @@ if ($resql) {
 		print '<input class="flat" type="text" size="4" name="search_total_ht" value="'.dol_escape_htmltag($search_total_ht).'">';
 		print '</td>';
 	}
+
 	if (!empty($arrayfields['c.total_vat']['checked'])) {
 		// Amount
 		print '<td class="liste_titre right">';
@@ -1195,6 +1198,9 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['sale_representative']['checked'])) {
 		print '<td class="liste_titre"></td>';
+	}
+	if(!empty($arrayfields['margin']['checked'])){
+		print '<td></td>';
 	}
 	// Extra fields
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_input.tpl.php';
@@ -1357,7 +1363,9 @@ if ($resql) {
 	if (!empty($arrayfields['sale_representative']['checked'])) {
 		print_liste_field_titre($arrayfields['sale_representative']['label'], $_SERVER["PHP_SELF"], "", "", "$param", '', $sortfield, $sortorder);
 	}
-
+	if(!empty($arrayfields['margin']['checked'])){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	$totalarray = array(
 		'nbfield' => 0,
 		'val' => array(
@@ -1658,6 +1666,7 @@ if ($resql) {
 				$totalarray['val']['c.total_ht'] = $obj->total_ht;
 			}
 		}
+
 		// Amount VAT
 		if (!empty($arrayfields['c.total_vat']['checked'])) {
 			print '<td class="nowrap right"><span class="amount">'.price($obj->total_tva)."</span></td>\n";
@@ -1680,7 +1689,16 @@ if ($resql) {
 			}
 			$totalarray['val']['c.total_ttc'] += $obj->total_ttc;
 		}
+//Marge
+		if (! empty($arrayfields['margin']['checked']))
+		{
+			$commande = new Commande($db);
+			$commande->fetch($obj->rowid);
+			$formmargin = new FormMargin($db);
 
+			$marginInfo = $formmargin->getMarginInfosArray($commande);
+			print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+		}
 		// Currency
 		if (!empty($arrayfields['c.multicurrency_code']['checked'])) {
 			  print '<td class="nowrap">'.$obj->multicurrency_code.' - '.$langs->trans('Currency'.$obj->multicurrency_code)."</td>\n";

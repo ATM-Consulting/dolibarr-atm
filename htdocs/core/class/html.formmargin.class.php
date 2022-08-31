@@ -81,85 +81,86 @@ class FormMargin
 				'total_margin_rate' => '',
 				'total_mark_rate' => ''
 		);
-
-		foreach ($object->lines as $line) {
-			if (empty($line->pa_ht) && isset($line->fk_fournprice) && !$force_price) {
-				require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
-				$product = new ProductFournisseur($this->db);
-				if ($product->fetch_product_fournisseur_price($line->fk_fournprice)) {
-					$line->pa_ht = $product->fourn_unitprice * (1 - $product->fourn_remise_percent / 100);
+		if(!empty($object->lines)) {
+			foreach ($object->lines as $line) {
+				if (empty($line->pa_ht) && isset($line->fk_fournprice) && !$force_price) {
+					require_once DOL_DOCUMENT_ROOT . '/fourn/class/fournisseur.product.class.php';
+					$product = new ProductFournisseur($this->db);
+					if ($product->fetch_product_fournisseur_price($line->fk_fournprice)) {
+						$line->pa_ht = $product->fourn_unitprice * (1 - $product->fourn_remise_percent / 100);
+					}
 				}
-			}
 
-			// If buy price is not defined (null), we will use the sell price. If defined to 0 (it means it was forced to 0 during insert, for example for a free to get product), we must still use 0.
-			//if ((!isset($line->pa_ht) || $line->pa_ht == 0) && $line->subprice > 0 && (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull > 0)) {
-			if ((!isset($line->pa_ht)) && $line->subprice > 0 && (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull > 0)) {
-				$line->pa_ht = $line->subprice * (1 - ($line->remise_percent / 100));
-			}
-
-			$pv = $line->total_ht;
-			$pa_ht = ($pv < 0 ? -$line->pa_ht : $line->pa_ht); // We choosed to have line->pa_ht always positive in database, so we guess the correct sign
-			if (($object->element == 'facture' && $object->type == $object::TYPE_SITUATION)
-				|| ($object->element == 'facture' && $object->type == $object::TYPE_CREDIT_NOTE && $conf->global->INVOICE_USE_SITUATION_CREDIT_NOTE && $object->situation_counter > 0)) {
-				$pa = $line->qty * $pa_ht * ($line->situation_percent / 100);
-			} else {
-				$pa = $line->qty * $pa_ht;
-			}
-
-			// calcul des marges
-			if (isset($line->fk_remise_except) && isset($conf->global->MARGIN_METHODE_FOR_DISCOUNT)) {    // remise
-				if ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '1') { // remise globale considérée comme produit
-					$marginInfos['pa_products'] += $pa;
-					$marginInfos['pv_products'] += $pv;
-					$marginInfos['pa_total'] += $pa;
-					$marginInfos['pv_total'] += $pv;
-					// if credit note, margin = -1 * (abs(selling_price) - buying_price)
-					//if ($pv < 0)
-					//{
-					//	$marginInfos['margin_on_products'] += -1 * (abs($pv) - $pa);
-					//}
-					//else
-						$marginInfos['margin_on_products'] += $pv - $pa;
-				} elseif ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '2') { // remise globale considérée comme service
-					$marginInfos['pa_services'] += $pa;
-					$marginInfos['pv_services'] += $pv;
-					$marginInfos['pa_total'] += $pa;
-					$marginInfos['pv_total'] += $pv;
-					// if credit note, margin = -1 * (abs(selling_price) - buying_price)
-					//if ($pv < 0)
-					//	$marginInfos['margin_on_services'] += -1 * (abs($pv) - $pa);
-					//else
-						$marginInfos['margin_on_services'] += $pv - $pa;
-				} elseif ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '3') { // remise globale prise en compte uniqt sur total
-					$marginInfos['pa_total'] += $pa;
-					$marginInfos['pv_total'] += $pv;
+				// If buy price is not defined (null), we will use the sell price. If defined to 0 (it means it was forced to 0 during insert, for example for a free to get product), we must still use 0.
+				//if ((!isset($line->pa_ht) || $line->pa_ht == 0) && $line->subprice > 0 && (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull > 0)) {
+				if ((!isset($line->pa_ht)) && $line->subprice > 0 && (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull > 0)) {
+					$line->pa_ht = $line->subprice * (1 - ($line->remise_percent / 100));
 				}
-			} else {
-				$type = $line->product_type ? $line->product_type : $line->fk_product_type;
-				if ($type == 0) {  // product
-					$marginInfos['pa_products'] += $pa;
-					$marginInfos['pv_products'] += $pv;
-					$marginInfos['pa_total'] += $pa;
-					$marginInfos['pv_total'] += $pv;
-					// if credit note, margin = -1 * (abs(selling_price) - buying_price)
-					//if ($pv < 0)
-					//{
-					//    $marginInfos['margin_on_products'] += -1 * (abs($pv) - $pa);
-					//}
-					//else
-					//{
+
+				$pv = $line->total_ht;
+				$pa_ht = ($pv < 0 ? -$line->pa_ht : $line->pa_ht); // We choosed to have line->pa_ht always positive in database, so we guess the correct sign
+				if (($object->element == 'facture' && $object->type == $object::TYPE_SITUATION)
+					|| ($object->element == 'facture' && $object->type == $object::TYPE_CREDIT_NOTE && $conf->global->INVOICE_USE_SITUATION_CREDIT_NOTE && $object->situation_counter > 0)) {
+					$pa = $line->qty * $pa_ht * ($line->situation_percent / 100);
+				} else {
+					$pa = $line->qty * $pa_ht;
+				}
+
+				// calcul des marges
+				if (isset($line->fk_remise_except) && isset($conf->global->MARGIN_METHODE_FOR_DISCOUNT)) {    // remise
+					if ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '1') { // remise globale considérée comme produit
+						$marginInfos['pa_products'] += $pa;
+						$marginInfos['pv_products'] += $pv;
+						$marginInfos['pa_total'] += $pa;
+						$marginInfos['pv_total'] += $pv;
+						// if credit note, margin = -1 * (abs(selling_price) - buying_price)
+						//if ($pv < 0)
+						//{
+						//	$marginInfos['margin_on_products'] += -1 * (abs($pv) - $pa);
+						//}
+						//else
 						$marginInfos['margin_on_products'] += $pv - $pa;
-					//}
-				} elseif ($type == 1) {  // service
-					$marginInfos['pa_services'] += $pa;
-					$marginInfos['pv_services'] += $pv;
-					$marginInfos['pa_total'] += $pa;
-					$marginInfos['pv_total'] += $pv;
-					// if credit note, margin = -1 * (abs(selling_price) - buying_price)
-					//if ($pv < 0)
-					//	$marginInfos['margin_on_services'] += -1 * (abs($pv) - $pa);
-					//else
+					} elseif ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '2') { // remise globale considérée comme service
+						$marginInfos['pa_services'] += $pa;
+						$marginInfos['pv_services'] += $pv;
+						$marginInfos['pa_total'] += $pa;
+						$marginInfos['pv_total'] += $pv;
+						// if credit note, margin = -1 * (abs(selling_price) - buying_price)
+						//if ($pv < 0)
+						//	$marginInfos['margin_on_services'] += -1 * (abs($pv) - $pa);
+						//else
 						$marginInfos['margin_on_services'] += $pv - $pa;
+					} elseif ($conf->global->MARGIN_METHODE_FOR_DISCOUNT == '3') { // remise globale prise en compte uniqt sur total
+						$marginInfos['pa_total'] += $pa;
+						$marginInfos['pv_total'] += $pv;
+					}
+				} else {
+					$type = $line->product_type ? $line->product_type : $line->fk_product_type;
+					if ($type == 0) {  // product
+						$marginInfos['pa_products'] += $pa;
+						$marginInfos['pv_products'] += $pv;
+						$marginInfos['pa_total'] += $pa;
+						$marginInfos['pv_total'] += $pv;
+						// if credit note, margin = -1 * (abs(selling_price) - buying_price)
+						//if ($pv < 0)
+						//{
+						//    $marginInfos['margin_on_products'] += -1 * (abs($pv) - $pa);
+						//}
+						//else
+						//{
+						$marginInfos['margin_on_products'] += $pv - $pa;
+						//}
+					} elseif ($type == 1) {  // service
+						$marginInfos['pa_services'] += $pa;
+						$marginInfos['pv_services'] += $pv;
+						$marginInfos['pa_total'] += $pa;
+						$marginInfos['pv_total'] += $pv;
+						// if credit note, margin = -1 * (abs(selling_price) - buying_price)
+						//if ($pv < 0)
+						//	$marginInfos['margin_on_services'] += -1 * (abs($pv) - $pa);
+						//else
+						$marginInfos['margin_on_services'] += $pv - $pa;
+					}
 				}
 			}
 		}

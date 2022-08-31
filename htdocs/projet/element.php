@@ -759,6 +759,7 @@ foreach ($listofreferent as $key => $value) {
 		'value' =>& $value,
 		'dates' => $dates,
 		'datee' => $datee
+
 	);
 	$reshook = $hookmanager->executeHooks('printOverviewProfit', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 	if ($reshook < 0) {

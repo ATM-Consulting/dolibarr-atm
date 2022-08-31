@@ -68,13 +68,13 @@ $enddateyear    = GETPOST('enddateyear', 'int');
 if (!empty($startdatemonth)) {
 	$startdate = dol_mktime(0, 0, 0, $startdatemonth, $startdateday, $startdateyear);
 }else{
-	$startdate  = dol_mktime(0, 0,0, 7, 1, (date("m") >= 7 ) ? date("Y") : date("Y")-1);
+	$startdate  = dol_mktime(0, 0,0, $conf->global->SOCIETE_FISCAL_MONTH_START, 1, (date("m") >= $conf->global->SOCIETE_FISCAL_MONTH_START ) ? date("Y") : date("Y")-1);
 }
 
 if (!empty($enddatemonth)) {
 	$enddate = dol_mktime(23, 59, 59, $enddatemonth, $enddateday, $enddateyear);
 }else{
-	$enddate  = dol_mktime(23, 59, 59, 6, 30, (date("m") < 7 ) ? date("Y") : date("Y")+1);
+	$enddate  = dol_mktime(23, 59, 59, $conf->global->SOCIETE_FISCAL_MONTH_START-1, 30, (date("m") < $conf->global->SOCIETE_FISCAL_MONTH_START ) ? date("Y") : date("Y")+1);
 }
 
 
