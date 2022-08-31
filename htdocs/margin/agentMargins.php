@@ -67,10 +67,16 @@ $enddateyear    = GETPOST('enddateyear', 'int');
 
 if (!empty($startdatemonth)) {
 	$startdate = dol_mktime(0, 0, 0, $startdatemonth, $startdateday, $startdateyear);
+}else{
+	$startdate  = dol_mktime(0, 0,0, 7, 1, (date("m") >= 7 ) ? date("Y") : date("Y")-1);
 }
+
 if (!empty($enddatemonth)) {
 	$enddate = dol_mktime(23, 59, 59, $enddatemonth, $enddateday, $enddateyear);
+}else{
+	$enddate  = dol_mktime(23, 59, 59, 6, 30, (date("m") < 7 ) ? date("Y") : date("Y")+1);
 }
+
 
 // Security check
 if ($user->rights->margins->read->all) {

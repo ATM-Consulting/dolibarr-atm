@@ -51,8 +51,13 @@ $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
 	$startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'],  $_POST['startdateday'],  $_POST['startdateyear']);
+else
+	$startdate  = dol_mktime(0, 0,0, 7, 1, (date("m") >= 7 ) ? date("Y") : date("Y")-1);
+
 if (!empty($_POST['enddatemonth']))
 	$enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'],  $_POST['enddateday'],  $_POST['enddateyear']);
+else
+	$enddate  = dol_mktime(23, 59, 59, 6, 30, (date("m") < 7 ) ? date("Y") : date("Y")+1);
 
 /*
  * View
@@ -171,7 +176,7 @@ $sql.= ", ".MAIN_DB_PREFIX."commande as f";
 $sql.= ", ".MAIN_DB_PREFIX."commandedet as d";
 $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.fk_statut > 0";
-$sql.= " AND s.entity = ".$conf->entity;
+$sql.= " AND f.entity = ".$conf->entity;
 $sql.= " AND d.fk_commande = f.rowid";
 $sql.= " AND (d.product_type = 0 OR d.product_type = 1)";
 if ($client)
