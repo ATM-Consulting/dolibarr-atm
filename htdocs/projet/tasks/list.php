@@ -915,6 +915,16 @@ if (!empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) {
 	$timespentoutputformat = $conf->global->PROJECT_TIME_SPENT_FORMAT;
 }
 
+if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_plannedworkloadoutputformat='alldayhour';
+$working_timespentoutputformat='alldayhour';
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 $i = 0;
 while ($i < min($num, $limit)) {
 	$obj = $db->fetch_object($resql);
@@ -1061,12 +1071,21 @@ while ($i < min($num, $limit)) {
 		// Planned workload
 		if (!empty($arrayfields['t.planned_workload']['checked'])) {
 			print '<td class="center">';
-			$fullhour = convertSecondToTime($obj->planned_workload, $plannedworkloadoutputformat);
-			$workingdelay = convertSecondToTime($obj->planned_workload, 'all', 86400, 7); // TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+
+
 			if ($obj->planned_workload != '') {
+				$fullhour=convertSecondToTime($obj->planned_workload, $plannedworkloadoutputformat);
 				print $fullhour;
-				// TODO Add delay taking account of working hours per day and working day per week
-				//if ($workingdelay != $fullhour) print '<br>('.$workingdelay.')';
+				if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+				{
+					$workingdelay=convertSecondToTime($obj->planned_workload, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+					// TODO Add delay taking account of working hours per day and working day per week
+					if ($workingdelay != $fullhour && !empty($workingdelay))
+					{
+						if (!empty($fullhour)) print '<br>';
+						print '('.$workingdelay.')';
+					}
+				}
 			}
 			//else print '--:--';
 			print '</td>';
@@ -1091,8 +1110,21 @@ while ($i < min($num, $limit)) {
 			} else {
 				print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$object->id.($showproject ? '' : '&withproject=1').'">';
 			}
-			if ($obj->duration_effective) {
-				print convertSecondToTime($obj->duration_effective, $timespentoutputformat);
+			if ($obj->duration_effective)
+			{
+				$fullhour = convertSecondToTime($obj->duration_effective, $timespentoutputformat);
+				print $fullhour;
+
+				if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+				{
+					$workingdelay=convertSecondToTime($obj->duration_effective, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+					// TODO Add delay taking account of working hours per day and working day per week
+					if ($workingdelay != $fullhour)
+					{
+						if (!empty($fullhour)) print '<br>';
+						print '('.$workingdelay.')';
+					}
+				}
 			} else {
 				print '--:--';
 			}
@@ -1281,16 +1313,43 @@ if (isset($totalarray['totaldurationeffectivefield']) || isset($totalarray['tota
 		$i++;
 		if ($i == 1) {
 			if ($num < $limit && empty($offset)) {
-				print '<td class="left">'.$langs->trans("Total").'</td>';
+				print '<td class="left">' . $langs->trans("Total") . '</td>';
 			} else {
-				print '<td class="left">'.$langs->trans("Totalforthispage").'</td>';
+				print '<td class="left">' . $langs->trans("Totalforthispage") . '</td>';
 			}
-		} elseif ($totalarray['totalplannedworkloadfield'] == $i) {
-			print '<td class="center">'.convertSecondToTime($totalarray['totalplannedworkload'], $plannedworkloadoutputformat).'</td>';
-		} elseif ($totalarray['totaldurationeffectivefield'] == $i) {
-			print '<td class="center">'.convertSecondToTime($totalarray['totaldurationeffective'], $timespentoutputformat).'</td>';
-		} elseif ($totalarray['totalprogress_calculatedfield'] == $i) {
+		} elseif ($totalarray['totalplannedworkloadfield'] == $i){
+			$fulltime = convertSecondToTime($totalarray['totalplannedworkload'], $plannedworkloadoutputformat);
+			print '<td class="center">'.$fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($totalarray['totalplannedworkload'], $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime)
+				{
+					if (!empty($fulltime)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
+			print '</td>';
+		}
+		elseif ($totalarray['totaldurationeffectivefield'] == $i)
+		{
+			$fulltime = convertSecondToTime($totalarray['totaldurationeffective'], $timespentoutputformat);
+			print '<td class="center">'.$fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($totalarray['totaldurationeffective'], $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime)
+				{
+					if (!empty($fulltime)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
+			print '</td>';
+		}
+		elseif ($totalarray['totalprogress_calculated'] == $i)
+		{
 			print '<td class="center">'.($totalarray['totalplannedworkload'] > 0 ? round(100 * $totalarray['totaldurationeffective'] / $totalarray['totalplannedworkload'], 2).' %' : '').'</td>';
+
 		} elseif ($totalarray['totalprogress_declaredfield'] == $i) {
 			print '<td class="center">'.($totalarray['totalplannedworkload'] > 0 ? round(100 * $totalarray['totaldurationdeclared'] / $totalarray['totalplannedworkload'], 2).' %' : '').'</td>';
 		} elseif ($totalarray['totaltobillfield'] == $i) {

@@ -192,6 +192,21 @@ if ($action == 'remove_file' && $user->rights->projet->creer) {
  * View
  */
 
+$plannedworkloadoutputformat='allhourmin';
+$timespentoutputformat='allhourmin';
+if (! empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) $plannedworkloadoutputformat=$conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+
+$working_plannedworkloadoutputformat='all';
+$working_timespentoutputformat='all';
+if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
+
 llxHeader('', $langs->trans("Task"));
 
 $form = new Form($db);
@@ -430,7 +445,7 @@ if ($id > 0 || !empty($ref)) {
 
 		// Planned workload
 		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td>';
-		print $form->select_duration('planned_workload', $object->planned_workload, 0, 'text');
+		print $form->select_duration('planned_workload', $object->planned_workload, 0, (empty($conf->global->PROJECT_USE_DECIMAL_DAY) ? 'text' : 'days'));
 		print '</td></tr>';
 
 		// Progress declared
@@ -532,7 +547,18 @@ if ($id > 0 || !empty($ref)) {
 		// Planned workload
 		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td colspan="3">';
 		if ($object->planned_workload != '') {
-			print convertSecondToTime($object->planned_workload, 'allhourmin');
+			$fullhour = convertSecondToTime($object->planned_workload, $plannedworkloadoutputformat);
+			print $fullhour;
+
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($object->planned_workload, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+				if ($workingdelay != $fullhour)
+				{
+					if (!empty($fullhour)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
 		}
 		print '</td></tr>';
 

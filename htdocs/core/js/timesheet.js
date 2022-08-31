@@ -63,7 +63,7 @@ function regexEvent(objet,evt,type)
           case 'timeChar':
               //var regex= /^[0-9:]{1}$/;
               //alert(event.charCode);
-              var charCode = (evt.which) ? evt.which : event.keyCode;
+              var charCode = (evt.which) ? evt.which : evt.keyCode;
 
               if(((charCode >= 48) && (charCode <= 57)) || //num
                     (charCode===46) || (charCode===8)||// comma & periode
@@ -277,15 +277,11 @@ function updateTotal(days,mode)
             var element=document.getElementById(id);
             if(element)
             {
-                if (element.value)
-                {
-                    total+=parseInt(element.value);
-
-                   }
-                else
-                {
-                    total+=parseInt(element.innerHTML);
-                }
+                if (element.value) {
+					total+=parseFloat(element.value);
+                } else if (element.innerHTML.length) {
+					total+=parseFloat(element.innerHTML);
+				}
             }
 
             var id='timeadded['+i+']['+days+']';
@@ -295,13 +291,13 @@ function updateTotal(days,mode)
             {
                 if (element.value)
                 {
-                    total+=parseInt(element.value);
+					total+=parseFloat(element.value);
 
-                   }
-                else
-                {
-                    total+=parseInt(element.innerHTML);
                 }
+				else if (element.innerHTML.length)
+				{
+					total+=parseFloat(element.innerHTML);
+				}
             }
         }
 

@@ -111,6 +111,15 @@ if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id) {
 }
 
 $object = new Task($db);
+$timespentoutputformat='allhourmin';
+if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+$working_timespentoutputformat='all';
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 $project = new Project($db);
 
 // Extra fields
@@ -254,22 +263,29 @@ if ($action == 'addtime' && $user->rights->projet->lire && GETPOST('formfilterac
 	$timespent_duration = array();
 
 	if (is_array($_POST)) {
-		foreach ($_POST as $key => $time) {
-			if (intval($time) > 0) {
-				$matches = array();
+		if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $post = $_POST;
+		else $post = $_POST['task'];
+		foreach($post as $key => $time)
+		{
+			if (intval($time) > 0)
+			{
+				if (!empty($conf->global->PROJECT_USE_DECIMAL_DAY))
+				{
+					$tmpduration=price2num($time[0]);
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME)) $timespent_duration[$key] = $tmpduration * $working_hours_per_day_in_seconds;
+					else $timespent_duration[$key] = $tmpduration * 24 * 60 * 60;
+				}
 				// Hours or minutes of duration
-				if (preg_match("/([0-9]+)duration(hour|min)/", $key, $matches)) {
+				elseif (preg_match("/([0-9]+)duration(hour|min)/", $key, $matches))
+				{
 					$id = $matches[1];
-					if ($id > 0) {
+					if ($id > 0)
+					{
 						// We store HOURS in seconds
-						if ($matches[2] == 'hour') {
-							$timespent_duration[$id] += $time * 60 * 60;
-						}
+						if($matches[2]=='hour') $timespent_duration[$id] += $time*60*60;
 
 						// We store MINUTES in seconds
-						if ($matches[2] == 'min') {
-							$timespent_duration[$id] += $time * 60;
-						}
+						if($matches[2]=='min') $timespent_duration[$id] += $time*60;
 					}
 				}
 			}
@@ -578,6 +594,7 @@ if (!empty($arrayfields['timeconsumed']['checked'])) {
 	print '<td class="liste_titre"></td>';
 }
 print '<td class="liste_titre"></td>';
+if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) print '<td class="liste_titre"></td>';
 print '<td class="liste_titre"></td>';
 print '<td class="liste_titre"></td>';
 // Action column
@@ -615,7 +632,7 @@ if (!empty($arrayfields['timeconsumed']['checked'])) {
 	print '<th class="right maxwidth75 maxwidth100">'.$langs->trans("TimeSpent").($usertoprocess->firstname ? '<br><span class="nowraponall">'.$usertoprocess->getNomUrl(-2).'<span class="opacitymedium paddingleft">'.dol_trunc($usertoprocess->firstname, 10).'</span></span>' : '').'</th>';
 }
 print '<th class="center leftborder">'.$langs->trans("HourStart").'</td>';
-
+if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) print '<td align="center">'.$langs->trans("Duration").'</td>';
 // By default, we can edit only tasks we are assigned to
 $restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
 
@@ -734,7 +751,7 @@ if (count($tasksarray) > 0) {
 			$isdiff = 1;
 		}
 	}
-
+	if (!empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $colspan--;
 	// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
 	if ($isdiff) {
 		print '<tr class="oddeven othertaskwithtime">';
@@ -751,8 +768,19 @@ if (count($tasksarray) > 0) {
 		//if ($timeonothertasks)
 		//{
 			print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center" size="2" disabled="" id="timespent[-1][0]" name="task[-1][0]" value="';
-		if ($timeonothertasks) {
-			print convertSecondToTime($timeonothertasks, 'allhourmin');
+		if ($timeonothertasks)
+		{
+			$fullhour = convertSecondToTime($timeonothertasks, $timespentoutputformat);
+			print $fullhour;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($timeonothertasks, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+				if ($workingdelay != $fullhour)
+				{
+					if (!empty($fullhour)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
 		}
 			print '"></span>';
 		//}
@@ -795,7 +823,8 @@ print '</div>';
 
 print '</form>';
 
-$modeinput = 'hours';
+if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $modeinput='hours';
+else $modeinput='timeChar';
 
 if ($conf->use_javascript_ajax) {
 	print "\n<!-- JS CODE TO ENABLE Tooltips on all object with class classfortooltip -->\n";
