@@ -38,13 +38,12 @@ require_once DOL_DOCUMENT_ROOT.'/holiday/class/holiday.class.php';
 // Load translation files required by the page
 $langs->loadLangs(array('projects', 'users', 'companies'));
 
-$action = GETPOST('action', 'aZ09');
-$mode = GETPOST("mode", 'alpha');
-$id = GETPOST('id', 'int');
-$taskid = GETPOST('taskid', 'int');
+$action=GETPOST('action', 'aZ09');
+$mode=GETPOST("mode", 'alpha');
+$id=GETPOST('id', 'int');
+$taskid=GETPOST('taskid', 'int');
 
-$contextpage = GETPOST('contextpage', 'aZ') ?GETPOST('contextpage', 'aZ') : 'perdaycard';
-
+$contextpage=GETPOST('contextpage', 'aZ')?GETPOST('contextpage', 'aZ'):'perdaycard';
 $mine = 0;
 if ($mode == 'mine') {
 	$mine = 1;
@@ -126,14 +125,14 @@ $project = new Project($db);
 $extrafields = new ExtraFields($db);
 
 // fetch optionals attributes and labels
-$extrafields->fetch_name_optionals_label($object->table_element);
+$extralabels_project = $extrafields->fetch_name_optionals_label('projet');
 
 // Definition of fields for list
 $arrayfields = array();
 $arrayfields['t.planned_workload'] = array('label'=>'PlannedWorkload', 'checked'=>1, 'enabled'=>1, 'position'=>0);
 $arrayfields['t.progress'] = array('label'=>'ProgressDeclared', 'checked'=>1, 'enabled'=>1, 'position'=>0);
 $arrayfields['timeconsumed'] = array('label'=>'TimeConsumed', 'checked'=>1, 'enabled'=>1, 'position'=>15);
-/*$arrayfields=array(
+$arrayfields=array(
  // Project
  'p.opp_amount'=>array('label'=>$langs->trans("OpportunityAmountShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>103),
  'p.fk_opp_status'=>array('label'=>$langs->trans("OpportunityStatusShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>104),
@@ -141,7 +140,7 @@ $arrayfields['timeconsumed'] = array('label'=>'TimeConsumed', 'checked'=>1, 'ena
  'p.budget_amount'=>array('label'=>$langs->trans("Budget"), 'checked'=>0, 'position'=>110),
  'p.usage_bill_time'=>array('label'=>$langs->trans("BillTimeShort"), 'checked'=>0, 'position'=>115),
  );
- */
+
 // Extra fields
 if (!empty($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label']) > 0) {
 	foreach ($extrafields->attributes[$object->table_element]['label'] as $key => $val) {
@@ -150,9 +149,25 @@ if (!empty($extrafields->attributes[$object->table_element]['label']) && is_arra
 		}
 	}
 }
+
+$extralabels_project_task= $extrafields->fetch_name_optionals_label('projet_task', true);
+if (!empty($extrafields->attributes['projet_task']['label']))
+{
+	foreach($extrafields->attributes['projet_task']['label'] as $key => $val)
+	{
+		if (! empty($extrafields->attributes['projet_task']['list'][$key])) $arrayfields["efpt.".$key]=array('label'=>$extrafields->attributes['projet_task']['label'][$key], 'checked'=>(($extrafields->attributes['projet_task']['list'][$key]<0)?0:1), 'position'=>$extrafields->attributes['projet_task']['pos'][$key], 'enabled'=>(abs($extrafields->attributes['projet_task']['list'][$key])!=3 && $extrafields->attributes['projet_task']['perms'][$key]));
+	}
+}
+
+$extralabels=array();
+if (is_array($extralabels_project)) $extralabels = $extralabels_project;
+if (is_array($extralabels_project_task)) $extralabels+= $extralabels_project_task;
+
+
+
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-
+$search_array_options=array();
 $search_array_options_project = $extrafields->getOptionalsFromPost($project->table_element, '', 'search_');
 $search_array_options_task = $extrafields->getOptionalsFromPost($object->table_element, '', 'search_task_');
 
@@ -616,6 +631,7 @@ print '<th>'.$langs->trans("Task").'</th>';
 $extrafieldsobjectkey = 'projet_task';
 $extrafieldsobjectprefix = 'efpt.';
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_title.tpl.php';
+
 if (!empty($arrayfields['t.planned_workload']['checked'])) {
 	print '<th class="leftborder plannedworkload minwidth75 maxwidth100 right" title="'.dol_escape_htmltag($langs->trans("PlannedWorkload")).'">'.$langs->trans("PlannedWorkload").'</th>';
 }
@@ -719,7 +735,7 @@ if (count($tasksarray) > 0) {
 
 	$j = 0;
 	$level = 0;
-	$totalforvisibletasks = projectLinesPerDay($j, 0, $usertoprocess, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $daytoparse, $isavailable, 0, $arrayfields, $extrafields);
+	$totalforvisibletasks = projectLinesPerDay($j, 0, $usertoprocess, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $daytoparse, $isavailable, 0, $arrayfields, $extrafields, $extralabels);
 	//var_dump($totalforvisibletasks);
 
 	// Show total for all other tasks
@@ -755,7 +771,7 @@ if (count($tasksarray) > 0) {
 	// There is a diff between total shown on screen and total spent by user, so we add a line with all other cumulated time of user
 	if ($isdiff) {
 		print '<tr class="oddeven othertaskwithtime">';
-		print '<td colspan="'.($colspan - 1).'" class="opacitymedium">';
+		print '<td colspan="'.($colspan+$addcolspan).'">';
 		print $langs->trans("OtherFilteredTasks");
 		print '</td>';
 		if (!empty($arrayfields['timeconsumed']['checked'])) {
@@ -792,7 +808,7 @@ if (count($tasksarray) > 0) {
 
 	if ($conf->use_javascript_ajax) {
 		print '<tr class="liste_total">';
-		print '<td class="liste_total" colspan="'.($colspan - 1 + $addcolspan).'">';
+		print '<td class="liste_total" colspan="'.($colspan+$addcolspan).'">';
 		print $langs->trans("Total");
 		print '</td>';
 		if (!empty($arrayfields['timeconsumed']['checked'])) {
