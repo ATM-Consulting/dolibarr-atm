@@ -99,9 +99,29 @@ $hookmanager->initHooks(array('projecttasktime', 'globalcard'));
 
 $object = new Task($db);
 $projectstatic = new Project($db);
-$extrafields = new ExtraFields($db);
-$extrafields->fetch_name_optionals_label($projectstatic->table_element);
-$extrafields->fetch_name_optionals_label($object->table_element);
+$extrafields_project = new ExtraFields($db);
+$extrafields_task = new ExtraFields($db);
+if ($projectid > 0 || ! empty($ref))
+{
+	// fetch optionals attributes and labels
+	$extralabels_projet=$extrafields_project->fetch_name_optionals_label($projectstatic->table_element);
+}
+$extralabels_task=$extrafields_task->fetch_name_optionals_label($object->table_element);
+
+$plannedworkloadoutputformat='allhourmin';
+$timespentoutputformat='allhourmin';
+if (! empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) $plannedworkloadoutputformat=$conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+
+$working_plannedworkloadoutputformat='all';
+$working_timespentoutputformat='all';
+if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 
 // Load task
 if ($id > 0 || $ref) {
@@ -987,7 +1007,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 		// Planned workload
 		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td>';
 		if ($object->planned_workload) {
-			print convertSecondToTime($object->planned_workload, 'allhourmin');
+			print convertSecondToTime($object->planned_workload, $plannedworkloadoutputformat);
 		}
 		print '</td></tr>';
 
@@ -1439,11 +1459,11 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 
 			// Duration - Time spent
 			print '<td class="nowraponall">';
-			$durationtouse = (GETPOST('timespent_duration') ? GETPOST('timespent_duration') : '');
+			$durationtouse = 0;
 			if (GETPOSTISSET('timespent_durationhour') || GETPOSTISSET('timespent_durationmin')) {
 				$durationtouse = (GETPOST('timespent_durationhour') * 3600 + GETPOST('timespent_durationmin') * 60);
 			}
-			print $form->select_duration('timespent_duration', $durationtouse, 0, 'text');
+			print $form->select_duration('timespent_duration', ($_POST['timespent_duration']?$_POST['timespent_duration']:''), 0, (empty($conf->global->PROJECT_USE_DECIMAL_DAY) ? 'text' : 'days'));
 			print '</td>';
 
 			// Progress declared

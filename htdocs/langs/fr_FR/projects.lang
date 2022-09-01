@@ -139,6 +139,7 @@ ProjectsDedicatedToThisThirdParty=Projets dédiés à ce tiers
 NoTasks=Aucune tâche pour ce projet
 LinkedToAnotherCompany=Liés à autre société
 TaskIsNotAssignedToUser=Tâche non assignée à l'utilisateur. Utilisez le bouton '<strong>%s</strong>'  pour assigner la tâche maintenant.
+FilterOutTasksNotAssignedToUser=Afficher également les tâches auxquelles cet utilisateur n’est pas affecté
 ErrorTimeSpentIsEmpty=Le temps consommé n'est pas renseigné
 TimeRecordingRestrictedToNMonthsBack=L'enregistrement du temps est limité à %s mois en arrière
 ThisWillAlsoRemoveTasks=Cette opération détruira également les tâches du projet (<b>%s</b> tâches actuellement) et le suivi des consommés.

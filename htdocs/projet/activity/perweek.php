@@ -163,7 +163,11 @@ $search_array_options = array();
 $search_array_options_project = $extrafields->getOptionalsFromPost('projet', '', 'search_');
 $search_array_options_task = $extrafields->getOptionalsFromPost('projet_task', '', 'search_task_');
 
-
+// T2004 (retour) - filtrer sur état "EN COURS" quand on arrive sur la page, mais permettre à l’utilisateur
+// de modifier ce filtrage
+if (!isset($_REQUEST['search_task_options_statut'])) {
+	$search_array_options_task['search_task_options_statut'] = 2;
+}
 
 /*
  * Actions
@@ -467,7 +471,7 @@ print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="addtime">';
 print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
-print '<input type="hidden" name="mode" value="'.$mode.'">';
+//print '<input type="hidden" name="mode" value="'.$mode.'">';
 print '<input type="hidden" name="day" value="'.$day.'">';
 print '<input type="hidden" name="month" value="'.$month.'">';
 print '<input type="hidden" name="year" value="'.$year.'">';
@@ -499,7 +503,7 @@ print dol_get_fiche_end();
 
 print '<div class="floatright right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
 
-print '<div class="colorbacktimesheet float valignmiddle">';
+/*print '<div class="colorbacktimesheet float valignmiddle">';
 $titleassigntask = $langs->transnoentities("AssignTaskToMe");
 if ($usertoprocess->id != $user->id) {
 	$titleassigntask = $langs->transnoentities("AssignTaskToUser", $usertoprocess->getFullName($langs));
@@ -511,7 +515,7 @@ print '</div>';
 print ' ';
 print $formcompany->selectTypeContact($object, '', 'type', 'internal', 'rowid', 0, 'maxwidth150onsmartphone');
 print '<input type="submit" class="button valignmiddle smallonsmartphone" name="assigntask" value="'.dol_escape_htmltag($titleassigntask).'">';
-print '</div>';
+print '</div>';*/
 
 print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
 
@@ -575,6 +579,11 @@ if (empty($user->rights->user->user->lire)) {
 $moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', $user->rights->user->user->lire ? 0 : 0, null, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
 
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.='<input id="mode" type="checkbox"' . ($mode==='mine' ? ' checked' : '') . ' name="mode" value="mine" class="flat maxwidthonsmartphone"> ';
+$moreforfilter.='<label class="checkp" for="mode">' . $langs->trans('FilterOutTasksNotAssignedToUser') . '</label>';
+$moreforfilter.='</div>';
+
 if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
@@ -598,6 +607,24 @@ if (!empty($moreforfilter)) {
 
 
 $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
+
+// T2004 (retour) : forcer affichage des colonnes État et Catégorie (elles n’apparaîtront pas cochées, mais elles seront quand même affichées)
+$TAlwaysVisibleExtrafields = array('efpt.statut', 'efpt.categorie');
+if (!empty($user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage})) {
+	$tmp_user_conf_fields = explode(',', $user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage});
+	foreach ($TAlwaysVisibleExtrafields as $k) {
+		if (!in_array($k, $tmp_user_conf_fields)) {
+			$tmp_user_conf_fields[] = $k;
+		}
+	}
+
+} else {
+	$tmp_user_conf_fields = array();
+	foreach($arrayfields as $k => $v) {
+		if ($v['checked'] || in_array($k, $TAlwaysVisibleExtrafields)) $tmp_user_conf_fields[] = $k;
+	}
+}
+$user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage} = join(',', $tmp_user_conf_fields);
 
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 
