@@ -235,7 +235,7 @@ function convertTime2Seconds($iHours = 0, $iMinutes = 0, $iSeconds = 0)
  */
 function convertSecondToTime($iSecond, $format = 'all', $lengthOfDay = 86400, $lengthOfWeek = 7)
 {
-	global $langs;
+	global $langs,$conf;
 
 	if (empty($lengthOfDay)) {
 		$lengthOfDay = 86400; // 1 day = 24 hours

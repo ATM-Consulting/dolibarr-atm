@@ -42,6 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 $langs->loadLangs(array("orders", "sendings", 'deliveries', 'companies', 'compta', 'bills', 'projects', 'suppliers', 'products'));
@@ -116,6 +117,7 @@ $search_multicurrency_montant_ttc = GETPOST('search_multicurrency_montant_ttc', 
 $optioncss = GETPOST('optioncss', 'alpha');
 $search_billed = GETPOST('search_billed', 'int');
 $search_project_ref = GETPOST('search_project_ref', 'alpha');
+$search_client_final = GETPOST('search_client_final','alpha');
 $search_btn = GETPOST('button_search', 'alpha');
 $search_remove_btn = GETPOST('button_removefilter', 'alpha');
 
@@ -173,6 +175,8 @@ $fieldstosearchall['s.nom'] = "ThirdParty";
 $fieldstosearchall['s.name_alias'] = "AliasNameShort";
 $fieldstosearchall['s.zip'] = "Zip";
 $fieldstosearchall['s.town'] = "Town";
+$fieldstosearchall['cf.ref'] = 'Ref';
+$fieldstosearchall['cf.ref_supplier'] = 'RefOrderSupplier';
 if (empty($user->socid)) {
 	$fieldstosearchall["cf.note_private"] = "NotePrivate";
 }
@@ -181,12 +185,33 @@ $checkedtypetiers = 0;
 
 // Definition of array of fields for columns
 $arrayfields = array(
-	's.town'=>array('label'=>"Town", 'enabled'=>1, 'position'=>47, 'checked'=>1),
-	's.zip'=>array('label'=>"Zip", 'enabled'=>1, 'position'=>47, 'checked'=>1),
-	'state.nom'=>array('label'=>"StateShort", 'enabled'=>1, 'position'=>48),
-	'country.code_iso'=>array('label'=>"Country", 'enabled'=>1, 'position'=>49),
-	'typent.code'=>array('label'=>"ThirdPartyType", 'enabled'=>$checkedtypetiers, 'position'=>50),
-	'u.login'=>array('label'=>"AuthorRequest", 'enabled'=>1, 'position'=>51)
+	'cf.ref'=>array('label'=>"Ref", 'checked'=>1),
+	'cf.ref_supplier'=>array('label'=>"RefOrderSupplierShort", 'checked'=>1, 'enabled'=>1),
+	'p.project_ref'=>array('label'=>"ProjectRef", 'checked'=>0, 'enabled'=>1),
+	'u.login'=>array('label'=>"AuthorRequest", 'checked'=>1),
+	's.nom'=>array('label'=>"ThirdParty", 'checked'=>1),
+	's.town'=>array('label'=>"Town", 'checked'=>1),
+	's.zip'=>array('label'=>"Zip", 'checked'=>1),
+	's2.nom'=>array('label'=>"Clientfinal", 'checked'=>1),
+	'state.nom'=>array('label'=>"StateShort", 'checked'=>0),
+	'country.code_iso'=>array('label'=>"Country", 'checked'=>0),
+	'typent.code'=>array('label'=>"ThirdPartyType", 'checked'=>$checkedtypetiers),
+	'cf.date_commande'=>array('label'=>"OrderDateShort", 'checked'=>1),
+	'cf.date_livraison'=>array('label'=>"DateDeliveryPlanned", 'checked'=>1, 'enabled'=>empty($conf->global->ORDER_DISABLE_DELIVERY_DATE)),
+	'cf.total_ht'=>array('label'=>"AmountHT", 'checked'=>1),
+	'cf.total_tva'=>array('label'=>"AmountVAT", 'checked'=>0),
+	'cf.total_ttc'=>array('label'=>"AmountTTC", 'checked'=>0),
+	'cf.multicurrency_code'=>array('label'=>'Currency', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1)),
+	'cf.multicurrency_tx'=>array('label'=>'CurrencyRate', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1)),
+	'cf.multicurrency_total_ht'=>array('label'=>'MulticurrencyAmountHT', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1)),
+	'cf.multicurrency_total_tva'=>array('label'=>'MulticurrencyAmountVAT', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1)),
+	'cf.multicurrency_total_ttc'=>array('label'=>'MulticurrencyAmountTTC', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1)),
+	'cf.datec'=>array('label'=>"DateCreation", 'checked'=>0, 'position'=>500),
+	'cf.tms'=>array('label'=>"DateModificationShort", 'checked'=>0, 'position'=>500),
+	'cf.fk_statut'=>array('label'=>"Status", 'checked'=>1, 'position'=>1000),
+	'cf.billed'=>array('label'=>"Billed", 'checked'=>1, 'position'=>1000, 'enabled'=>1),
+	'cf.date_valid' =>array('label' => 'DateValidation', 'checked' => 0),
+	'cf.date_approve' =>array('label' => 'DateApprove', 'checked' => 0)
 );
 foreach ($object->fields as $key => $val) {
 	// If $val['visible']==0, then we never show the field
@@ -262,6 +287,7 @@ if (empty($reshook)) {
 		$search_multicurrency_montant_tva = '';
 		$search_multicurrency_montant_ttc = '';
 		$search_project_ref = '';
+		$search_client_final='';
 		$search_status = '';
 		$search_date_order_startday = '';
 		$search_date_order_startmonth = '';
@@ -308,6 +334,9 @@ if (empty($reshook)) {
 	// Mass actions
 	$objectclass = 'CommandeFournisseur';
 	$objectlabel = 'SupplierOrders';
+	$permissiontoread = $user->rights->fournisseur->commande->lire;
+	$permissiontodelete = $user->rights->fournisseur->commande->supprimer;
+	$permissiontovalidate = $user->rights->fournisseur->commande->creer;
 	$uploaddir = $conf->fournisseur->commande->dir_output;
 	include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
 
@@ -654,6 +683,9 @@ if (empty($reshook)) {
 			if ($search_ref) {
 				$param .= '&search_ref='.urlencode($search_ref);
 			}
+			if ($search_client_final) {
+				$param .= '&search_client_final='.urlencode($search_client_final);
+			}
 			if ($search_company) {
 				$param .= '&search_company='.urlencode($search_company);
 			}
@@ -748,7 +780,7 @@ $sql .= " cf.rowid, cf.ref, cf.ref_supplier, cf.fk_statut, cf.billed, cf.total_h
 $sql .= ' cf.fk_multicurrency, cf.multicurrency_code, cf.multicurrency_tx, cf.multicurrency_total_ht, cf.multicurrency_total_tva, cf.multicurrency_total_ttc,';
 $sql .= ' cf.date_creation as date_creation, cf.tms as date_update,';
 $sql .= ' cf.note_public, cf.note_private,';
-$sql .= " p.rowid as project_id, p.ref as project_ref, p.title as project_title,";
+$sql .= " p.rowid as project_id, p.ref as project_ref, p.title as project_title, s2.rowid as socid2, s2.nom as name2,";
 $sql .= " u.firstname, u.lastname, u.photo, u.login, u.email as user_email, u.statut as user_status";
 // Add fields from extrafields
 if (!empty($extrafields->attributes[$object->table_element]['label'])) {
@@ -776,6 +808,9 @@ if ($search_product_category > 0) {
 }
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON cf.fk_user_author = u.rowid";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = cf.fk_projet";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON (ee.fk_target = cf.rowid AND ee.sourcetype = 'commande' AND ee.targettype = 'order_supplier')";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = ee.fk_source)";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s2 ON (s2.rowid = c.fk_soc)";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (empty($user->rights->societe->client->voir) && !$socid)) {
 	$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -802,6 +837,10 @@ if ($sall) {
 }
 if ($search_company) {
 	$sql .= natural_search('s.nom', $search_company);
+}
+if ($search_client_final)
+{
+	$sql .= natural_search('s2.nom', $search_client_final);
 }
 if ($search_request_author) {
 	$sql .= natural_search(array('u.lastname', 'u.firstname', 'u.login'), $search_request_author);
@@ -1275,6 +1314,10 @@ if ($resql) {
 	if (!empty($arrayfields['cf.fk_soc']['checked'])) {
 		print '<td class="liste_titre"><input type="text" size="6" class="flat" name="search_company" value="'.$search_company.'"></td>';
 	}
+	// client final
+	if (!empty($arrayfields['s2.nom']['checked'])) {
+		print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_client_final" value="' . $search_client_final . '"></td>';
+	}
 	// Town
 	if (!empty($arrayfields['s.town']['checked'])) {
 		print '<td class="liste_titre"><input class="flat maxwidth50" type="text" name="search_town" value="'.$search_town.'"></td>';
@@ -1447,6 +1490,9 @@ if ($resql) {
 	if (!empty($arrayfields['cf.fk_soc']['checked'])) {
 		print_liste_field_titre($arrayfields['cf.fk_soc']['label'], $_SERVER["PHP_SELF"], "s.nom", "", $param, '', $sortfield, $sortorder);
 	}
+	if (!empty($arrayfields['s2.nom']['checked'])) {
+		print_liste_field_titre($arrayfields['s2.nom']['label'], $_SERVER["PHP_SELF"], "s2.nom", "", $param, '', $sortfield, $sortorder);
+	}
 	if (!empty($arrayfields['s.town']['checked'])) {
 		print_liste_field_titre($arrayfields['s.town']['label'], $_SERVER["PHP_SELF"], 's.town', '', $param, '', $sortfield, $sortorder);
 	}
@@ -1506,6 +1552,9 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['cf.tms']['checked'])) {
 		print_liste_field_titre($arrayfields['cf.tms']['label'], $_SERVER["PHP_SELF"], "cf.tms", "", $param, '', $sortfield, $sortorder, 'center nowrap ');
+	}
+	if(!empty($conf->margin->enabled)){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
 	}
 	if (!empty($arrayfields['cf.fk_statut']['checked'])) {
 		print_liste_field_titre($arrayfields['cf.fk_statut']['label'], $_SERVER["PHP_SELF"], "cf.fk_statut", "", $param, '', $sortfield, $sortorder, 'right ');
@@ -1630,6 +1679,16 @@ if ($resql) {
 				$totalarray['nbfield']++;
 			}
 		}
+
+		// Client final
+		print '<td>';
+		if( $obj->socid2){
+			$thirdpartytmp->id = $obj->socid2;
+			$thirdpartytmp->name = $obj->name2;
+			print $thirdpartytmp->getNomUrl(1,'supplier');
+		}
+		print '</td>'."\n";
+
 		// Town
 		if (!empty($arrayfields['s.town']['checked'])) {
 			print '<td>';
@@ -1764,6 +1823,13 @@ if ($resql) {
 				$totalarray['nbfield']++;
 			}
 		}
+		//Marge
+		$commande = new Commande($db);
+		$commande->fetch($objp->rowid);
+		$formmargin = new FormMargin($db);
+		$marginInfo = $formmargin->getMarginInfosArray($commande);
+		print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+
 		// Amount VAT
 		if (!empty($arrayfields['cf.multicurrency_total_tva']['checked'])) {
 			print '<td class="right nowrap"><span class="amount">'.price($obj->multicurrency_total_tva)."</span></td>\n";

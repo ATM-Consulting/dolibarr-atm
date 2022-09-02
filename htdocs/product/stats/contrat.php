@@ -27,6 +27,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+if(! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT .'/projet/class/project.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array('contracts', 'products', 'companies'));
@@ -133,11 +134,13 @@ if ($id > 0 || !empty($ref)) {
 		$sql .= " sum(".$db->ifsql("cd.statut=5", 1, 0).') as nb_closed,';
 		$sql .= " c.rowid as rowid, c.ref, c.ref_customer, c.ref_supplier, c.date_contrat, c.statut as statut,";
 		$sql .= " s.nom as name, s.rowid as socid, s.code_client";
+		if($conf->projet->enabled) $sql .= ', c.fk_projet, p.ref as project_ref';
 		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
 		if (empty($user->rights->societe->client->voir) && !$socid) {
 			$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 		}
 		$sql .= ", ".MAIN_DB_PREFIX."contrat as c";
+		if($conf->projet->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = c.fk_projet ';
 		$sql .= ", ".MAIN_DB_PREFIX."contratdet as cd";
 		$sql .= " WHERE c.rowid = cd.fk_contrat";
 		$sql .= " AND c.fk_soc = s.rowid";
@@ -204,6 +207,9 @@ if ($id > 0 || !empty($ref)) {
 			print '<tr class="liste_titre">';
 			print_liste_field_titre("Ref", $_SERVER["PHP_SELF"], "c.rowid", "", "&amp;id=".$product->id, '', $sortfield, $sortorder);
 			print_liste_field_titre("Company", $_SERVER["PHP_SELF"], "s.nom", "", "&amp;id=".$product->id, '', $sortfield, $sortorder);
+			if(!empty($conf->projet->enabled)){
+				print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',"&amp;id=".$product->id,'',$sortfield,$sortorder);
+			}
 			print_liste_field_titre("CustomerCode", $_SERVER["PHP_SELF"], "s.code_client", "", "&amp;id=".$product->id, '', $sortfield, $sortorder);
 			print_liste_field_titre("Date", $_SERVER["PHP_SELF"], "c.date_contrat", "", "&amp;id=".$product->id, 'align="center"', $sortfield, $sortorder);
 			//print_liste_field_titre("AmountHT"),$_SERVER["PHP_SELF"],"c.amount","","&amp;id=".$product->id,'align="right"',$sortfield,$sortorder);
@@ -228,6 +234,14 @@ if ($id > 0 || !empty($ref)) {
 					print $contracttmp->getNomUrl(1);
 					print "</td>\n";
 					print '<td><a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"), "company").' '.dol_trunc($objp->name, 44).'</a></td>';
+					//Ref projet
+					if(! empty($conf->projet->enabled)){
+						$projet = new Project($db);
+						$projet->fetch($objp->fk_projet);
+						print '<td>';
+						print $projet->getNomUrl(1);
+						print '</td>';
+					}
 					print "<td>".$objp->code_client."</td>\n";
 					print "<td align=\"center\">";
 					print dol_print_date($db->jdate($objp->date_contrat), 'dayhour')."</td>";

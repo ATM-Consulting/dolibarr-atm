@@ -160,7 +160,7 @@ $arrayfields = array(
 	't.progress_calculated'=>array('label'=>"ProgressCalculated", 'checked'=>1, 'position'=>104),
 	't.progress'=>array('label'=>"ProgressDeclared", 'checked'=>1, 'position'=>105),
 	't.progress_summary'=>array('label'=>"TaskProgressSummary", 'checked'=>1, 'position'=>106),
-	't.budget_amount'=>array('label'=>"Budget", 'checked'=>0, 'position'=>107),
+	't.budget_amount'=>array('label'=>"Budget", 'checked'=>1, 'position'=>107),
 	't.tobill'=>array('label'=>"TimeToBill", 'checked'=>0, 'position'=>110),
 	't.billed'=>array('label'=>"TimeBilled", 'checked'=>0, 'position'=>111),
 	't.datec'=>array('label'=>"DateCreation", 'checked'=>0, 'position'=>500),
@@ -182,8 +182,7 @@ $permissiontodelete = $user->rights->projet->supprimer;
  */
 
 if (GETPOST('cancel', 'alpha')) {
-	$action = 'list';
-	$massaction = '';
+	$action = 'list'; $massaction = '';
 }
 if (!GETPOST('confirmmassaction', 'alpha') && $massaction != 'presend' && $massaction != 'confirm_presend') {
 	$massaction = '';
@@ -237,6 +236,8 @@ if (empty($reshook)) {
 	// Mass actions
 	$objectclass = 'Task';
 	$objectlabel = 'Tasks';
+	$permissiontoread = $user->rights->projet->lire;
+	$permissiontodelete = $user->rights->projet->supprimer;
 	$uploaddir = $conf->project->dir_output.'/tasks';
 	include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
 }
@@ -486,6 +487,7 @@ if (!$resql) {
 
 $num = $db->num_rows($resql);
 
+$arrayofselected = is_array($toselect) ? $toselect : array();
 
 // Direct jump if only one record found
 if ($num == 1 && !empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && $search_all) {
@@ -498,7 +500,7 @@ if ($num == 1 && !empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && $
 
 // Output page
 // --------------------------------------------------------------------
-
+$help_url = "EN:Module_Projects|FR:Module_Projets|ES:M&oacute;dulo_Proyectos";
 llxHeader('', $title, $help_url);
 
 $arrayofselected = is_array($toselect) ? $toselect : array();
@@ -959,6 +961,17 @@ if (!empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) {
 	$timespentoutputformat = $conf->global->PROJECT_TIME_SPENT_FORMAT;
 }
 
+if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_plannedworkloadoutputformat='alldayhour';
+$working_timespentoutputformat='alldayhour';
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
+
 // Loop on record
 // --------------------------------------------------------------------
 $i = 0;
@@ -1129,8 +1142,16 @@ while ($i < $imaxinloop) {
 				$workingdelay = convertSecondToTime($obj->planned_workload, 'all', 86400, 7); // TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
 				if ($obj->planned_workload != '') {
 					print $fullhour;
-					// TODO Add delay taking account of working hours per day and working day per week
-					//if ($workingdelay != $fullhour) print '<br>('.$workingdelay.')';
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+					{
+						$workingdelay=convertSecondToTime($obj->planned_workload, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+						// TODO Add delay taking account of working hours per day and working day per week
+						if ($workingdelay != $fullhour && !empty($workingdelay))
+						{
+							if (!empty($fullhour)) print '<br>';
+							print '('.$workingdelay.')';
+						}
+					}
 				}
 				//else print '--:--';
 				print '</td>';
@@ -1155,8 +1176,21 @@ while ($i < $imaxinloop) {
 				} else {
 					print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$object->id.($showproject ? '' : '&withproject=1').'">';
 				}
-				if ($obj->duration_effective) {
-					print convertSecondToTime($obj->duration_effective, $timespentoutputformat);
+				if ($obj->duration_effective)
+				{
+					$fullhour = convertSecondToTime($obj->duration_effective, $timespentoutputformat);
+					print $fullhour;
+
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+					{
+						$workingdelay=convertSecondToTime($obj->duration_effective, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+						// TODO Add delay taking account of working hours per day and working day per week
+						if ($workingdelay != $fullhour)
+						{
+							if (!empty($fullhour)) print '<br>';
+							print '('.$workingdelay.')';
+						}
+					}
 				} else {
 					print '--:--';
 				}
@@ -1354,11 +1388,37 @@ if (isset($totalarray['totaldurationeffectivefield']) || isset($totalarray['tota
 			} else {
 				print '<td class="left">'.$langs->trans("Totalforthispage").'</td>';
 			}
-		} elseif ($totalarray['totalplannedworkloadfield'] == $i) {
-			print '<td class="center">'.convertSecondToTime($totalarray['totalplannedworkload'], $plannedworkloadoutputformat).'</td>';
-		} elseif ($totalarray['totaldurationeffectivefield'] == $i) {
-			print '<td class="center">'.convertSecondToTime($totalarray['totaldurationeffective'], $timespentoutputformat).'</td>';
-		} elseif ($totalarray['totalprogress_calculatedfield'] == $i) {
+		} elseif ($totalarray['totalplannedworkloadfield'] == $i){
+			$fulltime = convertSecondToTime($totalarray['totalplannedworkload'], $plannedworkloadoutputformat);
+			print '<td class="center">'.$fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($totalarray['totalplannedworkload'], $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime)
+				{
+					if (!empty($fulltime)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
+			print '</td>';
+		}
+		elseif ($totalarray['totaldurationeffectivefield'] == $i)
+		{
+			$fulltime = convertSecondToTime($totalarray['totaldurationeffective'], $timespentoutputformat);
+			print '<td class="center">'.$fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($totalarray['totaldurationeffective'], $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime)
+				{
+					if (!empty($fulltime)) print '<br>';
+					print '('.$workingdelay.')';
+				}
+			}
+			print '</td>';
+		}
+		elseif ($totalarray['totalprogress_calculated'] == $i)
+		{
 			print '<td class="center">'.($totalarray['totalplannedworkload'] > 0 ? round(100 * $totalarray['totaldurationeffective'] / $totalarray['totalplannedworkload'], 2).' %' : '').'</td>';
 		} elseif ($totalarray['totalprogress_declaredfield'] == $i) {
 			print '<td class="center">'.($totalarray['totalplannedworkload'] > 0 ? round(100 * $totalarray['totaldurationdeclared'] / $totalarray['totalplannedworkload'], 2).' %' : '').'</td>';

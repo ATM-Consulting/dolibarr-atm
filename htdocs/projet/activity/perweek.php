@@ -113,22 +113,33 @@ if (empty($search_usertoprocessid) || $search_usertoprocessid == $user->id) {
 
 $object = new Task($db);
 
+$timespentoutputformat='allhourmin';
+if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+$working_timespentoutputformat='all';
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
+
+
 // Extra fields
 $extrafields = new ExtraFields($db);
 
 // fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($object->table_element);
-
+$extralabels_project = $extrafields->fetch_name_optionals_label('projet');
 // Definition of fields for list
 $arrayfields = array();
-/*$arrayfields=array(
+$arrayfields=array(
  // Project
  'p.opp_amount'=>array('label'=>$langs->trans("OpportunityAmountShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>103),
  'p.fk_opp_status'=>array('label'=>$langs->trans("OpportunityStatusShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>104),
  'p.opp_percent'=>array('label'=>$langs->trans("OpportunityProbabilityShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>105),
  'p.budget_amount'=>array('label'=>$langs->trans("Budget"), 'checked'=>0, 'position'=>110),
- 'p.usage_bill_time'=>array('label'=>$langs->trans("BillTimeShort"), 'checked'=>0, 'position'=>115),
- );*/
+ //'p.usage_bill_time'=>array('label'=>$langs->trans("BillTimeShort"), 'checked'=>0, 'position'=>115),
+ );
 $arrayfields['t.planned_workload'] = array('label'=>'PlannedWorkload', 'checked'=>1, 'enabled'=>1, 'position'=>5);
 $arrayfields['t.progress'] = array('label'=>'ProgressDeclared', 'checked'=>1, 'enabled'=>1, 'position'=>10);
 $arrayfields['timeconsumed'] = array('label'=>'TimeConsumed', 'checked'=>1, 'enabled'=>1, 'position'=>15);
@@ -152,7 +163,11 @@ $search_array_options = array();
 $search_array_options_project = $extrafields->getOptionalsFromPost('projet', '', 'search_');
 $search_array_options_task = $extrafields->getOptionalsFromPost('projet_task', '', 'search_task_');
 
-
+// T2004 (retour) - filtrer sur état "EN COURS" quand on arrive sur la page, mais permettre à l’utilisateur
+// de modifier ce filtrage
+if (!isset($_REQUEST['search_task_options_statut'])) {
+	$search_array_options_task['search_task_options_statut'] = 2;
+}
 
 /*
  * Actions
@@ -267,18 +282,20 @@ if ($action == 'addtime' && $user->rights->projet->lire && GETPOST('formfilterac
 			foreach ($value as $key => $val) {          // Loop on each day
 				$amountoadd = $timetoadd[$taskid][$key];
 				if (!empty($amountoadd)) {
-					$tmpduration = explode(':', $amountoadd);
-					$newduration = 0;
-					if (!empty($tmpduration[0])) {
-						$newduration += ($tmpduration[0] * 3600);
+					if (!empty($conf->global->PROJECT_USE_DECIMAL_DAY))
+					{
+						$tmpduration=price2num($amountoadd);
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME)) $newduration= $tmpduration * $working_hours_per_day_in_seconds;
+						else $newduration= $tmpduration * 24 * 60 * 60;
 					}
-					if (!empty($tmpduration[1])) {
-						$newduration += ($tmpduration[1] * 60);
+					else
+					{
+						$tmpduration=explode(':', $amountoadd);
+						$newduration=0;
+						if (! empty($tmpduration[0])) $newduration+=($tmpduration[0] * 3600);
+						if (! empty($tmpduration[1])) $newduration+=($tmpduration[1] * 60);
+						if (! empty($tmpduration[2])) $newduration+=($tmpduration[2]);
 					}
-					if (!empty($tmpduration[2])) {
-						$newduration += ($tmpduration[2]);
-					}
-
 					if ($newduration > 0) {
 						$object->fetch($taskid);
 
@@ -410,7 +427,7 @@ $search_options_pattern = 'search_task_options_';
 $extrafieldsobjectkey = 'projet_task';
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
 
-$tasksarray = $taskstatic->getTasksArray(0, 0, ($project->id ? $project->id : 0), $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, ($search_usertoprocessid ? $search_usertoprocessid : 0), 0, $extrafields); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
+$tasksarray=$taskstatic->getTasksArray(0, 0, ($project->id?$project->id:0), $socid, 0, $search_project_ref, $onlyopenedproject, $morewherefilter, ($search_usertoprocessid?$search_usertoprocessid:0), 0, $extrafields);    // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 if ($morewherefilter) {	// Get all task without any filter, so we can show total of time spent for not visible tasks
 	$tasksarraywithoutfilter = $taskstatic->getTasksArray(0, 0, ($project->id ? $project->id : 0), $socid, 0, '', $onlyopenedproject, '', ($search_usertoprocessid ? $search_usertoprocessid : 0)); // We want to see all tasks of open project i am allowed to see and that match filter, not only my tasks. Later only mine will be editable later.
 }
@@ -455,7 +472,7 @@ print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="addtime">';
 print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
-print '<input type="hidden" name="mode" value="'.$mode.'">';
+//print '<input type="hidden" name="mode" value="'.$mode.'">';
 print '<input type="hidden" name="day" value="'.$day.'">';
 print '<input type="hidden" name="month" value="'.$month.'">';
 print '<input type="hidden" name="year" value="'.$year.'">';
@@ -487,7 +504,7 @@ print dol_get_fiche_end();
 
 print '<div class="floatright right'.($conf->dol_optimize_smallscreen ? ' centpercent' : '').'">'.$nav.'</div>'; // We move this before the assign to components so, the default submit button is not the assign to.
 
-print '<div class="colorbacktimesheet float valignmiddle">';
+/*print '<div class="colorbacktimesheet float valignmiddle">';
 $titleassigntask = $langs->transnoentities("AssignTaskToMe");
 if ($usertoprocess->id != $user->id) {
 	$titleassigntask = $langs->transnoentities("AssignTaskToUser", $usertoprocess->getFullName($langs));
@@ -499,7 +516,7 @@ print '</div>';
 print ' ';
 print $formcompany->selectTypeContact($object, '', 'type', 'internal', 'rowid', 0, 'maxwidth150onsmartphone');
 print '<input type="submit" class="button valignmiddle smallonsmartphone" name="assigntask" value="'.dol_escape_htmltag($titleassigntask).'">';
-print '</div>';
+print '</div>';*/
 
 print '<div class="clearboth" style="padding-bottom: 20px;"></div>';
 
@@ -563,6 +580,11 @@ if (empty($user->rights->user->user->lire)) {
 $moreforfilter .= img_picto($langs->trans('Filter').' '.$langs->trans('User'), 'user', 'class="paddingright pictofixedwidth"').$form->select_dolusers($search_usertoprocessid ? $search_usertoprocessid : $usertoprocess->id, 'search_usertoprocessid', $user->rights->user->user->lire ? 0 : 0, null, 0, $includeonly, null, 0, 0, 0, '', 0, '', 'maxwidth200');
 $moreforfilter .= '</div>';
 
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.='<input id="mode" type="checkbox"' . ($mode==='mine' ? ' checked' : '') . ' name="mode" value="mine" class="flat maxwidthonsmartphone"> ';
+$moreforfilter.='<label class="checkp" for="mode">' . $langs->trans('FilterOutTasksNotAssignedToUser') . '</label>';
+$moreforfilter.='</div>';
+
 if (empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<div class="inline-block"></div>';
@@ -586,6 +608,24 @@ if (!empty($moreforfilter)) {
 
 
 $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
+
+// T2004 (retour) : forcer affichage des colonnes État et Catégorie (elles n’apparaîtront pas cochées, mais elles seront quand même affichées)
+$TAlwaysVisibleExtrafields = array('efpt.statut', 'efpt.categorie');
+if (!empty($user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage})) {
+	$tmp_user_conf_fields = explode(',', $user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage});
+	foreach ($TAlwaysVisibleExtrafields as $k) {
+		if (!in_array($k, $tmp_user_conf_fields)) {
+			$tmp_user_conf_fields[] = $k;
+		}
+	}
+
+} else {
+	$tmp_user_conf_fields = array();
+	foreach($arrayfields as $k => $v) {
+		if ($v['checked'] || in_array($k, $TAlwaysVisibleExtrafields)) $tmp_user_conf_fields[] = $k;
+	}
+}
+$user->conf->{'MAIN_SELECTEDFIELDS_' . $varpage} = join(',', $tmp_user_conf_fields);
 
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 
@@ -740,7 +780,7 @@ if (count($tasksarray) > 0) {
 
 	$j = 0;
 	$level = 0;
-	$totalforvisibletasks = projectLinesPerWeek($j, $firstdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields);
+	$totalforvisibletasks = projectLinesPerWeek($j, $firstdaytoshow, $usertoprocess, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restrictviewformytask, $isavailable, 0, $arrayfields, $extrafields, $extralabels);
 	//var_dump($totalforvisibletasks);
 
 	// Show total for all other tasks
@@ -800,7 +840,17 @@ if (count($tasksarray) > 0) {
 			$timeonothertasks = ($totalforeachday[$tmpday] - $totalforvisibletasks[$tmpday]);
 			if ($timeonothertasks) {
 				print '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center smallpadd" size="2" disabled="" id="timespent[-1]['.$idw.']" name="task[-1]['.$idw.']" value="';
-				print convertSecondToTime($timeonothertasks, 'allhourmin');
+				$fullhour =  convertSecondToTime($timeonothertasks, $timespentoutputformat);
+				print $fullhour;
+				if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+				{
+					$workingdelay=convertSecondToTime($timeonothertasks, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+					if ($workingdelay != $fullhour)
+					{
+						if (!empty($fullhour)) print '<br>';
+						print '('.$workingdelay.')';
+					}
+				}
 				print '"></span>';
 			}
 			print '</td>';
@@ -854,7 +904,8 @@ print $form->buttonsSaveCancel("Save", '');
 
 print '</form>'."\n\n";
 
-$modeinput = 'hours';
+if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $modeinput='hours';
+else $modeinput='timeChar';
 
 if ($conf->use_javascript_ajax) {
 	print "\n<!-- JS CODE TO ENABLE Tooltips on all object with class classfortooltip -->\n";

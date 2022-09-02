@@ -185,7 +185,7 @@ class FormProjets
 			}
 		}
 		if (!empty($filterkey)) {
-			$sql .= natural_search(array('p.title', 'p.ref'), $filterkey);
+			$sql .= natural_search(array('p.title', 'p.ref'), $filterkey) . ' AND p.entity='.$conf->entity;
 		}
 		$sql .= " ORDER BY p.ref ASC";
 

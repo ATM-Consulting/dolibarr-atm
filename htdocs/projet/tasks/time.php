@@ -100,10 +100,32 @@ $hookmanager->initHooks(array('projecttasktime', 'globalcard'));
 $object = new Task($db);
 $extrafields = new ExtraFields($db);
 $projectstatic = new Project($db);
+$extrafields_project = new ExtraFields($db);
+$extrafields_task = new ExtraFields($db);
+if ($projectid > 0 || ! empty($ref))
+{
+	// fetch optionals attributes and labels
+	$extralabels_projet=$extrafields_project->fetch_name_optionals_label($projectstatic->table_element);
+}
+$extralabels_task=$extrafields_task->fetch_name_optionals_label($object->table_element);
 
 // fetch optionals attributes and labels
 $extrafields->fetch_name_optionals_label($projectstatic->table_element);
 $extrafields->fetch_name_optionals_label($object->table_element);
+$plannedworkloadoutputformat='allhourmin';
+$timespentoutputformat='allhourmin';
+if (! empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) $plannedworkloadoutputformat=$conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+
+$working_plannedworkloadoutputformat='all';
+$working_timespentoutputformat='all';
+if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 
 // Load task
 if ($id > 0 || $ref) {
@@ -1009,7 +1031,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 		// Planned workload
 		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td>';
 		if ($object->planned_workload) {
-			print convertSecondToTime($object->planned_workload, 'allhourmin');
+			print convertSecondToTime($object->planned_workload, $plannedworkloadoutputformat);
 		}
 		print '</td></tr>';
 
@@ -1175,6 +1197,8 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 
 		// Form to convert time spent into invoice
 		if ($massaction == 'generateinvoice') {
+			print '<input type="hidden" name="massaction" value="confirm_createbills">';
+
 			if ($projectstatic->thirdparty->id > 0) {
 				print '<table class="noborder centerpercent">';
 				print '<tr>';
@@ -1279,6 +1303,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				print '</tr>';
 				print '</table>';
 
+				print '<br>';
 				print '<div class="center">';
 				print '<input type="submit" class="button" id="createinter" name="createinter" value="'.$langs->trans('GenerateInter').'">  ';
 				print '<input type="submit" class="button" id="cancel" name="cancel" value="'.$langs->trans('Cancel').'">';
@@ -1676,7 +1701,15 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 		$tmpinvoice = new Facture($db);
 
 		$i = 0;
+		$task_duration_outputformat='allhourmin';
+		if (! empty($conf->global->PROJECT_TASK_DURATION_FORMAT)) $task_duration_outputformat=$conf->global->PROJECT_TASK_DURATION_FORMAT;
+		$working_task_duration_outputformat='all';
+		if (! empty($conf->global->PROJECT_WORKING_TASK_DURATION_FORMAT)) $working_task_duration_outputformat=$conf->global->PROJECT_WORKING_TASK_DURATION_FORMAT;
 
+		$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+		$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+		$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 		$total = 0;
 		$totalvalue = 0;
 		$totalarray = array();
@@ -1812,7 +1845,14 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 					print '<input type="hidden" name="old_duration" value="'.$task_time->task_duration.'">';
 					print $form->select_duration('new_duration', $task_time->task_duration, 0, 'text');
 				} else {
-					print convertSecondToTime($task_time->task_duration, 'allhourmin');
+					$fulltime = convertSecondToTime($task_time->task_duration, $task_duration_outputformat);
+					print $fulltime;
+					$workingdelay=convertSecondToTime($task_time->task_duration, $working_task_duration_outputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+					if ($workingdelay != $fulltime)
+					{
+						if (!empty($fulltime)) print '<br>';
+						print '('.$workingdelay.')';
+					}
 				}
 				print '</td>';
 				if (!$i) {
@@ -1834,6 +1874,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				$value = price2num($task_time->thm * $task_time->task_duration / 3600, 'MT', 1);
 
 				print '<td class="nowraponall right">';
+				$value = price2num($task_time->thm * $task_time->task_duration / 3600, 'MT', 1);
 				print '<span class="amount" title="'.$langs->trans("THM").': '.price($task_time->thm).'">';
 				print price($value, 1, $langs, 1, -1, -1, $conf->currency);
 				print '</span>';
@@ -1900,10 +1941,12 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 						print '</a>';
 					}
 
+					print '&nbsp;';
 					print '<a class="reposition editfielda" href="'.$_SERVER["PHP_SELF"].'?id='.$task_time->fk_task.'&action=editline&token='.newToken().'&lineid='.$task_time->rowid.$param.((empty($id) || $tab == 'timespent') ? '&tab=timespent' : '').'">';
 					print img_edit('default', 0, 'class="pictofixedwidth paddingleft"');
 					print '</a>';
 
+					print '&nbsp;';
 					print '<a class="reposition paddingleft" href="'.$_SERVER["PHP_SELF"].'?id='.$task_time->fk_task.'&action=deleteline&token='.newToken().'&lineid='.$task_time->rowid.$param.((empty($id) || $tab == 'timespent') ? '&tab=timespent' : '').'">';
 					print img_delete('default', 'class="pictodelete paddingleft"');
 					print '</a>';
@@ -2222,7 +2265,16 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 						print '<td class="left">'.$langs->trans("Totalforthispage").'</td>';
 					}
 				} elseif ($totalarray['totaldurationfield'] == $i) {
-					print '<td class="right">'.convertSecondToTime($totalarray['totalduration'], 'allhourmin').'</td>';
+				print '<td align="right">';
+				$fulltime = convertSecondToTime($totalarray['totalduration'], $task_duration_outputformat);
+				print $fulltime;
+				$workingdelay=convertSecondToTime($totalarray['totalduration'], $working_task_duration_outputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+				if ($workingdelay != $fulltime)
+				{
+					if (!empty($fulltime)) print '<br>';
+						print '('.$workingdelay.')';
+				    }
+				    print '</td>';
 				} elseif ($totalarray['totalvaluefield'] == $i) {
 					print '<td class="right">'.price($totalarray['totalvalue']).'</td>';
 					//} elseif ($totalarray['totalvaluebilledfield'] == $i) { print '<td class="center">'.price($totalarray['totalvaluebilled']).'</td>';

@@ -223,6 +223,16 @@ if ($action == 'updateMaskTask') {
 		$timesheetFreezeDuration = GETPOST('timesheetFreezeDuration', 'alpha');
 		dolibarr_set_const($db, 'PROJECT_TIMESHEET_PREVENT_AFTER_MONTHS', intval($timesheetFreezeDuration), 'chaine', 0, '', $conf->entity); //Allow to disable this configuration if empty value
 	}
+	if (GETPOST('PROJECT_WORKING_HOURS_PER_DAY'))
+	{
+		$projectNumberWorkingHoursPerDay = GETPOST('projectNumberWorkingHoursPerDay', 'int');
+		dolibarr_set_const($db, 'PROJECT_WORKING_HOURS_PER_DAY', $projectNumberWorkingHoursPerDay, 'chaine', 0, '', $conf->entity);
+	}
+	if (GETPOST('PROJECT_WORKING_DAYS_PER_WEEKS'))
+	{
+		$projectNumberWorkingDaysPerWeeks = GETPOST('projectNumberWorkingDaysPerWeeks', 'int');
+		dolibarr_set_const($db, 'PROJECT_WORKING_DAYS_PER_WEEKS', $projectNumberWorkingDaysPerWeeks, 'chaine', 0, '', $conf->entity);
+	}
 } elseif (preg_match('/^(set|del)_?([A-Z_]+)$/', $action, $reg)) {
 	// Set boolean (on/off) constants
 	if (!dolibarr_set_const($db, $reg[2], ($reg[1] === 'set' ? '1' : '0'), 'chaine', 0, '', $conf->entity) > 0) {
@@ -804,6 +814,37 @@ print '<input type="submit" class="button small reposition" name="PROJECT_ALLOW_
 print '</td>';
 print '</tr>';
 
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ProjectEnableWorkingTime").'</td>';
+print '<td class="right" width="60" colspan="2">';
+//print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+//print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+//print '<input type="hidden" name="action" value="set_PROJECT_USE_DECIMAL_DAY">';
+print ajax_constantonoff('PROJECT_ENABLE_WORKING_TIME', array('disabled' => array(0 => '.projectNumberWorkingHoursPerDay', 1 => '.projectNumberWorkingDaysPerWeeks'), 'del' => array(0 => 'PROJECT_USE_DECIMAL_DAY') ));
+//print '</form>';
+print '</td>';
+print '</tr>';
+
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ProjectNumberWorkingHoursPerDay").'</td>';
+print '<td class="right" width="60" colspan="2">';
+$disabled = (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) ? 'disabled="disabled"': '';
+print '<input '.$disabled.' type="text" class="projectNumberWorkingHoursPerDay" size="5" name="projectNumberWorkingHoursPerDay" value="'.$conf->global->PROJECT_WORKING_HOURS_PER_DAY.'" placeholder="7" />';
+print '<input '.$disabled.' type="submit" class="button projectNumberWorkingHoursPerDay" name="PROJECT_WORKING_HOURS_PER_DAY" value="'.$langs->trans("Modify").'">';
+print '</td>';
+print '</tr>';
+
+
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ProjectNumberWorkingDaysPerWeeks").'</td>';
+print '<td class="right" width="60" colspan="2">';
+$disabled = (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) ? 'disabled="disabled"': '';
+print '<input '.$disabled.' type="text" class="projectNumberWorkingDaysPerWeeks" size="5" name="projectNumberWorkingDaysPerWeeks" value="'.$conf->global->PROJECT_WORKING_DAYS_PER_WEEKS.'" placeholder="5" />';
+print '<input '.$disabled.' type="submit" class="button projectNumberWorkingDaysPerWeeks" name="PROJECT_WORKING_DAYS_PER_WEEKS" value="'.$langs->trans("Modify").'">';
+print '</td>';
+print '</tr>';
+
+
 $key = 'PROJECT_CLASSIFY_CLOSED_WHEN_ALL_TASKS_DONE';
 echo '<tr class="oddeven">',
 		'<td class="left">',
@@ -820,6 +861,13 @@ print '<td>'.$langs->trans("TimesheetPreventAfterFollowingMonths").'</td>';
 print '<td class="right" width="60" colspan="2">';
 print '<input type="number" class="width50" id="timesheetFreezeDuration" name="timesheetFreezeDuration" min="0" step="1" value="'.$conf->global->PROJECT_TIMESHEET_PREVENT_AFTER_MONTHS.'"/>&nbsp;';
 print '<input type="submit" class="button small reposition" name="PROJECT_TIMESHEET_PREVENT_AFTER_MONTHS" value="'.$langs->trans("Modify").'">';
+print '</td>';
+print '</tr>';
+
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ProjectUseDecimalDay").'</td>';
+print '<td class="right" width="60" colspan="2">';
+print $form->textwithpicto(ajax_constantonoff('PROJECT_USE_DECIMAL_DAY'), $langs->trans('ProjectUseDecimalDayHelp'));
 print '</td>';
 print '</tr>';
 print '</table>';

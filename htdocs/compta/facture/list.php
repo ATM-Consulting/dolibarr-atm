@@ -233,6 +233,7 @@ $arrayfields = array(
 	'f.total_localtax1'=>array('label'=>$langs->transcountry("AmountLT1", $mysoc->country_code), 'checked'=>0, 'enabled'=>($mysoc->localtax1_assuj == "1"), 'position'=>110),
 	'f.total_localtax2'=>array('label'=>$langs->transcountry("AmountLT2", $mysoc->country_code), 'checked'=>0, 'enabled'=>($mysoc->localtax2_assuj == "1"), 'position'=>120),
 	'f.total_ttc'=>array('label'=>"AmountTTC", 'checked'=>0, 'position'=>130),
+	'margin'=>array('label'=>$langs->trans("Margin"), 'checked'=>0),
 	'dynamount_payed'=>array('label'=>"Received", 'checked'=>0, 'position'=>140),
 	'rtp'=>array('label'=>"Rest", 'checked'=>0, 'position'=>150), // Not enabled by default because slow
 	'u.login'=>array('label'=>"Author", 'checked'=>1, 'position'=>165),
@@ -1407,6 +1408,9 @@ if ($resql) {
 		print '<input class="flat" type="text" size="4" name="search_montant_ttc" value="'.dol_escape_htmltag($search_montant_ttc).'">';
 		print '</td>';
 	}
+	if(!empty($arrayfields['margin']['checked'])){
+		print '<td></td>';
+	}
 	if (!empty($arrayfields['u.login']['checked'])) {
 		// Author
 		print '<td class="liste_titre" align="center">';
@@ -1610,6 +1614,9 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['f.total_ttc']['checked'])) {
 		print_liste_field_titre($arrayfields['f.total_ttc']['label'], $_SERVER['PHP_SELF'], 'f.total_ttc', '', $param, 'class="right"', $sortfield, $sortorder);
+	}
+	if(!empty($arrayfields['margin']['checked'])){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
 	}
 	if (!empty($arrayfields['u.login']['checked'])) {
 		print_liste_field_titre($arrayfields['u.login']['label'], $_SERVER["PHP_SELF"], 'u.login', '', $param, 'align="center"', $sortfield, $sortorder);
@@ -2106,6 +2113,18 @@ if ($resql) {
 				$totalarray['val']['f.total_ttc'] += $obj->total_ttc;
 			}
 
+			if (! empty($arrayfields['margin']['checked']))
+			{
+				//Marge
+				$facture = new Facture($db);
+				$facture->fetch($obj->id);
+
+				$formmargin = new FormMargin($db);
+				$marginInfo = $formmargin->getMarginInfosArray($facture);
+
+				print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+			}
+
 			$userstatic->id = $obj->fk_user_author;
 			$userstatic->login = $obj->login;
 			$userstatic->lastname = $obj->lastname;
@@ -2241,6 +2260,7 @@ if ($resql) {
 					$totalarray['nbfield']++;
 				}
 			}
+
 			// Amount VAT
 			if (!empty($arrayfields['f.multicurrency_total_vat']['checked'])) {
 				print '<td class="right nowraponall amount">'.price($obj->multicurrency_total_vat)."</td>\n";

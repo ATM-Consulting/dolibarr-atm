@@ -73,8 +73,14 @@ function marges_prepare_head()
 
 	if ($user->rights->societe->lire) {
 		$head[$h][0] = DOL_URL_ROOT."/margin/customerMargins.php";
-		$head[$h][1] = $langs->trans("CustomerMargins");
+		$head[$h][1] = $langs->trans("Marges par client (factures)");
 		$head[$h][2] = 'customerMargins';
+		$h++;
+	}
+	if ($user->rights->societe->lire) {
+		$head[$h][0] = DOL_URL_ROOT."/margin/orderCustomerMargins.php";
+		$head[$h][1] = $langs->trans("Marges par client (commandes)");
+		$head[$h][2] = 'orderCustomerMargins';
 		$h++;
 	}
 

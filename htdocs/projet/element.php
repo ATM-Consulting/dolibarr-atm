@@ -36,6 +36,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 if (!empty($conf->stock->enabled)) {
 	require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 }
@@ -744,6 +745,8 @@ $tooltiponprofit .= $tooltiponprofitminus;
 print $form->textwithpicto($langs->trans("Element"), $tooltiponprofit);
 print '</td>';
 print '<td class="right" width="100">'.$langs->trans("Number").'</td>';
+print '<td align="right" width="100">'.$langs->trans("Prix d'achat").'</td>';
+print '<td align="right" width="100">'.$langs->trans("Margin").'</td>';
 print '<td class="right" width="100">'.$langs->trans("AmountHT").'</td>';
 print '<td class="right" width="100">'.$langs->trans("AmountTTC").'</td>';
 print '</tr>';
@@ -761,6 +764,7 @@ foreach ($listofreferent as $key => $value) {
 		'value' =>& $value,
 		'dates' => $dates,
 		'datee' => $datee
+
 	);
 	$reshook = $hookmanager->executeHooks('printOverviewProfit', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 	if ($reshook < 0) {
@@ -786,7 +790,8 @@ foreach ($listofreferent as $key => $value) {
 		if (is_array($elementarray) && count($elementarray) > 0) {
 			$total_ht = 0;
 			$total_ttc = 0;
-
+			$total_marge = 0;
+			$total_pa = 0;
 			$num = count($elementarray);
 			for ($i = 0; $i < $num; $i++) {
 				$tmp = explode('_', $elementarray[$i]);
@@ -817,6 +822,49 @@ foreach ($listofreferent as $key => $value) {
 				if ($tablename != 'expensereport_det' && method_exists($element, 'fetch_thirdparty')) {
 					$element->fetch_thirdparty();
 				}
+				//SPE CLIENT
+				//PA
+				if ($tablename == 'don') $total_buyprice_by_line=$element->amount;
+				elseif ($tablename == 'projet_task')
+				{
+					$formmargin = new FormMargin($db);
+					$marginInfo = $formmargin->getMarginInfosArray($element);
+					$total_buyprice_by_line = price2num($marginInfo['pa_total'],'MT');
+					if ($tmp['nblinesnull'] > 0)
+					{
+						$langs->load("errors");
+						$warning=$langs->trans("WarningSomeLinesWithNullHourlyRate");
+					}
+				}
+				else
+				{
+					$formmargin = new FormMargin($db);
+					$marginInfo = $formmargin->getMarginInfosArray($element);
+					$total_buyprice_by_line =  price2num($marginInfo['pa_total'],'MT');
+				}
+				$total_pa += $total_buyprice_by_line;
+
+				//MARGE
+				if ($tablename == 'don') $total_margin_by_line=$element->amount;
+				elseif ($tablename == 'projet_task')
+				{
+					$formmargin = new FormMargin($db);
+					$marginInfo = $formmargin->getMarginInfosArray($element);
+					$total_margin_by_line = price2num($marginInfo['total_margin'],'MT');
+					if ($tmp['nblinesnull'] > 0)
+					{
+						$langs->load("errors");
+						$warning=$langs->trans("WarningSomeLinesWithNullHourlyRate");
+					}
+				}
+				else
+				{
+					$formmargin = new FormMargin($db);
+					$marginInfo = $formmargin->getMarginInfosArray($element);
+					$total_margin_by_line = ($marginInfo['total_margin'] != $marginInfo['pv_total']) ? price2num($marginInfo['total_margin'],'MT') : 0;
+				}
+				$total_marge += $total_margin_by_line;
+				//FIN SPE CLIENT
 
 				// Define $total_ht_by_line
 				if ($tablename == 'don' || $tablename == 'chargesociales' || $tablename == 'payment_various' || $tablename == 'salary') {
@@ -918,6 +966,10 @@ foreach ($listofreferent as $key => $value) {
 			print '<td class="left">'.$name.'</td>';
 			// Nb
 			print '<td class="right">'.$i.'</td>';
+			// PA
+			print '<td align="right">'.price($total_pa).'</td>';
+			// Marge
+			print '<td align="right">'.price($total_marge).'</td>';
 			// Amount HT
 			print '<td class="right">';
 			if ($key == 'intervention' && !$qualifiedforfinalprofit) {
@@ -947,6 +999,8 @@ foreach ($listofreferent as $key => $value) {
 // and the final balance
 print '<tr class="liste_total">';
 print '<td class="right" colspan="2">'.$langs->trans("Profit").'</td>';
+print '<td align="right" ></td>';
+print '<td align="right" ></td>';
 print '<td class="right">'.price(price2num($balance_ht, 'MT')).'</td>';
 print '<td class="right">'.price(price2num($balance_ttc, 'MT')).'</td>';
 print '</tr>';
@@ -1113,6 +1167,14 @@ foreach ($listofreferent as $key => $value) {
 			print $langs->trans("ThirdParty");
 		}
 		print '</td>';
+		//Buy Price
+		print '<td width="100" align="center">';
+		if (! in_array($tablename, array('projet_task'))) print $langs->trans("Prix d'achat");
+		print '</td>';
+		//Margin
+		print '<td width="100" align="center">';
+		if (! in_array($tablename, array('projet_task'))) print $langs->trans("Margin");
+		print '</td>';
 		// Duration of intervention
 		if ($tablename == 'fichinter') {
 			print '<td>';
@@ -1150,6 +1212,8 @@ foreach ($listofreferent as $key => $value) {
 		if (is_array($elementarray) && count($elementarray) > 0) {
 			$total_ht = 0;
 			$total_ttc = 0;
+			$total_marge = 0;
+			$total_pa = 0;
 
 			$total_ht_by_third = 0;
 			$total_ttc_by_third = 0;
@@ -1353,6 +1417,70 @@ foreach ($listofreferent as $key => $value) {
 					print '</td>';
 				}
 
+				// SPE CLIENT
+				// Amount Buy Prices
+				$warning='';
+				if (empty($value['disableamount']))
+				{
+					if ($tablename == 'don') $total_buyprice_by_line=$element->amount;
+					elseif ($tablename == 'projet_task')
+					{
+						$formmargin = new FormMargin($db);
+						$marginInfo = $formmargin->getMarginInfosArray($element);
+						$total_buyprice_by_line = price2num($marginInfo['pa_total'],'MT');
+						if ($tmp['nblinesnull'] > 0)
+						{
+							$langs->load("errors");
+							$warning=$langs->trans("WarningSomeLinesWithNullHourlyRate");
+						}
+					}
+					else
+					{
+						$formmargin = new FormMargin($db);
+						$marginInfo = $formmargin->getMarginInfosArray($element);
+						$total_buyprice_by_line =  price2num($marginInfo['pa_total'],'MT');
+					}
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($total_buyprice_by_line)?price($total_buyprice_by_line):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					if ($warning) print ' '.img_warning($warning);
+					print '</td>';
+				}
+				else print '<td></td>';
+
+				// Amount Margin
+				$warning='';
+				if (empty($value['disableamount']))
+				{
+					if ($tablename == 'don') $total_margin_by_line=$element->amount;
+					elseif ($tablename == 'projet_task')
+					{
+						$formmargin = new FormMargin($db);
+						$marginInfo = $formmargin->getMarginInfosArray($element);
+						$total_margin_by_line = price2num($marginInfo['total_margin'],'MT');
+						if ($tmp['nblinesnull'] > 0)
+						{
+							$langs->load("errors");
+							$warning=$langs->trans("WarningSomeLinesWithNullHourlyRate");
+						}
+					}
+					else
+					{
+						$formmargin = new FormMargin($db);
+						$marginInfo = $formmargin->getMarginInfosArray($element);
+						$total_margin_by_line = ($marginInfo['total_margin'] != $marginInfo['pv_total']) ? price2num($marginInfo['total_margin'],'MT') : 0;
+					}
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($total_margin_by_line)?price($total_margin_by_line):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					if ($warning) print ' '.img_warning($warning);
+					print '</td>';
+				}
+				else print '<td></td>';
+				// FIN SPE CLIENT
+
 				// Amount without tax
 				$warning = '';
 				if (empty($value['disableamount'])) {
@@ -1405,8 +1533,6 @@ foreach ($listofreferent as $key => $value) {
 						print ' '.img_warning($warning);
 					}
 					print '</td>';
-				} else {
-					print '<td></td>';
 				}
 
 				// Amount inc tax
@@ -1484,9 +1610,12 @@ foreach ($listofreferent as $key => $value) {
 					$total_ht = $total_ht + $total_ht_by_line;
 					$total_ttc = $total_ttc + $total_ttc_by_line;
 
+					$total_marge = $total_marge + $total_margin_by_line;
+					$total_pa = $total_pa + $total_buyprice_by_line;
 					$total_ht_by_third += $total_ht_by_line;
 					$total_ttc_by_third += $total_ttc_by_line;
-
+					$total_marge_by_third += $total_margin_by_line;
+					$total_pa_by_third += $total_buyprice_by_line;
 					$total_time = $total_time + $total_time_by_line;
 				}
 
@@ -1522,6 +1651,14 @@ foreach ($listofreferent as $key => $value) {
 			}
 
 			print '<tr class="liste_total"><td colspan="'.$colspan.'">'.$langs->trans("Number").': '.$i.'</td>';
+
+			//SPE CLI
+			if (empty($value['disableamount'])) print '<td align="right" width="100">'.$langs->trans("Total Prix d'achat").' : '.price($total_pa).'</td>';
+			else print '<td></td>';
+			if (empty($value['disableamount'])) print '<td align="right" width="100">'.$langs->trans("TotalMargin").' : '.price($total_marge).'</td>';
+			else print '<td></td>';
+			//FIN SPE CLI
+
 			if (in_array($tablename, array('projet_task'))) {
 				print '<td class="center">';
 				print convertSecondToTime($total_time, 'allhourmin');

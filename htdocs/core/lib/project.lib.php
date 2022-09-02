@@ -548,6 +548,21 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 	global $user, $langs, $conf, $db, $hookmanager;
 	global $projectstatic, $taskstatic, $extrafields;
 
+	$plannedworkloadoutputformat='allhourmin';
+	$timespentoutputformat='allhourmin';
+	if (! empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) $plannedworkloadoutputformat=$conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
+	if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+
+	$working_plannedworkloadoutputformat='all';
+	$working_timespentoutputformat='all';
+	if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+	if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+	$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+	$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+	$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
+
 	$lastprojectid = 0;
 
 	$projectsArrayId = explode(',', $projectsListId);
@@ -723,24 +738,20 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 					print '</td>';
 				}
 
-				$plannedworkloadoutputformat = 'allhourmin';
-				$timespentoutputformat = 'allhourmin';
-				if (!empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) {
-					$plannedworkloadoutputformat = $conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
-				}
-				if (!empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) {
-					$timespentoutputformat = $conf->global->PROJECT_TIME_SPENT_FORMAT;
-				}
+
 
 				// Planned Workload (in working hours)
 				if (count($arrayfields) > 0 && !empty($arrayfields['t.planned_workload']['checked'])) {
 					print '<td class="right">';
-					$fullhour = convertSecondToTime($lines[$i]->planned_workload, $plannedworkloadoutputformat);
-					$workingdelay = convertSecondToTime($lines[$i]->planned_workload, 'all', 86400, 7); // TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+					$fullhour=convertSecondToTime($lines[$i]->planned_workload, $plannedworkloadoutputformat);
 					if ($lines[$i]->planned_workload != '') {
 						print $fullhour;
-						// TODO Add delay taking account of working hours per day and working day per week
-						//if ($workingdelay != $fullhour) print '<br>('.$workingdelay.')';
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($lines[$i]->planned_workload, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							// TODO Add delay taking account of working hours per day and working day per week
+							if ($workingdelay != $fullhour) print '<br>('.$workingdelay.')';
+						}
 					}
 					//else print '--:--';
 					print '</td>';
@@ -754,8 +765,17 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 					} else {
 						print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.($showproject ? '' : '&withproject=1').'">';
 					}
-					if ($lines[$i]->duration) {
-						print convertSecondToTime($lines[$i]->duration, $timespentoutputformat);
+					if ($lines[$i]->duration)
+					{
+						$fullhour = convertSecondToTime($lines[$i]->duration, $timespentoutputformat);
+						print $fullhour;
+
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($lines[$i]->duration, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							// TODO Add delay taking account of working hours per day and working day per week
+							if ($workingdelay != $fullhour) print '<br>('.$workingdelay.')';
+						}
 					} else {
 						print '--:--';
 					}
@@ -928,7 +948,13 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 		}
 		if (count($arrayfields) > 0 && !empty($arrayfields['t.planned_workload']['checked'])) {
 			print '<td class="nowrap liste_total right">';
-			print convertSecondToTime($total_projectlinesa_planned, 'allhourmin');
+			$fulltime = convertSecondToTime($total_projectlinesa_planned, $plannedworkloadoutputformat);
+			print $fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($total_projectlinesa_planned, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime) print '<br>('.$workingdelay.')';
+			}
 			print '</td>';
 		}
 		if (count($arrayfields) > 0 && !empty($arrayfields['t.duration_effective']['checked'])) {
@@ -936,7 +962,13 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 			if ($projectidfortotallink > 0) {
 				print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?projectid='.$projectidfortotallink.($showproject ? '' : '&withproject=1').'">';
 			}
-			print convertSecondToTime($total_projectlinesa_spent, 'allhourmin');
+			$fulltime = convertSecondToTime($total_projectlinesa_spent, $timespentoutputformat);
+			print $fulltime;
+			if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+			{
+				$workingdelay=convertSecondToTime($total_projectlinesa_spent, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);	// TODO Replace 86400 and 7 to take account working hours per day and working day per weeks
+				if ($workingdelay != $fulltime) print '<br>('.$workingdelay.')';
+			}
 			if ($projectidfortotallink > 0) {
 				print '</a>';
 			}
@@ -1226,11 +1258,20 @@ function projectLinesPerAction(&$inc, $parent, $fuser, $lines, &$level, &$projec
 
 			print convertSecondToTime($lines[$i]->timespent_duration, 'allhourmin');
 
-			$modeinput = 'hours';
+			if (empty($conf->global->PROJECT_USE_DECIMAL_DAY))
+			{
+				$modeinput='hours';
+				$class='.inputhour, .inputminute';
+			}
+			else
+			{
+				$modeinput='timeChar';
+				$class='.inputdays';
+			}
 
 			print '<script type="text/javascript">';
 			print "jQuery(document).ready(function () {\n";
-			print " 	jQuery('.inputhour, .inputminute').bind('keyup', function(e) { updateTotal(0, '".$modeinput."') });";
+			print " 	jQuery('".$class."').bind('keyup', function(e) { updateTotal(0, '".$modeinput."') });";
 			print "})\n";
 			print '</script>';
 
@@ -1285,17 +1326,34 @@ function projectLinesPerAction(&$inc, $parent, $fuser, $lines, &$level, &$projec
  * @param	int			$oldprojectforbreak		Old project id of last project break
  * @param	array		$arrayfields		    Array of additional column
  * @param	Extrafields	$extrafields		    Object extrafields
+ * @param	array		$extralabels		    Array of additional column
  * @return  array								Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
-function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, $preselectedday, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null)
+function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, $preselectedday, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, $extralabels=array())
 {
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic;
+	global $atm;
 
 	$lastprojectid = 0;
 	$totalforeachday = array();
 	$workloadforid = array();
 	$lineswithoutlevel0 = array();
+
+	$plannedworkloadoutputformat='allhourmin';
+	$timespentoutputformat='allhourmin';
+	if (! empty($conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT)) $plannedworkloadoutputformat=$conf->global->PROJECT_PLANNED_WORKLOAD_FORMAT;
+	if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+
+	$working_plannedworkloadoutputformat='all';
+	$working_timespentoutputformat='all';
+	if (! empty($conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT)) $working_plannedworkloadoutputformat=$conf->global->PROJECT_WORKING_PLANNED_WORKLOAD_FORMAT;
+	if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+	$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+	$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+	$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 
 	$numlines = count($lines);
 
@@ -1391,7 +1449,7 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 						print ' - ';
 						print '<span class="secondary">'.$projectstatic->title.'</span>';
 					}
-					/*
+
 					$colspan=5+(empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)?0:2);
 					print '<table class="">';
 
@@ -1451,7 +1509,7 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 					print '</tr>';
 					print '</table>';
 
-					*/
+
 					print '</td>';
 					print '</tr>';
 				}
@@ -1531,7 +1589,17 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 					// $lines[$i]->duration is a denormalised field = summ of time spent by everybody for task. What we need is time consummed by user
 					if ($lines[$i]->duration) {
 						print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.'">';
-						print convertSecondToTime($lines[$i]->duration, 'allhourmin');
+						$fullhour = convertSecondToTime($lines[$i]->duration, $timespentoutputformat);
+						print $fullhour;
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($lines[$i]->duration, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							if ($workingdelay != $fullhour)
+							{
+								if (!empty($fullhour)) print '<br>';
+								print '('.$workingdelay.')';
+							}
+						}
 						print '</a>';
 					} else {
 						print '--:--';
@@ -1541,8 +1609,19 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 					// Time spent by user
 					print '<td class="right">';
 					$tmptimespent = $taskstatic->getSummaryOfTimeSpent($fuser->id);
-					if ($tmptimespent['total_duration']) {
-						print convertSecondToTime($tmptimespent['total_duration'], 'allhourmin');
+					if ($tmptimespent['total_duration'])
+					{
+						$fullhour = convertSecondToTime($tmptimespent['total_duration'], $timespentoutputformat);
+						print $fullhour;
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($tmptimespent['total_duration'], $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							if ($workingdelay != $fullhour)
+							{
+								if (!empty($fullhour)) print '<br>';
+								print '('.$workingdelay.')';
+							}
+						}
 					} else {
 						print '--:--';
 					}
@@ -1609,7 +1688,9 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 				$tableCell .= '<span class="timesheetalreadyrecorded" title="texttoreplace"><input type="text" class="center" size="2" disabled id="timespent['.$inc.']['.$idw.']" name="task['.$lines[$i]->id.']['.$idw.']" value="'.$alreadyspent.'"></span>';
 				$tableCell .= '<span class="hideonsmartphone"> + </span>';
 				//$tableCell.='&nbsp;&nbsp;&nbsp;';
-				$tableCell .= $form->select_duration($lines[$i]->id.'duration', '', $disabledtask, 'text', 0, 1);
+				if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $tableCell.=$form->select_duration($lines[$i]->id.'duration', '', $disabledtask, 'text', 0, 1);
+				else $tableCell.='<input type="text" class="center smallpadd inputdays" size="2" id="timeadded['.$inc.']['.$idw.']" name="task['.$lines[$i]->id.']['.$idw.']" value="" cols="2"  maxlength="5">';
+
 				//$tableCell.='&nbsp;<input type="submit" class="button"'.($disabledtask?' disabled':'').' value="'.$langs->trans("Add").'">';
 				print $tableCell;
 
@@ -1651,7 +1732,7 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 			if ($lines[$i]->id > 0) {
 				//var_dump('totalforeachday after taskid='.$lines[$i]->id.' and previous one on level '.$level);
 				//var_dump($totalforeachday);
-				$ret = projectLinesPerDay($inc, $lines[$i]->id, $fuser, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $preselectedday, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields);
+				$ret = projectLinesPerDay($inc, $lines[$i]->id, $fuser, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $preselectedday, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, $extralabels);
 				//var_dump('ret with parent='.$lines[$i]->id.' level='.$level);
 				//var_dump($ret);
 				foreach ($ret as $key => $val) {
@@ -1687,15 +1768,26 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
  * @param	int			$oldprojectforbreak		Old project id of last project break
  * @param	array		$arrayfields		    Array of additional column
  * @param	Extrafields	$extrafields		    Object extrafields
+ *  @param	array		$extralabels		    Array of additional column
  * @return  array								Array with time spent for $fuser for each day of week on tasks in $lines and substasks
  */
-function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null)
+function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$level, &$projectsrole, &$tasksrole, $mine, $restricteditformytask, &$isavailable, $oldprojectforbreak = 0, $arrayfields = array(), $extrafields = null, $extralabels=array())
 {
 	global $conf, $db, $user, $langs;
 	global $form, $formother, $projectstatic, $taskstatic, $thirdpartystatic;
+	global $atm;
 
 	$numlines = count($lines);
 
+	$timespentoutputformat='allhourmin';
+	if (! empty($conf->global->PROJECT_TIMES_SPENT_FORMAT)) $timespentoutputformat=$conf->global->PROJECT_TIME_SPENT_FORMAT;
+	$working_timespentoutputformat='all';
+	if (! empty($conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT)) $working_timespentoutputformat=$conf->global->PROJECT_WORKING_TIMES_SPENT_FORMAT;
+
+	$working_hours_per_day=!empty($conf->global->PROJECT_WORKING_HOURS_PER_DAY) ? $conf->global->PROJECT_WORKING_HOURS_PER_DAY : 7;
+	$working_days_per_weeks=!empty($conf->global->PROJECT_WORKING_DAYS_PER_WEEKS) ? $conf->global->PROJECT_WORKING_DAYS_PER_WEEKS : 5;
+
+	$working_hours_per_day_in_seconds = 3600 * $working_hours_per_day;
 	$lastprojectid = 0;
 	$workloadforid = array();
 	$totalforeachday = array();
@@ -1786,7 +1878,7 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 					}
 
 					print '<tr class="oddeven trforbreak nobold">'."\n";
-					print '<td colspan="'.(11 + $addcolspan).'">';
+					print '<td colspan="'.(15+$addcolspan).'">';
 					print $projectstatic->getNomUrl(1, '', 0, '<strong>'.$langs->transnoentitiesnoconv("YourRole").':</strong> '.$projectsrole[$lines[$i]->fk_project]);
 					if ($thirdpartystatic->id > 0) {
 						print ' - '.$thirdpartystatic->getNomUrl(1);
@@ -1796,7 +1888,7 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 						print '<span class="secondary">'.$projectstatic->title.'</span>';
 					}
 
-					/*$colspan=5+(empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)?0:2);
+					$colspan=5+(empty($conf->global->PROJECT_TIMESHEET_DISABLEBREAK_ON_PROJECT)?0:2);
 					print '<table class="">';
 
 					print '<tr class="liste_titre">';
@@ -1854,7 +1946,7 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 
 					print '</tr>';
 					print '</table>';
-					*/
+
 
 					print '</td>';
 					print '</tr>';
@@ -1972,7 +2064,17 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 
 				// Fields to show current time
 				$tableCell = '';
-				$modeinput = 'hours';
+				if (empty($conf->global->PROJECT_USE_DECIMAL_DAY))
+				{
+					$modeinput='hours';
+					$class='.inputhour, .inputminute';
+				}
+				else
+				{
+					$modeinput='timeChar';
+					$class='.inputdays';
+				}
+
 				for ($idw = 0; $idw < 7; $idw++) {
 					$tmpday = dol_time_plus_duree($firstdaytoshow, $idw, 'd');
 
@@ -1990,10 +2092,12 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 					$totalforeachday[$tmpday] += $dayWorkLoad;
 
 					$alreadyspent = '';
-					if ($dayWorkLoad > 0) {
-						$alreadyspent = convertSecondToTime($dayWorkLoad, 'allhourmin');
+					if ($dayWorkLoad > 0)
+					{
+						if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $alreadyspent=convertSecondToTime($dayWorkLoad, 'allhourmin');
+						else $alreadyspent=convertSecondToTime($dayWorkLoad, 'fulldaydecimal', $working_hours_per_day_in_seconds, $working_days_per_weeks);
 					}
-					$alttitle = $langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
+					$alttitle=$langs->trans("AddHereTimeSpentForDay", $tmparray['day'], $tmparray['mon']);
 
 					global $numstartworkingday, $numendworkingday;
 					$cssweekend = '';
@@ -2046,7 +2150,7 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 			if ($lines[$i]->id > 0) {
 				//var_dump('totalforeachday after taskid='.$lines[$i]->id.' and previous one on level '.$level);
 				//var_dump($totalforeachday);
-				$ret = projectLinesPerWeek($inc, $firstdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields);
+				$ret = projectLinesPerWeek($inc, $firstdaytoshow, $fuser, $lines[$i]->id, ($parent == 0 ? $lineswithoutlevel0 : $lines), $level, $projectsrole, $tasksrole, $mine, $restricteditformytask, $isavailable, $oldprojectforbreak, $arrayfields, $extrafields, $extralabels);
 				//var_dump('ret with parent='.$lines[$i]->id.' level='.$level);
 				//var_dump($ret);
 				foreach ($ret as $key => $val) {
@@ -2211,9 +2315,21 @@ function projectLinesPerMonth(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &
 				print "</td>\n";
 
 				// Planned Workload
-				print '<td class="leftborder plannedworkload right">';
-				if ($lines[$i]->planned_workload) {
-					print convertSecondToTime($lines[$i]->planned_workload, 'allhourmin');
+				print '<td align="right" class="leftborder plannedworkload">';
+				if ($lines[$i]->planned_workload)
+				{
+					$fullhour = convertSecondToTime($lines[$i]->planned_workload, $plannedworkloadoutputformat);
+					print $fullhour;
+
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+					{
+						$workingdelay=convertSecondToTime($lines[$i]->planned_workload, $working_plannedworkloadoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+						if ($workingdelay != $fullhour)
+						{
+							if (!empty($fullhour)) print '<br>';
+							print '('.$workingdelay.')';
+						}
+					}
 				} else {
 					print '--:--';
 				}
@@ -2229,7 +2345,18 @@ function projectLinesPerMonth(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &
 				// $lines[$i]->duration is a denormalised field = summ of time spent by everybody for task. What we need is time consummed by user
 				if ($lines[$i]->duration) {
 					print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.'">';
-					print convertSecondToTime($lines[$i]->duration, 'allhourmin');
+					$fullhour = convertSecondToTime($lines[$i]->duration, 'allhourmin');
+					print $fullhour;
+
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+					{
+						$workingdelay=convertSecondToTime($lines[$i]->duration, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+						if ($workingdelay != $fullhour)
+						{
+							if (!empty($fullhour)) print '<br>';
+							print '('.$workingdelay.')';
+						}
+					}
 					print '</a>';
 				} else {
 					print '--:--';
@@ -2239,8 +2366,20 @@ function projectLinesPerMonth(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &
 				// Time spent by user
 				print '<td class="right">';
 				$tmptimespent = $taskstatic->getSummaryOfTimeSpent($fuser->id);
-				if ($tmptimespent['total_duration']) {
-					print convertSecondToTime($tmptimespent['total_duration'], 'allhourmin');
+				if ($tmptimespent['total_duration'])
+				{
+					$fullhour = convertSecondToTime($tmptimespent['total_duration'], 'allhourmin');
+					print $fullhour;
+
+					if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+					{
+						$workingdelay=convertSecondToTime($tmptimespent['total_duration'], $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+						if ($workingdelay != $fullhour)
+						{
+							if (!empty($fullhour)) print '<br>';
+							print '('.$workingdelay.')';
+						}
+					}
 				} else {
 					print '--:--';
 				}

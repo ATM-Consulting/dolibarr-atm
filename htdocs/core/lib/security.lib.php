@@ -380,10 +380,8 @@ function restrictedArea($user, $features, $objectid = 0, $tableandshare = '', $f
 		} elseif (!empty($feature) && ($feature != 'user' && $feature != 'usergroup')) {		// This is permissions on 1 level
 			if (empty($user->rights->$feature->lire)
 				&& empty($user->rights->$feature->read)
-				&& empty($user->rights->$feature->run)) {
-				$readok = 0;
-				$nbko++;
-			}
+				&& empty($user->rights->$feature->run)
+				&& empty($user->rights->$feature->liretous)) { $readok=0; $nbko++; }
 		}
 	}
 
