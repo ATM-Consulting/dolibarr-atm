@@ -45,10 +45,8 @@ $taskid = GETPOST('taskid', 'int');
 
 $contextpage = GETPOST('contextpage', 'aZ') ?GETPOST('contextpage', 'aZ') : 'perweekcard';
 
-$mine = 0;
-if ($mode == 'mine') {
-	$mine = 1;
-}
+$mine = 1;
+if ($mode === 'view_all') $mine=0;
 
 $projectid = GETPOSTISSET("id") ? GETPOST("id", "int", 1) : GETPOST("projectid", "int");
 
@@ -131,7 +129,6 @@ $extrafields = new ExtraFields($db);
 $extrafields->fetch_name_optionals_label($object->table_element);
 $extralabels_project = $extrafields->fetch_name_optionals_label('projet');
 // Definition of fields for list
-$arrayfields = array();
 $arrayfields=array(
  // Project
  'p.opp_amount'=>array('label'=>$langs->trans("OpportunityAmountShort"), 'checked'=>0, 'enabled'=>($conf->global->PROJECT_USE_OPPORTUNITIES?1:0), 'position'=>103),
@@ -354,10 +351,10 @@ if ($action == 'addtime' && $user->rights->projet->lire && GETPOST('formfilterac
 			$param .= ($search_task_ref ? '&search_task_ref='.urlencode($search_task_ref) : '');
 			$param .= ($search_task_label ? '&search_task_label='.urlencode($search_task_label) : '');
 
-			/*$search_array_options=$search_array_options_project;
+			$search_array_options=$search_array_options_project;
 			 $search_options_pattern='search_options_';
 			 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
-			 */
+
 
 			$search_array_options = $search_array_options_task;
 			$search_options_pattern = 'search_task_options_';
