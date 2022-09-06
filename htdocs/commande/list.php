@@ -279,7 +279,7 @@ if (empty($reshook)) {
 		$search_fk_input_reason = '';
 	}
 	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')
-	 || GETPOST('button_search_x', 'alpha') || GETPOST('button_search.x', 'alpha') || GETPOST('button_search', 'alpha')) {
+		|| GETPOST('button_search_x', 'alpha') || GETPOST('button_search.x', 'alpha') || GETPOST('button_search', 'alpha')) {
 		$massaction = ''; // Protection to avoid mass action if we force a new search during a mass action confirmation
 	}
 
@@ -787,7 +787,6 @@ $sql .= " state.code_departement as state_code, state.nom as state_name,";
 $sql .= " country.code as country_code,";
 $sql .= ' c.rowid, c.ref, c.total_ht, c.total_tva, c.total_ttc, c.ref_client, c.fk_user_author,';
 $sql .= ' c.fk_multicurrency, c.multicurrency_code, c.multicurrency_tx, c.multicurrency_total_ht, c.multicurrency_total_tva as multicurrency_total_vat, c.multicurrency_total_ttc,';
-if($conf->project->enabled) $sql .= ' c.fk_projet, p.ref as ref_projet, ';
 $sql .= ' c.date_valid, c.date_commande, c.note_public, c.note_private, c.date_livraison as date_delivery, c.fk_statut, c.facture as billed,';
 $sql .= ' c.date_creation as date_creation, c.tms as date_update, c.date_cloture as date_cloture,';
 $sql .= ' p.rowid as project_id, p.ref as project_ref, p.title as project_label,';
@@ -826,8 +825,6 @@ if ($search_product_category > 0) {
 }
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = c.fk_projet";
 $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON c.fk_user_author = u.rowid';
-
-if($conf->project->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = c.fk_projet ';
 
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (empty($user->rights->societe->client->voir) && !$socid)) {
@@ -1486,7 +1483,7 @@ if ($resql) {
 	// Payment term
 	if (!empty($arrayfields['c.fk_cond_reglement']['checked'])) {
 		print '<td class="liste_titre">';
-		$form->select_conditions_paiements($search_fk_cond_reglement, 'search_fk_cond_reglement', -1, 1, 1);
+		$form->select_conditions_paiements($search_fk_cond_reglement, 'search_fk_cond_reglement', 1, 1, 1);
 		print '</td>';
 	}
 	// Payment mode
@@ -1507,7 +1504,6 @@ if ($resql) {
 		print '<input class="flat" type="text" size="4" name="search_total_ht" value="'.dol_escape_htmltag($search_total_ht).'">';
 		print '</td>';
 	}
-
 	if (!empty($arrayfields['c.total_vat']['checked'])) {
 		// Amount
 		print '<td class="liste_titre right">';
@@ -1723,6 +1719,9 @@ if ($resql) {
 	if (!empty($arrayfields['c.total_ttc']['checked'])) {
 		print_liste_field_titre($arrayfields['c.total_ttc']['label'], $_SERVER["PHP_SELF"], 'c.total_ttc', '', $param, '', $sortfield, $sortorder, 'right ');
 	}
+	if(!empty($arrayfields['margin']['checked'])){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	if (!empty($arrayfields['c.multicurrency_code']['checked'])) {
 		print_liste_field_titre($arrayfields['c.multicurrency_code']['label'], $_SERVER['PHP_SELF'], 'c.multicurrency_code', '', $param, '', $sortfield, $sortorder);
 	}
@@ -1746,9 +1745,6 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['total_pa']['checked'])) {
 		print_liste_field_titre($arrayfields['total_pa']['label'], $_SERVER['PHP_SELF'], '', '', $param, 'class="right"', $sortfield, $sortorder);
-	}
-	if(!empty($arrayfields['margin']['checked'])){
-		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
 	}
 	if (!empty($arrayfields['total_margin']['checked'])) {
 		print_liste_field_titre($arrayfields['total_margin']['label'], $_SERVER['PHP_SELF'], '', '', $param, 'class="right"', $sortfield, $sortorder);
@@ -1893,11 +1889,6 @@ if ($resql) {
 		if (!empty($arrayfields['c.ref']['checked'])) {
 			print '<td class="nowraponall">';
 			print $generic_commande->getNomUrl(1, ($search_status != 2 ? 0 : $obj->fk_statut), 0, 0, 0, 1, 1);
-
-			// Warning late icon and note
-			if ($generic_commande->hasDelay()) {
-				print img_picto($langs->trans("Late").' : '.$generic_commande->showDelay(), "warning");
-			}
 
 			$filename = dol_sanitizeFileName($obj->ref);
 			$filedir = $conf->commande->multidir_output[$conf->entity].'/'.dol_sanitizeFileName($obj->ref);
@@ -2078,7 +2069,7 @@ if ($resql) {
 		}
 		// Amount HT
 		if (!empty($arrayfields['c.total_ht']['checked'])) {
-			  print '<td class="nowrap right"><span class="amount">'.price($obj->total_ht)."</span></td>\n";
+			print '<td class="nowrap right"><span class="amount">'.price($obj->total_ht)."</span></td>\n";
 			if (!$i) {
 				$totalarray['nbfield']++;
 			}
@@ -2091,7 +2082,6 @@ if ($resql) {
 				$totalarray['val']['c.total_ht'] = $obj->total_ht;
 			}
 		}
-
 		// Amount VAT
 		if (!empty($arrayfields['c.total_vat']['checked'])) {
 			print '<td class="nowrap right"><span class="amount">'.price($obj->total_tva)."</span></td>\n";
@@ -2114,7 +2104,7 @@ if ($resql) {
 			}
 			$totalarray['val']['c.total_ttc'] += $obj->total_ttc;
 		}
-//Marge
+		//Marge
 		if (! empty($arrayfields['margin']['checked']))
 		{
 			$commande = new Commande($db);
@@ -2124,9 +2114,10 @@ if ($resql) {
 			$marginInfo = $formmargin->getMarginInfosArray($commande);
 			print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
 		}
+
 		// Currency
 		if (!empty($arrayfields['c.multicurrency_code']['checked'])) {
-			  print '<td class="nowrap">'.$obj->multicurrency_code.' - '.$langs->trans('Currency'.$obj->multicurrency_code)."</td>\n";
+			print '<td class="nowrap">'.$obj->multicurrency_code.' - '.$langs->trans('Currency'.$obj->multicurrency_code)."</td>\n";
 			if (!$i) {
 				$totalarray['nbfield']++;
 			}
@@ -2134,16 +2125,16 @@ if ($resql) {
 
 		// Currency rate
 		if (!empty($arrayfields['c.multicurrency_tx']['checked'])) {
-			  print '<td class="nowrap">';
-			  $form->form_multicurrency_rate($_SERVER['PHP_SELF'].'?id='.$obj->rowid, $obj->multicurrency_tx, 'none', $obj->multicurrency_code);
-			  print "</td>\n";
+			print '<td class="nowrap">';
+			$form->form_multicurrency_rate($_SERVER['PHP_SELF'].'?id='.$obj->rowid, $obj->multicurrency_tx, 'none', $obj->multicurrency_code);
+			print "</td>\n";
 			if (!$i) {
 				$totalarray['nbfield']++;
 			}
 		}
 		// Amount HT
 		if (!empty($arrayfields['c.multicurrency_total_ht']['checked'])) {
-			  print '<td class="right nowrap"><span class="amount">'.price($obj->multicurrency_total_ht)."</span></td>\n";
+			print '<td class="right nowrap"><span class="amount">'.price($obj->multicurrency_total_ht)."</span></td>\n";
 			if (!$i) {
 				$totalarray['nbfield']++;
 			}
