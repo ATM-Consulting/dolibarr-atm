@@ -417,10 +417,9 @@ class Reception extends CommonObject
 				$this->statut               = $obj->fk_statut;
 				$this->user_author_id       = $obj->fk_user_author;
 				$this->date_creation        = $this->db->jdate($obj->date_creation);
-				$this->date                 = $this->db->jdate($obj->date_reception); // TODO deprecated
-				$this->date_reception = $this->db->jdate($obj->date_reception); // TODO deprecated
-				$this->date_reception = $this->db->jdate($obj->date_reception); // Date real
-				$this->date_delivery        = $this->db->jdate($obj->date_delivery); // Date planed
+				$this->date                 = $this->db->jdate($obj->date_reception); // deprecated
+				$this->date_reception 		= $this->db->jdate($obj->date_reception); // Date real
+				$this->date_delivery        = $this->db->jdate($obj->date_delivery); // Date planned
 				$this->model_pdf            = $obj->model_pdf;
 				$this->modelpdf             = $obj->model_pdf; // deprecated
 				$this->shipping_method_id = $obj->fk_shipping_method;
@@ -1376,6 +1375,35 @@ class Reception extends CommonObject
 
 			$this->lines[] = $line;
 			$xnbp++;
+		}
+	}
+
+	/**
+	 *	Set the planned delivery date
+	 *
+	 *	@param      User			$user        		Objet utilisateur qui modifie
+	 *	@param      integer 		$reception_date     Reception date
+	 *	@return     int         						<0 if KO, >0 if OK
+	 */
+	public function setReceptionDate($user, $reception_date)
+	{
+		// phpcs:enable
+		if ($user->rights->reception->creer) {
+			$sql = "UPDATE ".MAIN_DB_PREFIX."reception";
+			$sql .= " SET date_reception = ".($reception_date ? "'".$this->db->idate($reception_date)."'" : 'null');
+			$sql .= " WHERE rowid = ".((int) $this->id);
+
+			dol_syslog(get_class($this)."::setReceptionDate", LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if ($resql) {
+				$this->date_reception = $reception_date;
+				return 1;
+			} else {
+				$this->error = $this->db->error();
+				return -1;
+			}
+		} else {
+			return -2;
 		}
 	}
 
