@@ -2313,7 +2313,7 @@ class Product extends CommonObject
 			$sql .= " p.stock";
 		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."product as p";
-		if (!empty($conf->global->MULTICOMPANY_PMP_PER_ENTITY_ENABLED) || $separatedEntityPMP) {
+		if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED) || $separatedEntityPMP) {
 			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "product_perentity as ppe ON ppe.fk_product = p.rowid AND ppe.entity = " . ((int) $conf->entity);
 		}
 		if ($separatedStock) {
