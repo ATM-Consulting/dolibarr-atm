@@ -250,148 +250,159 @@ if (empty($reshook)) {
 		$error = 0;
 		$predef = '';
 
-		$db->begin();
+		$date_reception = dol_mktime(12, 0, 0, GETPOST('remonth', 'int'), GETPOST('reday', 'int'), GETPOST('reyear', 'int'));
 
-		$object->note = GETPOST('note', 'alpha');
-		$object->origin = $origin;
-		$object->origin_id = $origin_id;
-		$object->fk_project = GETPOST('projectid', 'int');
-		$object->weight = GETPOST('weight', 'int') == '' ? null : GETPOST('weight', 'int');
-		$object->sizeH = GETPOST('sizeH', 'int') == '' ? null : GETPOST('sizeH', 'int');
-		$object->sizeW = GETPOST('sizeW', 'int') == '' ? null : GETPOST('sizeW', 'int');
-		$object->sizeS = GETPOST('sizeS', 'int') == '' ? null : GETPOST('sizeS', 'int');
-		$object->size_units = GETPOST('size_units', 'int');
-		$object->weight_units = GETPOST('weight_units', 'int');
-
-		// On va boucler sur chaque ligne du document d'origine pour completer objet reception
-		// avec info diverses + qte a livrer
-
-		if ($object->origin == "supplierorder") {
-			$classname = 'CommandeFournisseur';
-		} else {
-			$classname = ucfirst($object->origin);
+		if (empty($date_reception)) {
+			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("DateReception")), null, 'errors');
+			$action = 'create';
+			$error++;
 		}
-		$objectsrc = new $classname($db);
-		$objectsrc->fetch($object->origin_id);
 
-		$object->socid = $objectsrc->socid;
-		$object->ref_supplier = GETPOST('ref_supplier', 'alpha');
-		$object->model_pdf = GETPOST('model');
-		$object->date_delivery = $date_delivery; // Date delivery planed
-		$object->fk_delivery_address = $objectsrc->fk_delivery_address;
-		$object->shipping_method_id = GETPOST('shipping_method_id', 'int');
-		$object->tracking_number = GETPOST('tracking_number', 'alpha');
-		$object->note_private = GETPOST('note_private', 'restricthtml');
-		$object->note_public = GETPOST('note_public', 'restricthtml');
-		$object->fk_incoterms = GETPOST('incoterm_id', 'int');
-		$object->location_incoterms = GETPOST('location_incoterms', 'alpha');
+		if (!$error) {
+			$db->begin();
 
-		$batch_line = array();
-		$stockLine = array();
-		$array_options = array();
+			$object->note = GETPOST('note', 'alpha');
+			$object->origin = $origin;
+			$object->origin_id = $origin_id;
+			$object->fk_project = GETPOST('projectid', 'int');
+			$object->weight = GETPOST('weight', 'int') == '' ? null : GETPOST('weight', 'int');
+			$object->sizeH = GETPOST('sizeH', 'int') == '' ? null : GETPOST('sizeH', 'int');
+			$object->sizeW = GETPOST('sizeW', 'int') == '' ? null : GETPOST('sizeW', 'int');
+			$object->sizeS = GETPOST('sizeS', 'int') == '' ? null : GETPOST('sizeS', 'int');
+			$object->size_units = GETPOST('size_units', 'int');
+			$object->weight_units = GETPOST('weight_units', 'int');
 
-		$totalqty = 0;
+			// On va boucler sur chaque ligne du document d'origine pour completer objet reception
+			// avec info diverses + qte a livrer
 
-		$num = 0;
-		foreach ($_POST as $key => $value) {
-			// without batch module enabled
-
-			if (strpos($key, 'qtyasked') !== false) {
-				$num++;
+			if ($object->origin == "supplierorder") {
+				$classname = 'CommandeFournisseur';
+			} else {
+				$classname = ucfirst($object->origin);
 			}
-		}
+			$objectsrc = new $classname($db);
+			$objectsrc->fetch($object->origin_id);
 
-		for ($i = 1; $i <= $num; $i++) {
-			$idl = "idl".$i;
+			$object->socid = $objectsrc->socid;
+			$object->ref_supplier = GETPOST('ref_supplier', 'alpha');
+			$object->model_pdf = GETPOST('model');
+			$object->date_reception = $date_reception;
+			$object->date_delivery = $date_delivery; // Date delivery planed
+			$object->fk_delivery_address = $objectsrc->fk_delivery_address;
+			$object->shipping_method_id = GETPOST('shipping_method_id', 'int');
+			$object->tracking_number = GETPOST('tracking_number', 'alpha');
+			$object->note_private = GETPOST('note_private', 'restricthtml');
+			$object->note_public = GETPOST('note_public', 'restricthtml');
+			$object->fk_incoterms = GETPOST('incoterm_id', 'int');
+			$object->location_incoterms = GETPOST('location_incoterms', 'alpha');
 
-			$sub_qty = array();
-			$subtotalqty = 0;
+			$batch_line = array();
+			$stockLine = array();
+			$array_options = array();
 
-			$j = 0;
-			$batch = "batchl".$i."_0";
-			$stockLocation = "ent1".$i."_0";
-			$qty = "qtyl".$i;
+			$totalqty = 0;
 
-			//var_dump(GETPOST($qty,'int')); var_dump($_POST); var_dump($batch);exit;
-			//reception line for product with no batch management and no multiple stock location
-			if (GETPOST($qty, 'alpha') > 0) {
-				$totalqty += price2num(GETPOST($qty, 'alpha'), 'MS');
+			$num = 0;
+			foreach ($_POST as $key => $value) {
+				// without batch module enabled
+
+				if (strpos($key, 'qtyasked') !== false) {
+					$num++;
+				}
 			}
 
-			// Extrafields
-			$array_options[$i] = $extrafields->getOptionalsFromPost($object->table_element_line, $i);
-		}
-
-
-		if ($totalqty > 0) {  // There is at least one thing to ship
-			//var_dump($_POST);exit;
 			for ($i = 1; $i <= $num; $i++) {
-				$lineToTest = '';
-				$lineId = GETPOST($idl, 'int');
-				foreach ($objectsrc->lines as $linesrc) {
-					if ($linesrc->id == $lineId) {
-						$lineToTest = $linesrc;
-						break;
+				$idl = "idl" . $i;
+
+				$sub_qty = array();
+				$subtotalqty = 0;
+
+				$j = 0;
+				$batch = "batchl" . $i . "_0";
+				$stockLocation = "ent1" . $i . "_0";
+				$qty = "qtyl" . $i;
+
+				//var_dump(GETPOST($qty,'int')); var_dump($_POST); var_dump($batch);exit;
+				//reception line for product with no batch management and no multiple stock location
+				if (GETPOST($qty, 'alpha') > 0) {
+					$totalqty += price2num(GETPOST($qty, 'alpha'), 'MS');
+				}
+
+				// Extrafields
+				$array_options[$i] = $extrafields->getOptionalsFromPost($object->table_element_line, $i);
+			}
+
+
+			if ($totalqty > 0) {  // There is at least one thing to ship
+				//var_dump($_POST);exit;
+				for ($i = 1; $i <= $num; $i++) {
+					$lineToTest = '';
+					$lineId = GETPOST($idl, 'int');
+					foreach ($objectsrc->lines as $linesrc) {
+						if ($linesrc->id == $lineId) {
+							$lineToTest = $linesrc;
+							break;
+						}
+					}
+					if (empty($lineToTest)) {
+						continue;
+					}
+					$qty = "qtyl" . $i;
+					$comment = "comment" . $i;
+					$eatby = "dlc" . $i;
+					$sellby = "dluo" . $i;
+					$batch = "batch" . $i;
+
+					if (GETPOST($qty, 'int') > 0 || (GETPOST($qty, 'int') == 0 && $conf->global->RECEPTION_GETS_ALL_ORDER_PRODUCTS)) {
+						$ent = "entl" . $i;
+
+						$idl = "idl" . $i;
+
+						$entrepot_id = is_numeric(GETPOST($ent, 'int')) ? GETPOST($ent, 'int') : GETPOST('entrepot_id', 'int');
+
+						if (!empty($lineToTest)) {
+							$fk_product = $lineToTest->fk_product;
+						} else {
+							$fk_product = $linesrc->fk_product;
+						}
+
+						if ($entrepot_id < 0) {
+							$entrepot_id = '';
+						}
+						if (!($fk_product > 0) && empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
+							$entrepot_id = 0;
+						}
+						$eatby = GETPOST($eatby, 'alpha');
+						$sellby = GETPOST($sellby, 'alpha');
+						$eatbydate = str_replace('/', '-', $eatby);
+						$sellbydate = str_replace('/', '-', $sellby);
+
+						$ret = $object->addline($entrepot_id, GETPOST($idl, 'int'), GETPOST($qty, 'int'), $array_options[$i], GETPOST($comment, 'alpha'), strtotime($eatbydate), strtotime($sellbydate), GETPOST($batch, 'alpha'));
+						if ($ret < 0) {
+							setEventMessages($object->error, $object->errors, 'errors');
+							$error++;
+						}
 					}
 				}
-				if (empty($lineToTest)) {
-					continue;
+
+
+				// Fill array 'array_options' with data from add form
+				$ret = $extrafields->setOptionalsFromPost(null, $object);
+				if ($ret < 0) {
+					$error++;
 				}
-				$qty = "qtyl".$i;
-				$comment = "comment".$i;
-				$eatby = "dlc".$i;
-				$sellby = "dluo".$i;
-				$batch = "batch".$i;
+				if (!$error) {
+					$ret = $object->create($user); // This create reception (like Odoo picking) and line of receptions. Stock movement will when validating reception.
 
-				if (GETPOST($qty, 'int') > 0 || (GETPOST($qty, 'int') == 0 && $conf->global->RECEPTION_GETS_ALL_ORDER_PRODUCTS)) {
-					$ent = "entl".$i;
-
-					$idl = "idl".$i;
-
-					$entrepot_id = is_numeric(GETPOST($ent, 'int')) ? GETPOST($ent, 'int') : GETPOST('entrepot_id', 'int');
-
-					if (!empty($lineToTest)) {
-						$fk_product = $lineToTest->fk_product;
-					} else {
-						$fk_product = $linesrc->fk_product;
-					}
-
-					if ($entrepot_id < 0) {
-						$entrepot_id = '';
-					}
-					if (!($fk_product > 0) && empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
-						$entrepot_id = 0;
-					}
-					$eatby = GETPOST($eatby, 'alpha');
-					$sellby = GETPOST($sellby, 'alpha');
-					$eatbydate = str_replace('/', '-', $eatby);
-					$sellbydate = str_replace('/', '-', $sellby);
-
-					$ret = $object->addline($entrepot_id, GETPOST($idl, 'int'), GETPOST($qty, 'int'), $array_options[$i], GETPOST($comment, 'alpha'), strtotime($eatbydate), strtotime($sellbydate), GETPOST($batch, 'alpha'));
-					if ($ret < 0) {
+					if ($ret <= 0) {
 						setEventMessages($object->error, $object->errors, 'errors');
 						$error++;
 					}
 				}
-			}
-
-
-			// Fill array 'array_options' with data from add form
-			$ret = $extrafields->setOptionalsFromPost(null, $object);
-			if ($ret < 0) {
+			} else {
+				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("QtyToReceive") . '/' . $langs->transnoentitiesnoconv("Warehouse")), null, 'errors');
 				$error++;
 			}
-			if (!$error) {
-				$ret = $object->create($user); // This create reception (like Odoo picking) and line of receptions. Stock movement will when validating reception.
-
-				if ($ret <= 0) {
-					setEventMessages($object->error, $object->errors, 'errors');
-					$error++;
-				}
-			}
-		} else {
-			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("QtyToReceive").'/'.$langs->transnoentitiesnoconv("Warehouse")), null, 'errors');
-			$error++;
 		}
 
 		if (!$error) {
@@ -453,6 +464,14 @@ if (empty($reshook)) {
 			if ($result < 0) {
 				setEventMessages($object->error, $object->errors, 'errors');
 		}*/
+	} elseif ($action == 'setdate_reception' && $user->rights->reception->creer) {
+		$datereception = dol_mktime(12, 0, 0, GETPOST('rec_month', 'int'), GETPOST('rec_day', 'int'), GETPOST('rec_year', 'int'));
+
+		$object->fetch($id);
+		$result = $object->setReceptionDate($user, $datereception);
+		if ($result < 0) {
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
 	} elseif ($action == 'setdate_livraison' && $user->rights->reception->creer) {
 		//print "x ".$_POST['liv_month'].", ".$_POST['liv_day'].", ".$_POST['liv_year'];
 		$datedelivery = dol_mktime(GETPOST('liv_hour', 'int'), GETPOST('liv_min', 'int'), 0, GETPOST('liv_month', 'int'), GETPOST('liv_day', 'int'), GETPOST('liv_year', 'int'));
@@ -778,6 +797,11 @@ if ($action == 'create') {
 			print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans('Company').'</td>';
 			print '<td colspan="3">'.$soc->getNomUrl(1).'</td>';
 			print '</tr>';
+
+			// Date
+			print '<tr><td class="fieldrequired">'.$langs->trans('DateReception').'</td><td>';
+			print $form->selectDate('', '', '', '', '', "add", 1, 1);
+			print '</td></tr>';
 
 			// Project
 			if (!empty($conf->projet->enabled)) {
@@ -1432,9 +1456,28 @@ if ($action == 'create') {
 			print '</tr>';
 		}
 
-		// Date creation
-		print '<tr><td class="titlefield">'.$langs->trans("DateCreation").'</td>';
-		print '<td colspan="3">'.dol_print_date($object->date_creation, "dayhour")."</td>\n";
+		// Date reception
+		print '<tr><td class="titlefield">';
+		print '<table class="nobordernopadding" width="100%"><tr><td>';
+		print $langs->trans('DateReception');
+		print '</td>';
+
+		if ($action != 'editdate_reception') {
+			print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate_reception&amp;id='.$object->id.'">'.img_edit($langs->trans('SetReceptionDate'), 1).'</a></td>';
+		}
+		print '</tr></table>';
+		print '</td><td colspan="2">';
+		if ($action == 'editdate_reception') {
+			print '<form name="setdate_reception" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
+			print '<input type="hidden" name="token" value="'.newToken().'">';
+			print '<input type="hidden" name="action" value="setdate_reception">';
+			print $form->selectDate($object->date_reception ? $object->date_reception : -1, 'rec_', 1, 1, '', "setdate_reception", 1, 0);
+			print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+			print '</form>';
+		} else {
+			print $object->date_reception ? dol_print_date($object->date_reception, 'day') : '&nbsp;';
+		}
+		print '</td>';
 		print '</tr>';
 
 		// Delivery date planned
@@ -1456,7 +1499,7 @@ if ($action == 'create') {
 			print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
 			print '</form>';
 		} else {
-			print $object->date_delivery ? dol_print_date($object->date_delivery, 'dayhour') : '&nbsp;';
+			print $object->date_delivery ? dol_print_date($object->date_delivery, 'day') : '&nbsp;';
 		}
 		print '</td>';
 		print '</tr>';
