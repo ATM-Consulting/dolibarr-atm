@@ -417,6 +417,7 @@ if ($action == "dosign" && empty($cancel)) {
 					dataType: "text",
 					data: {
 						"action" : "importSignature",
+						"token" : \''.newToken().'\',
 						"signaturebase64" : signature,
 						"ref" : \''.dol_escape_js($REF).'\',
 						"securekey" : \''.dol_escape_js($SECUREKEY).'\',
