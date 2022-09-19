@@ -972,7 +972,7 @@ if (empty($action) || $action == 'view') {
 			print "<td>".$invoicestatic->getNomUrl(1)."</td>";
 			// Account
 			print "<td>";
-			$accountoshow = length_accountg($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER);
+			$accountoshow = length_accountg($companystatic->accountancy_code_customer_general);
 			if (($accountoshow == "") || $accountoshow == 'NotDefined') {
 				print '<span class="error">'.$langs->trans("MainAccountForCustomersNotDefined").'</span>';
 			} else {
