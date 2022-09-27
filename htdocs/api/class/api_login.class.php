@@ -82,7 +82,7 @@ class Login
 		{
 			throw new RestException(403, "Bad value for entity, must be the numeric ID of company.");
 		}
-		if ($entity == '') $entity=1;
+		if ($entity == '') $entity = getEntityUser($login);
 
 		include_once DOL_DOCUMENT_ROOT . '/core/lib/security2.lib.php';
 		$login = checkLoginPassEntity($login, $password, $entity, $authmode);
