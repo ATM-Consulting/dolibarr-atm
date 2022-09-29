@@ -2427,8 +2427,10 @@ class Facture extends CommonInvoice
 				$formmargin = new FormMargin($this->db);
 				$arraytmp = $formmargin->getMarginInfosArray($srcinvoice, false);
 				$facligne->pa_ht = $arraytmp['pa_total'];
+				dol_syslog("Test0 ".$this->situation_cycle_ref." ".$remise->description, "LOG_DEBUG");
 				// InfraS add begin
 				if (!empty($this->situation_cycle_ref) && $remise->description == '(DEPOSIT)') {	// we insert a discount in a situation invoice
+					dol_syslog("Test1 ".$this->situation_cycle_ref." ".$remise->description, "LOG_DEBUG");
 					$srcinvoice->situation_cycle_ref	= $this->situation_cycle_ref;
 					$srcinvoice->situation_counter		= 0;
 					$srcinvoice->situation_final		= 0;
