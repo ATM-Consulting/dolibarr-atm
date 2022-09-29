@@ -3514,14 +3514,16 @@ abstract class CommonObject
 				$prev_sits = $this->get_prev_sits();
 
 				foreach ($prev_sits as $sit) {				// $sit is an object Facture loaded with a fetch.
-					$this->total_ht -= $sit->total_ht;
-					$this->total_tva -= $sit->total_tva;
-					$this->total_localtax1 -= $sit->total_localtax1;
-					$this->total_localtax2 -= $sit->total_localtax2;
-					$this->total_ttc -= $sit->total_ttc;
-					$this->multicurrency_total_ht -= $sit->multicurrency_total_ht;
-					$this->multicurrency_total_tva -= $sit->multicurrency_total_tva;
-					$this->multicurrency_total_ttc -= $sit->multicurrency_total_ttc;
+					if ($sit->situation_counter > 0) {
+						$this->total_ht -= $sit->total_ht;
+						$this->total_tva -= $sit->total_tva;
+						$this->total_localtax1 -= $sit->total_localtax1;
+						$this->total_localtax2 -= $sit->total_localtax2;
+						$this->total_ttc -= $sit->total_ttc;
+						$this->multicurrency_total_ht -= $sit->multicurrency_total_ht;
+						$this->multicurrency_total_tva -= $sit->multicurrency_total_tva;
+						$this->multicurrency_total_ttc -= $sit->multicurrency_total_ttc;
+					}
 				}
 			}
 
