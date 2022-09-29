@@ -2321,7 +2321,6 @@ class Facture extends CommonInvoice
 		$sql .= " note_private=".(isset($this->note_private) ? "'".$this->db->escape($this->note_private)."'" : "null").",";
 		$sql .= " note_public=".(isset($this->note_public) ? "'".$this->db->escape($this->note_public)."'" : "null").",";
 		$sql .= " model_pdf=".(isset($this->model_pdf) ? "'".$this->db->escape($this->model_pdf)."'" : "null").",";
-		$sql .= " fk_input_reason=".($this->demand_reason_id > 0 ? $this->db->escape($this->demand_reason_id) : "null").",";
 		$sql .= " import_key=".(isset($this->import_key) ? "'".$this->db->escape($this->import_key)."'" : "null").",";
 		$sql .= " situation_cycle_ref=".(empty($this->situation_cycle_ref) ? "null" : $this->db->escape($this->situation_cycle_ref)).",";
 		$sql .= " situation_counter=".(isset($this->situation_counter) ? $this->db->escape($this->situation_counter) : "null").",";	// InfraS change
