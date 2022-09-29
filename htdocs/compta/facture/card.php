@@ -129,7 +129,6 @@ $usercanread = $user->rights->facture->lire;
 $usercancreate = $user->rights->facture->creer;
 $usercanissuepayment = $user->rights->facture->paiement;
 $usercandelete = $user->rights->facture->supprimer;
-$usercancreatecontract = $user->rights->contrat->creer;
 $usercanvalidate = ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && $usercancreate) || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->facture->invoice_advance->validate)));
 $usercansend = (empty($conf->global->MAIN_USE_ADVANCED_PERMS) || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->facture->invoice_advance->send)));
 $usercanreopen = ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && $usercancreate) || (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->facture->invoice_advance->reopen)));
@@ -284,15 +283,6 @@ if (empty($reshook)) {
 	} elseif ($action == 'valid' && $usercancreate) {
 		// Validation
 		$object->fetch($id);
-
-		if (!empty($conf->global-> INVOICE_CHECK_POSTERIOR_DATE)) {
-			$last_of_type = $object->willBeLastOfSameType($allow_validated_drafts = true);
-			if (empty($object->date_validation) && !$last_of_type[0]) {
-				setEventMessages($langs->transnoentities("ErrorInvoiceIsNotLastOfSameType", $object->ref , dol_print_date($object->date, 'day'), dol_print_date($last_of_type[1], 'day')), null, 'errors');
-				header('Location: '.$_SERVER["PHP_SELF"].'?facid='.$id);
-				exit;
-			}
-		}
 
 		// On verifie signe facture
 		if ($object->type == Facture::TYPE_CREDIT_NOTE) {
@@ -609,12 +599,6 @@ if (empty($reshook)) {
 	} elseif ($action == 'setref_client' && $usercancreate) {
 		$object->fetch($id);
 		$object->set_ref_client(GETPOST('ref_client'));
-	} elseif ($action == 'setdemandreason' && $usercancreate) {
-		$object->fetch($id);
-		$result = $object->setValueFrom('fk_input_reason', GETPOST('demand_reason_id', 'int'), '', null, 'int', '', $user, 'BILL_MODIFY');
-		if ($result < 0) {
-			setEventMessages($object->error, $object->errors, 'errors');
-		}
 	} elseif ($action == 'confirm_valid' && $confirm == 'yes' && $usercanvalidate) {
 		// Classify to validated
 		$idwarehouse = GETPOST('idwarehouse', 'int');
@@ -3034,7 +3018,6 @@ if ($action == 'create') {
 				$expesrc->fetch_optionals();
 				$object->array_options = $expesrc->array_options;
 
-				$demand_reason_id = (!empty($expesrc->demand_reason_id) ? $expesrc->demand_reason_id : (!empty($soc->demand_reason_id) ? $soc->demand_reason_id : 0));
 			} else {
 				$cond_reglement_id 	= (!empty($objectsrc->cond_reglement_id) ? $objectsrc->cond_reglement_id : (!empty($soc->cond_reglement_id) ? $soc->cond_reglement_id : 0));
 				$mode_reglement_id 	= (!empty($objectsrc->mode_reglement_id) ? $objectsrc->mode_reglement_id : (!empty($soc->mode_reglement_id) ? $soc->mode_reglement_id : 0));
@@ -3054,15 +3037,12 @@ if ($action == 'create') {
 				// Replicate extrafields
 				$objectsrc->fetch_optionals();
 				$object->array_options = $objectsrc->array_options;
-
-				$demand_reason_id = (!empty($objectsrc->demand_reason_id) ? $objectsrc->demand_reason_id : (!empty($soc->demand_reason_id) ? $soc->demand_reason_id : 0));
 			}
 		}
 	} else {
 		$cond_reglement_id 	= $soc->cond_reglement_id;
 		$mode_reglement_id 	= $soc->mode_reglement_id;
 		$fk_account        	= $soc->fk_account;
-		$demand_reason_id   = $soc->demand_reason_id;
 		$remise_percent 	= $soc->remise_percent;
 		$remise_absolue 	= 0;
 		$dateinvoice = (empty($dateinvoice) ? (empty($conf->global->MAIN_AUTOFILL_DATE) ?-1 : '') : $dateinvoice); // Do not set 0 here (0 for a date is 1970)
@@ -3706,12 +3686,6 @@ if ($action == 'create') {
 		print $form->select_comptes(($fk_account < 0 ? '' : $fk_account), 'fk_account', 0, '', 1, '', 0, 'maxwidth200 widthcentpercentminusx', 1);
 		print '</td></tr>';
 	}
-
-	// Source / Channel - What trigger creation
-	print '<tr><td>'.$langs->trans('Source').'</td><td>';
-	print img_picto('', 'question', 'class="pictofixedwidth"');
-	$form->selectInputReason($demand_reason_id, 'demand_reason_id', '', 1, 'maxwidth200 widthcentpercentminusx');
-	print '</td></tr>';
 
 	// Project
 	if (!empty($conf->projet->enabled)) {
@@ -4475,18 +4449,6 @@ if ($action == 'create') {
 		}
 		print '</td></tr>';
 	}
-
-	// Source reason (why we have an order)
-	print '<tr><td>';
-	$editenable = $usercancreate;
-	print $form->editfieldkey("Source", 'demandreason', '', $object, $editenable);
-	print '</td><td class="valuefield">';
-	if ($action == 'editdemandreason') {
-		$form->formInputReason($_SERVER['PHP_SELF'].'?id='.$object->id, $object->demand_reason_id, 'demand_reason_id', 1);
-	} else {
-		$form->formInputReason($_SERVER['PHP_SELF'].'?id='.$object->id, $object->demand_reason_id, 'none');
-	}
-	print '</td></tr>';
 
 	// Payment term
 	print '<tr><td>';
@@ -5456,17 +5418,6 @@ if ($action == 'create') {
 				}
 			}
 
-			// Create contract
-			if (!empty($conf->global->CONTRACT_CREATE_FROM_INVOICE)) {
-				if ($conf->contrat->enabled && $object->statut == Facture::STATUS_VALIDATED) {
-					$langs->load("contracts");
-
-					if ($usercancreatecontract) {
-						print '<a class="butAction" href="' . DOL_URL_ROOT . '/contrat/card.php?action=create&amp;origin=' . $object->element . '&amp;originid=' . $object->id . '&amp;socid=' . $object->socid . '">' . $langs->trans('AddContract') . '</a>';
-					}
-				}
-			}
-
 			// Validate
 			if ($object->statut == Facture::STATUS_DRAFT && count($object->lines) > 0 && ((($object->type == Facture::TYPE_STANDARD || $object->type == Facture::TYPE_REPLACEMENT || $object->type == Facture::TYPE_DEPOSIT || $object->type == Facture::TYPE_PROFORMA || $object->type == Facture::TYPE_SITUATION) && (!empty($conf->global->FACTURE_ENABLE_NEGATIVE) || $object->total_ttc >= 0)) || ($object->type == Facture::TYPE_CREDIT_NOTE && $object->total_ttc <= 0))) {
 				if ($usercanvalidate) {
@@ -5554,7 +5505,7 @@ if ($action == 'create') {
 				}
 				// For deposit invoice
 				if ($object->type == Facture::TYPE_DEPOSIT && $usercancreate && $object->statut > Facture::STATUS_DRAFT && empty($discount->id)) {
-					if (price2num($object->total_ttc, 'MT') == price2num($sumofpaymentall, 'MT')) {
+					if (price2num($sumofpaymentall, 'MT') <= price2num($object->total_ttc, 'MT')) {
 						// We can close a down payment only if paid amount is same than amount of down payment (by definition)
 						print '<a class="butAction'.($conf->use_javascript_ajax ? ' reposition' : '').'" href="'.$_SERVER["PHP_SELF"].'?facid='.$object->id.'&amp;action=converttoreduc">'.$langs->trans('ConvertToReduc').'</a>';
 					} else {

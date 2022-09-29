@@ -331,7 +331,6 @@ class Facture extends CommonInvoice
 		'note_private' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>205),
 		'note_public' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>210),
 		'model_pdf' =>array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>1, 'visible'=>0, 'position'=>215),
-		'fk_input_reason' =>array('type'=>'integer', 'label'=>'Source', 'enabled'=>1, 'visible'=>-1, 'position'=>220),
 		'extraparams' =>array('type'=>'varchar(255)', 'label'=>'Extraparams', 'enabled'=>1, 'visible'=>-1, 'position'=>225),
 		'situation_cycle_ref' =>array('type'=>'smallint(6)', 'label'=>'Situation cycle ref', 'enabled'=>'$conf->global->INVOICE_USE_SITUATION', 'visible'=>-1, 'position'=>230),
 		'situation_counter' =>array('type'=>'smallint(6)', 'label'=>'Situation counter', 'enabled'=>'$conf->global->INVOICE_USE_SITUATION', 'visible'=>-1, 'position'=>235),
@@ -650,7 +649,6 @@ class Facture extends CommonInvoice
 		$sql .= ", fk_account";
 		$sql .= ", module_source, pos_source, fk_fac_rec_source, fk_facture_source, fk_user_author, fk_projet";
 		$sql .= ", fk_cond_reglement, fk_mode_reglement, date_lim_reglement, model_pdf";
-		$sql .= ", fk_input_reason";
 		$sql .= ", situation_cycle_ref, situation_counter, situation_final";
 		$sql .= ", fk_incoterms, location_incoterms";
 		$sql .= ", fk_multicurrency";
@@ -686,7 +684,6 @@ class Facture extends CommonInvoice
 		$sql .= ", ".((int) $this->mode_reglement_id);
 		$sql .= ", '".$this->db->idate($this->date_lim_reglement)."'";
 		$sql .= ", ".(isset($this->model_pdf) ? "'".$this->db->escape($this->model_pdf)."'" : "null");
-		$sql .= ", ".($this->demand_reason_id > 0 ? ((int) $this->demand_reason_id) : "null");
 		$sql .= ", ".($this->situation_cycle_ref ? "'".$this->db->escape($this->situation_cycle_ref)."'" : "null");
 		$sql .= ", ".($this->situation_counter ? "'".$this->db->escape($this->situation_counter)."'" : "null");
 		$sql .= ", ".($this->situation_final ? $this->situation_final : 0);
@@ -1921,7 +1918,6 @@ class Facture extends CommonInvoice
 		$sql .= ', f.date_valid as datev';
 		$sql .= ', f.tms as datem';
 		$sql .= ', f.note_private, f.note_public, f.fk_statut, f.paye, f.close_code, f.close_note, f.fk_user_author, f.fk_user_valid, f.model_pdf, f.last_main_doc';
-		$sql .= ", f.fk_input_reason";
 		$sql .= ', f.fk_facture_source, f.fk_fac_rec_source';
 		$sql .= ', f.fk_mode_reglement, f.fk_cond_reglement, f.fk_projet as fk_project, f.extraparams';
 		$sql .= ', f.situation_cycle_ref, f.situation_counter, f.situation_final';
@@ -1936,7 +1932,6 @@ class Facture extends CommonInvoice
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'facture as f';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_payment_term as c ON f.fk_cond_reglement = c.rowid';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_paiement as p ON f.fk_mode_reglement = p.id';
-		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_input_reason as dr ON f.fk_input_reason = dr.rowid";
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_incoterms as i ON f.fk_incoterms = i.rowid';
 
 		if ($rowid) {
@@ -1960,8 +1955,8 @@ class Facture extends CommonInvoice
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
 
-				$this->id = $obj->rowid;
-				$this->entity = $obj->entity;
+				$this->id					= $obj->rowid;
+				$this->entity				= $obj->entity;
 
 				$this->ref					= $obj->ref;
 				$this->ref_client			= $obj->ref_client;
@@ -1970,10 +1965,10 @@ class Facture extends CommonInvoice
 				$this->type					= $obj->type;
 				$this->date					= $this->db->jdate($obj->df);
 				$this->date_pointoftax		= $this->db->jdate($obj->date_pointoftax);
-				$this->date_creation = $this->db->jdate($obj->datec);
+				$this->date_creation		= $this->db->jdate($obj->datec);
 				$this->date_validation		= $this->db->jdate($obj->datev);
-				$this->date_modification = $this->db->jdate($obj->datem);
-				$this->datem = $this->db->jdate($obj->datem);
+				$this->date_modification	= $this->db->jdate($obj->datem);
+				$this->datem				= $this->db->jdate($obj->datem);
 				$this->remise_percent		= $obj->remise_percent;
 				$this->remise_absolue		= $obj->remise_absolue;
 				$this->total_ht				= $obj->total_ht;
@@ -1981,42 +1976,41 @@ class Facture extends CommonInvoice
 				$this->total_localtax1		= $obj->localtax1;
 				$this->total_localtax2		= $obj->localtax2;
 				$this->total_ttc			= $obj->total_ttc;
-				$this->revenuestamp = $obj->revenuestamp;
-				$this->paye = $obj->paye;
+				$this->revenuestamp			= $obj->revenuestamp;
+				$this->paye					= $obj->paye;
 				$this->close_code			= $obj->close_code;
 				$this->close_note			= $obj->close_note;
 
-				$this->socid = $obj->fk_soc;
-				$this->thirdparty = null; // Clear if another value was already set by fetch_thirdparty
+				$this->socid				= $obj->fk_soc;
+				$this->thirdparty			= null; // Clear if another value was already set by fetch_thirdparty
 
-				$this->fk_project = $obj->fk_project;
-				$this->project = null; // Clear if another value was already set by fetch_projet
+				$this->fk_project			= $obj->fk_project;
+				$this->project				= null; // Clear if another value was already set by fetch_projet
 
-				$this->statut = $obj->fk_statut;
-				$this->status = $obj->fk_statut;
+				$this->statut				= $obj->fk_statut;
+				$this->status				= $obj->fk_statut;
 
-				$this->date_lim_reglement = $this->db->jdate($obj->dlr);
+				$this->date_lim_reglement	= $this->db->jdate($obj->dlr);
 				$this->mode_reglement_id	= $obj->fk_mode_reglement;
 				$this->mode_reglement_code	= $obj->mode_reglement_code;
 				$this->mode_reglement		= $obj->mode_reglement_libelle;
 				$this->cond_reglement_id	= $obj->fk_cond_reglement;
 				$this->cond_reglement_code	= $obj->cond_reglement_code;
 				$this->cond_reglement		= $obj->cond_reglement_libelle;
-				$this->cond_reglement_doc = $obj->cond_reglement_libelle_doc;
-				$this->fk_account = ($obj->fk_account > 0) ? $obj->fk_account : null;
+				$this->cond_reglement_doc	= $obj->cond_reglement_libelle_doc;
+				$this->fk_account			= ($obj->fk_account > 0) ? $obj->fk_account : null;
 				$this->fk_facture_source	= $obj->fk_facture_source;
 				$this->fk_fac_rec_source	= $obj->fk_fac_rec_source;
-				$this->note = $obj->note_private; // deprecated
-				$this->note_private = $obj->note_private;
+				$this->note					= $obj->note_private; // deprecated
+				$this->note_private			= $obj->note_private;
 				$this->note_public			= $obj->note_public;
 				$this->user_author			= $obj->fk_user_author; // deprecated
 				$this->user_valid           = $obj->fk_user_valid; // deprecated
-				$this->fk_user_author = $obj->fk_user_author;
+				$this->fk_user_author		= $obj->fk_user_author;
 				$this->fk_user_valid        = $obj->fk_user_valid;
-				$this->model_pdf = $obj->model_pdf;
-				$this->modelpdf = $obj->model_pdf; // deprecated
-				$this->last_main_doc = $obj->last_main_doc;
-				$this->demand_reason_id		= $obj->fk_input_reason;
+				$this->model_pdf			= $obj->model_pdf;
+				$this->modelpdf				= $obj->model_pdf; // deprecated
+				$this->last_main_doc		= $obj->last_main_doc;
 				$this->situation_cycle_ref  = $obj->situation_cycle_ref;
 				$this->situation_counter    = $obj->situation_counter;
 				$this->situation_final      = $obj->situation_final;
@@ -2029,15 +2023,15 @@ class Facture extends CommonInvoice
 				//Incoterms
 				$this->fk_incoterms         = $obj->fk_incoterms;
 				$this->location_incoterms   = $obj->location_incoterms;
-				$this->label_incoterms = $obj->label_incoterms;
+				$this->label_incoterms		= $obj->label_incoterms;
 
-				$this->module_source = $obj->module_source;
-				$this->pos_source = $obj->pos_source;
+				$this->module_source		= $obj->module_source;
+				$this->pos_source			= $obj->pos_source;
 
 				// Multicurrency
-				$this->fk_multicurrency 		= $obj->fk_multicurrency;
-				$this->multicurrency_code = $obj->multicurrency_code;
-				$this->multicurrency_tx 		= $obj->multicurrency_tx;
+				$this->fk_multicurrency		= $obj->fk_multicurrency;
+				$this->multicurrency_code	= $obj->multicurrency_code;
+				$this->multicurrency_tx		= $obj->multicurrency_tx;
 				$this->multicurrency_total_ht = $obj->multicurrency_total_ht;
 				$this->multicurrency_total_tva 	= $obj->multicurrency_total_tva;
 				$this->multicurrency_total_ttc 	= $obj->multicurrency_total_ttc;
@@ -3001,75 +2995,6 @@ class Facture extends CommonInvoice
 			$this->error = 'Permission denied';
 			dol_syslog(get_class($this)."::validate ".$this->error.' MAIN_USE_ADVANCED_PERMS='.$conf->global->MAIN_USE_ADVANCED_PERMS, LOG_ERR);
 			return -1;
-		}
-		if (!empty($conf->global-> INVOICE_CHECK_POSTERIOR_DATE)) {
-			$last_of_type = $this->willBeLastOfSameType($allow_validated_drafts = true);
-			if (!$last_of_type[0]) {
-				$this->error = $langs->transnoentities("ErrorInvoiceIsNotLastOfSameType", $this->ref , dol_print_date($this->date, 'day'), dol_print_date($last_of_type[1], 'day'));
-				return -1;
-			}
-		}
-
-		// Check for mandatory fields in thirdparty (defined into setup)
-		if (!empty($this->thirdparty) && is_object($this->thirdparty)) {
-			$array_to_check = array('IDPROF1', 'IDPROF2', 'IDPROF3', 'IDPROF4', 'IDPROF5', 'IDPROF6', 'EMAIL', 'ACCOUNTANCY_CODE_CUSTOMER');
-			foreach ($array_to_check as $key) {
-				$keymin = strtolower($key);
-				if (!property_exists($this->thirdparty, $keymin)) {
-					continue;
-				}
-				$vallabel = $this->thirdparty->$keymin;
-
-				$i = (int) preg_replace('/[^0-9]/', '', $key);
-				if ($i > 0) {
-					if ($this->thirdparty->isACompany()) {
-						// Check for mandatory prof id (but only if country is other than ours)
-						if ($mysoc->country_id > 0 && $this->thirdparty->country_id == $mysoc->country_id) {
-							$idprof_mandatory = 'SOCIETE_'.$key.'_INVOICE_MANDATORY';
-							if (!$vallabel && !empty($conf->global->$idprof_mandatory)) {
-								$langs->load("errors");
-								$this->error = $langs->trans('ErrorProdIdIsMandatory', $langs->transcountry('ProfId'.$i, $this->thirdparty->country_code)).' ('.$langs->trans("ForbiddenBySetupRules").') ['.$langs->trans('Company').' : '.$this->thirdparty->name.']';
-								dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
-								return -1;
-							}
-						}
-					}
-				} else {
-					if ($key == 'EMAIL') {
-						// Check for mandatory
-						if (!empty($conf->global->SOCIETE_EMAIL_INVOICE_MANDATORY) && !isValidEMail($this->thirdparty->email)) {
-							$langs->load("errors");
-							$this->error = $langs->trans("ErrorBadEMail", $this->thirdparty->email).' ('.$langs->trans("ForbiddenBySetupRules").') ['.$langs->trans('Company').' : '.$this->thirdparty->name.']';
-							dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
-							return -1;
-						}
-					}
-					if ($key == 'ACCOUNTANCY_CODE_CUSTOMER') {
-						// Check for mandatory
-						if (!empty($conf->global->SOCIETE_ACCOUNTANCY_CODE_CUSTOMER_INVOICE_MANDATORY) && empty($this->thirdparty->code_compta)) {
-							$langs->load("errors");
-							$this->error = $langs->trans("ErrorAccountancyCodeCustomerIsMandatory", $this->thirdparty->name).' ('.$langs->trans("ForbiddenBySetupRules").')';
-							dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
-							return -1;
-						}
-					}
-				}
-			}
-		}
-
-		// Check for mandatory fields in $this
-		$array_to_check = array('REF_CLIENT'=>'RefCustomer');
-		foreach ($array_to_check as $key => $val) {
-			$keymin = strtolower($key);
-			$vallabel = $this->$keymin;
-
-			// Check for mandatory
-			$keymandatory = 'INVOICE_'.$key.'_MANDATORY_FOR_VALIDATION';
-			if (!$vallabel && !empty($conf->global->$keymandatory)) {
-				$langs->load("errors");
-				$error++;
-				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv($val)), null, 'errors');
-			}
 		}
 
 		// Check for mandatory fields in thirdparty (defined into setup)
@@ -5591,43 +5516,6 @@ class Facture extends CommonInvoice
 			$this->db->commit(); // We commit also on error, to have the error message recorded.
 			$this->error = 'Nb of emails sent : '.$nbMailSend.', '.(!empty($errorsMsg)) ? join(', ', $errorsMsg) : $error;
 			return $error;
-		}
-	}
-
-	/**
-	 * See if current invoice date is posterior to the last invoice date among validated invoices of same type.
-	 * @param 	boolean 	$allow_validated_drafts			return true if the invoice has been validated before returning to DRAFT state.
-	 * @return boolean
-	 */
-	public function willBeLastOfSameType($allow_validated_drafts = false)
-	{
-		// get date of last validated invoices of same type
-		$sql  = 'SELECT datef';
-		$sql .= ' FROM '.MAIN_DB_PREFIX.'facture';
-		$sql .= ' WHERE type = ' . (int) $this->type ;
-		$sql .= ' AND date_valid IS NOT NULL';
-		$sql .= ' ORDER BY datef DESC LIMIT 1';
-
-		$result = $this->db->query($sql);
-		if ($result) {
-			// compare with current validation date
-			if ($this->db->num_rows($result)) {
-				$obj = $this->db->fetch_object($result);
-				$last_date = $this->db->jdate($obj->datef);
-				$invoice_date = $this->date;
-
-				$is_last_of_same_type = $invoice_date >= $last_date;
-				if ($allow_validated_drafts) {
-					$is_last_of_same_type = $is_last_of_same_type || (!strpos($this->ref, 'PROV') && $this->status == self::STATUS_DRAFT);
-				}
-
-				return [$is_last_of_same_type, $last_date];
-			} else {
-				// element is first of type to be validated
-				return [true];
-			}
-		} else {
-			dol_print_error($this->db);
 		}
 	}
 }
