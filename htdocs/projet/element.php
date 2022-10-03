@@ -1491,7 +1491,7 @@ foreach ($listofreferent as $key => $value) {
 					}
 					if ($key == 'shipping') {
 						if ($element->status != Expedition::STATUS_VALIDATED && $element->status != Expedition::STATUS_CLOSED) {
-							$total_ht_by_line = 0; // Only signed proposal must not be included in total
+							$total_ht_by_line = 0; // Only validated & closed shipping must not be included in total
 							$total_ttc_by_line = 0; // Only signed proposal must not be included in total
 						}
 					}

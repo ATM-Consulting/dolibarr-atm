@@ -696,7 +696,8 @@ class Contrat extends CommonObject
 					$this->ref_supplier = $obj->ref_supplier;
 					$this->ref_ext = $obj->ref_ext;
 					$this->entity = $obj->entity;
-					$this->statut = $obj->statut;
+					$this->statut = (int) $obj->fk_statut;
+					$this->status = (int) $obj->fk_statut;
 
 					$this->date_contrat = $this->db->jdate($obj->datecontrat);
 					$this->date_creation = $this->db->jdate($obj->datecontrat);
