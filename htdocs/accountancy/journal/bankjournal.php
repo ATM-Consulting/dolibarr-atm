@@ -126,10 +126,10 @@ if (!empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
 	$sql .= " spe.accountancy_code_supplier_general,";
 	$sql .= " spe.accountancy_code_supplier as code_compta_fournisseur,";
 } else {
-	$sql .= " s.accountancy_code_customer_general,";
-	$sql .= " s.code_compta as code_compta,";
-	$sql .= " s.accountancy_code_supplier_general,";
-	$sql .= " s.code_compta_fournisseur,";
+	$sql .= " soc.accountancy_code_customer_general,";
+	$sql .= " soc.code_compta as code_compta,";
+	$sql .= " soc.accountancy_code_supplier_general,";
+	$sql .= " soc.code_compta_fournisseur,";
 }
 $sql .= " u.accountancy_code, u.rowid as userid, u.lastname as lastname, u.firstname as firstname, u.email as useremail, u.statut as userstatus,";
 $sql .= " bu2.type as typeop_user,";
@@ -199,8 +199,8 @@ if ($result) {
 	//print $sql;
 
 	// Variables
-	$account_supplier = (($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER != "") ? $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER : 'NotDefined'); // NotDefined is a reserved word
-	$account_customer = (($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER != "") ? $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER : 'NotDefined'); // NotDefined is a reserved word
+	$account_supplier = (($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER != "") ? $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER : ''); // NotDefined is a reserved word
+	$account_customer = (($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER != "") ? $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER : ''); // NotDefined is a reserved word
 	$account_employee = (!empty($conf->global->SALARIES_ACCOUNTING_ACCOUNT_PAYMENT) ? $conf->global->SALARIES_ACCOUNTING_ACCOUNT_PAYMENT : 'NotDefined'); // NotDefined is a reserved word
 	$account_pay_vat = (!empty($conf->global->ACCOUNTING_VAT_PAY_ACCOUNT) ? $conf->global->ACCOUNTING_VAT_PAY_ACCOUNT : 'NotDefined'); // NotDefined is a reserved word
 	$account_pay_donation = (!empty($conf->global->DONATION_ACCOUNTINGACCOUNT) ? $conf->global->DONATION_ACCOUNTINGACCOUNT : 'NotDefined'); // NotDefined is a reserved word
@@ -707,13 +707,13 @@ if (!$error && $action == 'writebookkeeping') {
 							$lettering = true;
 							$bookkeeping->subledger_account = $k; // For payment, the subledger account is stored as $key of $tabtp
 							$bookkeeping->subledger_label = $tabcompany[$key]['name']; // $tabcompany is defined only if we are sure there is 1 thirdparty for the bank transaction
-							$bookkeeping->numero_compte = $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER;
+							$bookkeeping->numero_compte = $tabcompany[$key]['accountancy_code_general'];
 							$bookkeeping->label_compte = $accountingaccountcustomer->label;
 						} elseif ($tabtype[$key] == 'payment_supplier') {	// If payment is payment of supplier invoice, we get ref of invoice
 							$lettering = true;
 							$bookkeeping->subledger_account = $k; // For payment, the subledger account is stored as $key of $tabtp
 							$bookkeeping->subledger_label = $tabcompany[$key]['name']; // $tabcompany is defined only if we are sure there is 1 thirdparty for the bank transaction
-							$bookkeeping->numero_compte = $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER;
+							$bookkeeping->numero_compte = $tabcompany[$key]['accountancy_code_general'];
 							$bookkeeping->label_compte = $accountingaccountsupplier->label;
 						} elseif ($tabtype[$key] == 'payment_expensereport') {
 							$bookkeeping->subledger_account = $tabuser[$key]['accountancy_code'];
@@ -970,9 +970,11 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 					print '"'.$val["type_payment"].'"'.$sep;
 					print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
 					if ($tabtype[$key] == 'payment_supplier') {
-						print '"'.$conf->global->ACCOUNTING_ACCOUNT_SUPPLIER.'"'.$sep;
+						$account_ledger = (!empty($obj->accountancy_code_supplier_general)) ? $obj->accountancy_code_supplier_general : $account_supplier;
+						print '"'.$account_ledger.'"'.$sep;
 					} elseif ($tabtype[$key] == 'payment') {
-						print '"'.$conf->global->ACCOUNTING_ACCOUNT_CUSTOMER.'"'.$sep;
+						$account_ledger = (!empty($obj->accountancy_code_customer_general)) ? $obj->accountancy_code_customer_general : $account_customer;
+						print '"'.$account_ledger.'"'.$sep;
 					} elseif ($tabtype[$key] == 'payment_expensereport') {
 						print '"'.$conf->global->SALARIES_ACCOUNTING_ACCOUNT_PAYMENT.'"'.$sep;
 					} elseif ($tabtype[$key] == 'payment_salary') {
@@ -1213,10 +1215,10 @@ if (empty($action) || $action == 'view') {
 					$account_ledger = $k;
 					// Try to force general ledger account depending on type
 					if ($tabtype[$key] == 'payment') {
-						$account_ledger = $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER;
+						$account_ledger = $tabcompany[$key]['accountancy_code_general'];
 					}
 					if ($tabtype[$key] == 'payment_supplier') {
-						$account_ledger = $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER;
+						$account_ledger = $tabcompany[$key]['accountancy_code_general'];
 					}
 					if ($tabtype[$key] == 'payment_expensereport') {
 						$account_ledger = $conf->global->SALARIES_ACCOUNTING_ACCOUNT_PAYMENT;
