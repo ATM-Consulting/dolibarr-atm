@@ -183,7 +183,6 @@ $arrayfields = array(
 	'c.total_ht'=>array('label'=>"AmountHT", 'checked'=>1, 'position'=>75),
 	'c.total_vat'=>array('label'=>"AmountVAT", 'checked'=>0, 'position'=>80),
 	'c.total_ttc'=>array('label'=>"AmountTTC", 'checked'=>0, 'position'=>85),
-	'margin'=>array('label'=>$langs->trans("Margin"), 'checked'=>0),
 	'c.multicurrency_code'=>array('label'=>'Currency', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>90),
 	'c.multicurrency_tx'=>array('label'=>'CurrencyRate', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>95),
 	'c.multicurrency_total_ht'=>array('label'=>'MulticurrencyAmountHT', 'checked'=>0, 'enabled'=>(empty($conf->multicurrency->enabled) ? 0 : 1), 'position'=>100),
@@ -1571,9 +1570,6 @@ if ($resql) {
 		print '<td class="liste_titre right">';
 		print '</td>';
 	}
-	if(!empty($arrayfields['margin']['checked'])){
-		print '<td></td>';
-	}
 	// Extra fields
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_input.tpl.php';
 	// Fields from hook
@@ -1718,9 +1714,6 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['c.total_ttc']['checked'])) {
 		print_liste_field_titre($arrayfields['c.total_ttc']['label'], $_SERVER["PHP_SELF"], 'c.total_ttc', '', $param, '', $sortfield, $sortorder, 'right ');
-	}
-	if(!empty($arrayfields['margin']['checked'])){
-		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
 	}
 	if (!empty($arrayfields['c.multicurrency_code']['checked'])) {
 		print_liste_field_titre($arrayfields['c.multicurrency_code']['label'], $_SERVER['PHP_SELF'], 'c.multicurrency_code', '', $param, '', $sortfield, $sortorder);
@@ -2103,16 +2096,6 @@ if ($resql) {
 				$totalarray['pos'][$totalarray['nbfield']] = 'c.total_ttc';
 			}
 			$totalarray['val']['c.total_ttc'] += $obj->total_ttc;
-		}
-		//Marge
-		if (! empty($arrayfields['margin']['checked']))
-		{
-			$commande = new Commande($db);
-			$commande->fetch($obj->rowid);
-			$formmargin = new FormMargin($db);
-
-			$marginInfo = $formmargin->getMarginInfosArray($commande);
-			print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
 		}
 
 		// Currency
