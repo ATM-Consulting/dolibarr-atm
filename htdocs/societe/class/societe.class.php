@@ -1298,7 +1298,7 @@ class Societe extends CommonObject
 
 		$this->accountancy_code_customer_general = trim($this->accountancy_code_customer_general);
 		$this->code_compta_client = trim(empty($this->code_compta) ? $this->code_compta_client : $this->code_compta);
-		$this->code_compta = $this->code_compta_client;		// for backward compatbility
+		$this->code_compta = $this->code_compta_client;		// for backward compatibility
 		$this->accountancy_code_supplier_general = trim($this->accountancy_code_supplier_general);
 		$this->code_compta_fournisseur = trim($this->code_compta_fournisseur);
 
@@ -1688,7 +1688,7 @@ class Societe extends CommonObject
 			$sql .= ', spe.accountancy_code_supplier_general, spe.accountancy_code_supplier as code_compta_fournisseur';
 			$sql .= ', spe.accountancy_code_buy, spe.accountancy_code_sell';
 		}
-		$sql .= ', s.code_client, s.code_fournisseur, s.code_compta, s.code_compta_fournisseur, s.parent, s.barcode';
+		$sql .= ', s.code_client, s.code_fournisseur, s.parent, s.barcode';
 		$sql .= ', s.fk_departement as state_id, s.fk_pays as country_id, s.fk_stcomm, s.mode_reglement, s.cond_reglement, s.transport_mode';
 		$sql .= ', s.fk_account, s.tva_assuj';
 		$sql .= ', s.mode_reglement_supplier, s.cond_reglement_supplier, s.transport_mode_supplier';
