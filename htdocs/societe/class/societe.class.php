@@ -1714,9 +1714,7 @@ class Societe extends CommonObject
 			$sql .= ', sr.remise_client, sr2.remise_supplier';
 		}
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'societe as s';
-		if (!empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
-		}
+		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_effectif as e ON s.fk_effectif = e.id';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as c ON s.fk_pays = c.rowid';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_stcomm as st ON s.fk_stcomm = st.id';
@@ -1781,12 +1779,12 @@ class Societe extends CommonObject
 
 				$this->id           = $obj->rowid;
 				$this->entity       = $obj->entity;
-				$this->canvas = $obj->canvas;
+				$this->canvas		= $obj->canvas;
 
 				$this->ref          = $obj->rowid;
-				$this->name = $obj->name;
+				$this->name			= $obj->name;
 				$this->nom          = $obj->name; // deprecated
-				$this->name_alias = $obj->name_alias;
+				$this->name_alias	= $obj->name_alias;
 				$this->ref_ext      = $obj->ref_ext;
 
 				$this->date_creation     = $this->db->jdate($obj->date_creation);
@@ -1794,18 +1792,18 @@ class Societe extends CommonObject
 				$this->user_creation     = $obj->fk_user_creat;
 				$this->user_modification = $obj->fk_user_modif;
 
-				$this->address = $obj->address;
+				$this->address		= $obj->address;
 				$this->zip 			= $obj->zip;
 				$this->town 		= $obj->town;
 
 				$this->country_id   = $obj->country_id;
 				$this->country_code = $obj->country_id ? $obj->country_code : '';
-				$this->country = $obj->country_id ? (($langs->transnoentities('Country'.$obj->country_code) != 'Country'.$obj->country_code) ? $langs->transnoentities('Country'.$obj->country_code) : $obj->country) : '';
+				$this->country		= $obj->country_id ? (($langs->transnoentities('Country'.$obj->country_code) != 'Country'.$obj->country_code) ? $langs->transnoentities('Country'.$obj->country_code) : $obj->country) : '';
 
 				$this->state_id     = $obj->state_id;
 				$this->state_code   = $obj->state_code;
 				$this->region_id    = $obj->region_id;
-				$this->region_code   = $obj->region_code;
+				$this->region_code	= $obj->region_code;
 				$this->state        = ($obj->state != '-' ? $obj->state : '');
 
 				$transcode = $langs->trans('StatusProspect'.$obj->fk_stcomm);
@@ -1835,9 +1833,9 @@ class Societe extends CommonObject
 				$this->code_client = $obj->code_client;
 				$this->code_fournisseur = $obj->code_fournisseur;
 
-				if (!empty($obj->spe_accountancy_code_customer_general)) {
+				if ($obj->spe_accountancy_code_customer_general != '') {
 					$this->accountancy_code_customer_general = $obj->spe_accountancy_code_customer_general;
-				} elseif (!empty($obj->soc_accountancy_code_customer_general)) {
+				} elseif ($obj->soc_accountancy_code_customer_general != '') {
 					$this->accountancy_code_customer_general = $obj->soc_accountancy_code_customer_general;
 				} elseif (!empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER)) {
 					$this->accountancy_code_customer_general = $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER;
@@ -1847,9 +1845,9 @@ class Societe extends CommonObject
 
 				dol_syslog('Code compta client général spe:'. $obj->spe_accountancy_code_customer_general.' soc:'.$obj->soc_accountancy_code_customer_general.' retenu:'. $this->accountancy_code_customer_general, LOG_ERR);
 
-				if (!empty($obj->spe_accountancy_code_customer)) {
+				if ($obj->spe_accountancy_code_customer != '') {
 					$this->code_compta = $obj->spe_accountancy_code_customer;
-				} elseif (!empty($obj->soc_accountancy_code_customer)) {
+				} elseif ($obj->soc_accountancy_code_customer != '') {
 					$this->code_compta = $obj->soc_accountancy_code_customer;
 				} else {
 					$this->code_compta = '';
@@ -1857,9 +1855,9 @@ class Societe extends CommonObject
 
 				dol_syslog('Code compta client spe:'. $obj->spe_accountancy_code_customer.' soc:'.$obj->soc_accountancy_code_customer.' retenu:'. $this->code_compta, LOG_ERR);
 
-				if (!empty($obj->spe_accountancy_code_supplier_general)) {
+				if ($obj->spe_accountancy_code_supplier_general != '') {
 					$this->accountancy_code_supplier_general = $obj->spe_accountancy_code_supplier_general;
-				} elseif (!empty($obj->soc_accountancy_code_supplier_general)) {
+				} elseif ($obj->soc_accountancy_code_supplier_general != '') {
 					$this->accountancy_code_supplier_general = $obj->soc_accountancy_code_supplier_general;
 				} elseif (!empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER)) {
 					$this->accountancy_code_supplier_general = $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER;
@@ -1869,9 +1867,9 @@ class Societe extends CommonObject
 
 				dol_syslog('Code compta fourn général spe:'. $obj->spe_accountancy_code_supplier_general.' soc:'.$obj->soc_accountancy_code_supplier_general.' retenu:'. $this->accountancy_code_supplier_general, LOG_ERR);
 
-				if (!empty($obj->spe_accountancy_code_supplier)) {
+				if ($obj->spe_accountancy_code_supplier != '') {
 					$this->code_compta_fournisseur = $obj->spe_accountancy_code_supplier;
-				} elseif (!empty($obj->soc_accountancy_code_supplier)) {
+				} elseif ($obj->soc_accountancy_code_supplier != '') {
 					$this->code_compta_fournisseur = $obj->soc_accountancy_code_supplier;
 				} else {
 					$this->code_compta_fournisseur = '';
