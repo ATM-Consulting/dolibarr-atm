@@ -1845,6 +1845,8 @@ class Societe extends CommonObject
 					$this->accountancy_code_customer_general = '';
 				}
 
+				dol_syslog('Code compta client général spe:'. $obj->spe_accountancy_code_customer_general.' soc:'.$obj->soc_accountancy_code_customer_general.' retenu:'. $this->accountancy_code_customer_general, LOG_ERR);
+
 				if (!empty($obj->spe_accountancy_code_customer)) {
 					$this->code_compta = $obj->spe_accountancy_code_customer;
 				} elseif (!empty($obj->soc_accountancy_code_customer)) {
@@ -1852,6 +1854,8 @@ class Societe extends CommonObject
 				} else {
 					$this->code_compta = '';
 				}
+
+				dol_syslog('Code compta client spe:'. $obj->spe_accountancy_code_customer.' soc:'.$obj->soc_accountancy_code_customer.' retenu:'. $this->code_compta, LOG_ERR);
 
 				if (!empty($obj->spe_accountancy_code_supplier_general)) {
 					$this->accountancy_code_supplier_general = $obj->spe_accountancy_code_supplier_general;
@@ -1863,6 +1867,8 @@ class Societe extends CommonObject
 					$this->accountancy_code_supplier_general = '';
 				}
 
+				dol_syslog('Code compta fourn général spe:'. $obj->spe_accountancy_code_supplier_general.' soc:'.$obj->soc_accountancy_code_supplier_general.' retenu:'. $this->accountancy_code_supplier_general, LOG_ERR);
+
 				if (!empty($obj->spe_accountancy_code_supplier)) {
 					$this->code_compta_fournisseur = $obj->spe_accountancy_code_supplier;
 				} elseif (!empty($obj->soc_accountancy_code_supplier)) {
@@ -1870,6 +1876,8 @@ class Societe extends CommonObject
 				} else {
 					$this->code_compta_fournisseur = '';
 				}
+
+				dol_syslog('Code compta fourn spe:'. $obj->spe_accountancy_code_supplier.' soc:'.$obj->soc_accountancy_code_supplier.' retenu:'. $this->code_compta_fournisseur, LOG_ERR);
 
 				$this->barcode = $obj->barcode;
 
