@@ -1684,8 +1684,8 @@ class Societe extends CommonObject
 			$sql .= ', s.accountancy_code_supplier_general, s.code_compta_fournisseur';
 			$sql .= ', s.accountancy_code_buy, s.accountancy_code_sell';
 		} else {
-			$sql .= ', spe.accountancy_code_customer_general, spe.accountancy_code_customer as code_compta';
-			$sql .= ', spe.accountancy_code_supplier_general, spe.accountancy_code_supplier as code_compta_fournisseur';
+			$sql .= ', spe.accountancy_code_customer_general, spe.accountancy_code_customer';
+			$sql .= ', spe.accountancy_code_supplier_general, spe.accountancy_code_supplier';
 			$sql .= ', spe.accountancy_code_buy, spe.accountancy_code_sell';
 		}
 		$sql .= ', s.code_client, s.code_fournisseur, s.parent, s.barcode';
@@ -1833,9 +1833,12 @@ class Societe extends CommonObject
 				$this->code_fournisseur = $obj->code_fournisseur;
 
 				$this->accountancy_code_customer_general = $obj->accountancy_code_customer_general;
-				$this->code_compta = $obj->code_compta;
+				$accountancy_code_customer = (!empty($this->accountancy_code_customer) ? $this->accountancy_code_customer : $this->code_compta);
+				$this->code_compta = $accountancy_code_customer;
+
 				$this->accountancy_code_supplier_general = $obj->accountancy_code_supplier_general;
-				$this->code_compta_fournisseur = $obj->code_compta_fournisseur;
+				$accountancy_code_supplier = (!empty($this->accountancy_code_supplier) ? $this->accountancy_code_supplier : $this->code_compta_fournisseur);
+				$this->code_compta_fournisseur = $accountancy_code_supplier;
 
 				$this->barcode = $obj->barcode;
 
