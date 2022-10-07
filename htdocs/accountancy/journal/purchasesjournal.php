@@ -106,17 +106,10 @@ if (!GETPOSTISSET('date_startmonth') && (empty($date_start) || empty($date_end))
 $sql = "SELECT f.rowid, f.ref as ref, f.type, f.datef as df, f.libelle,f.ref_supplier, f.date_lim_reglement as dlr, f.close_code,";
 $sql .= " fd.rowid as fdid, fd.description, fd.product_type, fd.total_ht, fd.tva as total_tva, fd.total_localtax1, fd.total_localtax2, fd.tva_tx, fd.total_ttc, fd.vat_src_code,";
 $sql .= " s.rowid as socid, s.nom as name, s.fournisseur, s.code_client, s.code_fournisseur,";
-if (!empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-	$sql .= " spe.accountancy_code_customer_general,";
-	$sql .= " spe.accountancy_code_customer as code_compta,";
-	$sql .= " spe.accountancy_code_supplier_general,";
-	$sql .= " spe.accountancy_code_supplier as code_compta_fournisseur,";
-} else {
-	$sql .= " s.accountancy_code_customer_general,";
-	$sql .= " s.code_compta as code_compta,";
-	$sql .= " s.accountancy_code_supplier_general,";
-	$sql .= " s.code_compta_fournisseur,";
-}
+$sql .= " spe.accountancy_code_supplier_general as spe_accountancy_code_supplier_general,";
+$sql .= " spe.accountancy_code_supplier as spe_accountancy_code_supplier,";
+$sql .= " s.accountancy_code_supplier_general as soc_accountancy_code_supplier_general,";
+$sql .= " s.code_compta_fournisseur as soc_accountancy_code_supplier,";
 if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
 	$sql .= " ppe.accountancy_code_buy,";
 } else {
@@ -182,8 +175,21 @@ if ($result) {
 		$obj = $db->fetch_object($result);
 
 		// Controls
-		$accountancy_code_supplier_general = (!empty($obj->accountancy_code_supplier_general)) ? $obj->accountancy_code_supplier_general : $cptfour;
-		$compta_soc = ($obj->code_compta_fournisseur != "") ? $obj->code_compta_fournisseur : '';
+		if (!empty($obj->spe_accountancy_code_supplier_general)) {
+			$accountancy_code_supplier_general = $obj->spe_accountancy_code_supplier_general;
+		} elseif (!empty($obj->soc_accountancy_code_supplier_general)) {
+			$accountancy_code_supplier_general = $obj->soc_accountancy_code_supplier_general;
+		} else {
+			$accountancy_code_supplier_general = $cptfour;
+		}
+
+		if (!empty($obj->spe_accountancy_code_supplier)) {
+			$compta_soc = $obj->spe_accountancy_code_supplier;
+		} elseif (!empty($obj->soc_accountancy_code_supplier)) {
+			$compta_soc = $obj->soc_accountancy_code_supplier;
+		} else {
+			$compta_soc = '';
+		}
 
 		$compta_prod = $obj->compte;
 		if (empty($compta_prod)) {
@@ -300,7 +306,7 @@ if ($action == 'writebookkeeping') {
 
 		$companystatic->id = $tabcompany[$key]['id'];
 		$companystatic->name = $tabcompany[$key]['name'];
-		$companystatic->accountancy_code_supplier_general = $tabcompany[$key]['accountancy_code_supplier_customer'];
+		$companystatic->accountancy_code_supplier_general = $tabcompany[$key]['accountancy_code_supplier_general'];
 		$companystatic->code_compta_fournisseur = $tabcompany[$key]['code_compta_fournisseur'];
 		$companystatic->code_client = $tabcompany[$key]['code_client'];
 		$companystatic->code_fournisseur = $tabcompany[$key]['code_fournisseur'];

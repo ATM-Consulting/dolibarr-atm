@@ -109,17 +109,10 @@ if (!GETPOSTISSET('date_startmonth') && (empty($date_start) || empty($date_end))
 $sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.ref_client, f.date_lim_reglement as dlr, f.close_code, f.retained_warranty,";
 $sql .= " fd.rowid as fdid, fd.description, fd.product_type, fd.total_ht, fd.total_tva, fd.total_localtax1, fd.total_localtax2, fd.tva_tx, fd.total_ttc, fd.situation_percent, fd.vat_src_code,";
 $sql .= " s.rowid as socid, s.nom as name, s.code_client, s.code_fournisseur,";
-if (!empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-	$sql .= " spe.accountancy_code_customer_general,";
-	$sql .= " spe.accountancy_code_customer as code_compta,";
-	$sql .= " spe.accountancy_code_supplier_general,";
-	$sql .= " spe.accountancy_code_supplier as code_compta_fournisseur,";
-} else {
-	$sql .= " s.accountancy_code_customer_general,";
-	$sql .= " s.code_compta as code_compta,";
-	$sql .= " s.accountancy_code_supplier_general,";
-	$sql .= " s.code_compta_fournisseur,";
-}
+$sql .= " spe.accountancy_code_customer_general as spe_accountancy_code_customer_general,";
+$sql .= " spe.accountancy_code_customer as spe_accountancy_code_customer,";
+$sql .= " s.accountancy_code_customer_general as soc_accountancy_code_customer_general,";
+$sql .= " s.code_compta as soc_accountancy_code_customer,";
 $sql .= " p.rowid as pid, p.ref as pref, aa.rowid as fk_compte, aa.account_number as compte, aa.label as label_compte,";
 if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
 	$sql .= " ppe.accountancy_code_sell";
@@ -134,9 +127,7 @@ if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."accounting_account as aa ON aa.rowid = fd.fk_code_ventilation";
 $sql .= " JOIN ".MAIN_DB_PREFIX."facture as f ON f.rowid = fd.fk_facture";
 $sql .= " JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = f.fk_soc";
-if (!empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-	$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
-}
+$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
 $sql .= " WHERE fd.fk_code_ventilation > 0";
 $sql .= " AND f.entity IN (".getEntity('invoice', 0).')'; // We don't share object for accountancy, we use source object sharing
 $sql .= " AND f.fk_statut > 0";
@@ -181,7 +172,7 @@ if ($result) {
 	$num = $db->num_rows($result);
 
 	// Variables
-	$cptcli = (($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER != "")) ? $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER : 'NotDefined';
+	$cptcli = (($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER != "")) ? $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER : '';
 	$cpttva = (!empty($conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT : 'NotDefined';
 
 	$i = 0;
@@ -189,8 +180,21 @@ if ($result) {
 		$obj = $db->fetch_object($result);
 
 		// Controls
-		$accountancy_code_customer_general = (!empty($obj->accountancy_code_customer_general)) ? $obj->accountancy_code_customer_general : $cptcli;
-		$compta_soc = (!empty($obj->code_compta)) ? $obj->code_compta : '';
+		if (!empty($obj->spe_accountancy_code_customer_general)) {
+			$accountancy_code_customer_general = $obj->spe_accountancy_code_customer_general;
+		} elseif (!empty($obj->soc_accountancy_code_customer_general)) {
+			$accountancy_code_customer_general = $obj->soc_accountancy_code_customer_general;
+		} else {
+			$accountancy_code_customer_general = $cptcli;
+		}
+
+		if (!empty($obj->spe_accountancy_code_customer)) {
+			$compta_soc = $obj->spe_accountancy_code_customer;
+		} elseif (!empty($obj->soc_accountancy_code_customer)) {
+			$compta_soc = $obj->soc_accountancy_code_customer;
+		} else {
+			$compta_soc = '';
+		}
 
 		$compta_prod = $obj->compte;
 		if (empty($compta_prod)) {

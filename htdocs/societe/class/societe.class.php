@@ -1679,15 +1679,18 @@ class Societe extends CommonObject
 		$sql .= ', s.fk_effectif as effectif_id';
 		$sql .= ', s.fk_forme_juridique as forme_juridique_code';
 		$sql .= ', s.webservices_url, s.webservices_key, s.model_pdf';
-		if (empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-			$sql .= ', s.accountancy_code_customer_general, s.code_compta';
-			$sql .= ', s.accountancy_code_supplier_general, s.code_compta_fournisseur';
-			$sql .= ', s.accountancy_code_buy, s.accountancy_code_sell';
-		} else {
-			$sql .= ', spe.accountancy_code_customer_general, spe.accountancy_code_customer';
-			$sql .= ', spe.accountancy_code_supplier_general, spe.accountancy_code_supplier';
-			$sql .= ', spe.accountancy_code_buy, spe.accountancy_code_sell';
-		}
+		$sql .= ', s.accountancy_code_customer_general as soc_accountancy_code_customer_general';
+		$sql .= ', s.code_compta as soc_accountancy_customer';
+		$sql .= ', s.accountancy_code_supplier_general as soc_accountancy_code_supplier_general';
+		$sql .= ', s.code_compta_fournisseur as soc_accountancy_supplier';
+		$sql .= ', s.accountancy_code_buy as soc_accountancy_code_buy';
+		$sql .= ', s.accountancy_code_sell as soc_accountancy_code_sell';
+		$sql .= ', spe.accountancy_code_customer_general as spe_accountancy_code_customer_general';
+		$sql .= ', spe.accountancy_code_customer as spe_accountancy_customer';
+		$sql .= ', spe.accountancy_code_supplier_general as spe_accountancy_code_supplier_general';
+		$sql .= ', spe.accountancy_code_supplier as spe_accountancy_supplier';
+		$sql .= ', spe.accountancy_code_buy as spe_accountancy_code_buy';
+		$sql .= ', spe.accountancy_code_sell as spe_accountancy_code_sell';
 		$sql .= ', s.code_client, s.code_fournisseur, s.parent, s.barcode';
 		$sql .= ', s.fk_departement as state_id, s.fk_pays as country_id, s.fk_stcomm, s.mode_reglement, s.cond_reglement, s.transport_mode';
 		$sql .= ', s.fk_account, s.tva_assuj';
@@ -1832,13 +1835,41 @@ class Societe extends CommonObject
 				$this->code_client = $obj->code_client;
 				$this->code_fournisseur = $obj->code_fournisseur;
 
-				$this->accountancy_code_customer_general = $obj->accountancy_code_customer_general;
-				$accountancy_code_customer = (!empty($this->accountancy_code_customer) ? $this->accountancy_code_customer : $this->code_compta);
-				$this->code_compta = $accountancy_code_customer;
+				if (!empty($obj->spe_accountancy_code_customer_general)) {
+					$this->accountancy_code_customer_general = $obj->spe_accountancy_code_customer_general;
+				} elseif (!empty($obj->soc_accountancy_code_customer_general)) {
+					$this->accountancy_code_customer_general = $obj->soc_accountancy_code_customer_general;
+				} elseif (!empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER)) {
+					$this->accountancy_code_customer_general = $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER;
+				} else {
+					$this->accountancy_code_customer_general = '';
+				}
 
-				$this->accountancy_code_supplier_general = $obj->accountancy_code_supplier_general;
-				$accountancy_code_supplier = (!empty($this->accountancy_code_supplier) ? $this->accountancy_code_supplier : $this->code_compta_fournisseur);
-				$this->code_compta_fournisseur = $accountancy_code_supplier;
+				if (!empty($obj->spe_accountancy_code_customer)) {
+					$this->code_compta = $obj->spe_accountancy_code_customer;
+				} elseif (!empty($obj->soc_accountancy_code_customer)) {
+					$this->code_compta = $obj->soc_accountancy_code_customer;
+				} else {
+					$this->code_compta = '';
+				}
+
+				if (!empty($obj->spe_accountancy_code_supplier_general)) {
+					$this->accountancy_code_supplier_general = $obj->spe_accountancy_code_supplier_general;
+				} elseif (!empty($obj->soc_accountancy_code_supplier_general)) {
+					$this->accountancy_code_supplier_general = $obj->soc_accountancy_code_supplier_general;
+				} elseif (!empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER)) {
+					$this->accountancy_code_supplier_general = $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER;
+				} else {
+					$this->accountancy_code_supplier_general = '';
+				}
+
+				if (!empty($obj->spe_accountancy_code_supplier)) {
+					$this->code_compta_fournisseur = $obj->spe_accountancy_code_supplier;
+				} elseif (!empty($obj->soc_accountancy_code_supplier)) {
+					$this->code_compta_fournisseur = $obj->soc_accountancy_code_supplier;
+				} else {
+					$this->code_compta_fournisseur = '';
+				}
 
 				$this->barcode = $obj->barcode;
 
@@ -1893,8 +1924,21 @@ class Societe extends CommonObject
 				$this->webservices_url = $obj->webservices_url;
 				$this->webservices_key = $obj->webservices_key;
 
-				$this->accountancy_code_buy     = $obj->accountancy_code_buy;
-				$this->accountancy_code_sell    = $obj->accountancy_code_sell;
+				if (!empty($obj->spe_accountancy_code_buy)) {
+					$this->accountancy_code_buy = $obj->spe_accountancy_code_buy;
+				} elseif (!empty($obj->soc_accountancy_code_buy)) {
+					$this->accountancy_code_buy = $obj->soc_accountancy_code_buy;
+				} else {
+					$this->accountancy_code_buy = '';
+				}
+
+				if (!empty($obj->spe_accountancy_code_sell)) {
+					$this->accountancy_code_buy = $obj->spe_accountancy_code_sell;
+				} elseif (!empty($obj->soc_accountancy_code_sell)) {
+					$this->accountancy_code_buy = $obj->soc_accountancy_code_sell;
+				} else {
+					$this->accountancy_code_buy = '';
+				}
 
 				$this->outstanding_limit		= $obj->outstanding_limit;
 				$this->order_min_amount			= $obj->order_min_amount;
