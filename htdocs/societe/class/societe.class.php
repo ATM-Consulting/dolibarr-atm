@@ -1680,15 +1680,15 @@ class Societe extends CommonObject
 		$sql .= ', s.fk_forme_juridique as forme_juridique_code';
 		$sql .= ', s.webservices_url, s.webservices_key, s.model_pdf';
 		$sql .= ', s.accountancy_code_customer_general as soc_accountancy_code_customer_general';
-		$sql .= ', s.code_compta as soc_accountancy_customer';
+		$sql .= ', s.code_compta as soc_accountancy_code_customer';
 		$sql .= ', s.accountancy_code_supplier_general as soc_accountancy_code_supplier_general';
-		$sql .= ', s.code_compta_fournisseur as soc_accountancy_supplier';
+		$sql .= ', s.code_compta_fournisseur as soc_accountancy_code_supplier';
 		$sql .= ', s.accountancy_code_buy as soc_accountancy_code_buy';
 		$sql .= ', s.accountancy_code_sell as soc_accountancy_code_sell';
 		$sql .= ', spe.accountancy_code_customer_general as spe_accountancy_code_customer_general';
-		$sql .= ', spe.accountancy_code_customer as spe_accountancy_customer';
+		$sql .= ', spe.accountancy_code_customer as spe_accountancy_code_customer';
 		$sql .= ', spe.accountancy_code_supplier_general as spe_accountancy_code_supplier_general';
-		$sql .= ', spe.accountancy_code_supplier as spe_accountancy_supplier';
+		$sql .= ', spe.accountancy_code_supplier as spe_accountancy_code_supplier';
 		$sql .= ', spe.accountancy_code_buy as spe_accountancy_code_buy';
 		$sql .= ', spe.accountancy_code_sell as spe_accountancy_code_sell';
 		$sql .= ', s.code_client, s.code_fournisseur, s.parent, s.barcode';
@@ -1714,7 +1714,7 @@ class Societe extends CommonObject
 			$sql .= ', sr.remise_client, sr2.remise_supplier';
 		}
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'societe as s';
-		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_perentity as spe ON spe.fk_soc = s.rowid AND spe.entity = " . ((int) $conf->entity);
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_effectif as e ON s.fk_effectif = e.id';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as c ON s.fk_pays = c.rowid';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_stcomm as st ON s.fk_stcomm = st.id';
@@ -1843,8 +1843,6 @@ class Societe extends CommonObject
 					$this->accountancy_code_customer_general = '';
 				}
 
-				dol_syslog('Code compta client général spe:'. $obj->spe_accountancy_code_customer_general.' soc:'.$obj->soc_accountancy_code_customer_general.' retenu:'. $this->accountancy_code_customer_general, LOG_ERR);
-
 				if ($obj->spe_accountancy_code_customer != '') {
 					$this->code_compta = $obj->spe_accountancy_code_customer;
 				} elseif ($obj->soc_accountancy_code_customer != '') {
@@ -1852,8 +1850,6 @@ class Societe extends CommonObject
 				} else {
 					$this->code_compta = '';
 				}
-
-				dol_syslog('Code compta client spe:'. $obj->spe_accountancy_code_customer.' soc:'.$obj->soc_accountancy_code_customer.' retenu:'. $this->code_compta, LOG_ERR);
 
 				if ($obj->spe_accountancy_code_supplier_general != '') {
 					$this->accountancy_code_supplier_general = $obj->spe_accountancy_code_supplier_general;
@@ -1865,8 +1861,6 @@ class Societe extends CommonObject
 					$this->accountancy_code_supplier_general = '';
 				}
 
-				dol_syslog('Code compta fourn général spe:'. $obj->spe_accountancy_code_supplier_general.' soc:'.$obj->soc_accountancy_code_supplier_general.' retenu:'. $this->accountancy_code_supplier_general, LOG_ERR);
-
 				if ($obj->spe_accountancy_code_supplier != '') {
 					$this->code_compta_fournisseur = $obj->spe_accountancy_code_supplier;
 				} elseif ($obj->soc_accountancy_code_supplier != '') {
@@ -1874,8 +1868,6 @@ class Societe extends CommonObject
 				} else {
 					$this->code_compta_fournisseur = '';
 				}
-
-				dol_syslog('Code compta fourn spe:'. $obj->spe_accountancy_code_supplier.' soc:'.$obj->soc_accountancy_code_supplier.' retenu:'. $this->code_compta_fournisseur, LOG_ERR);
 
 				$this->barcode = $obj->barcode;
 
