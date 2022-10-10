@@ -938,11 +938,19 @@ class Societe extends CommonObject
 					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "societe_perentity (";
 					$sql .= " fk_soc";
 					$sql .= ", entity";
+					$sql .= ", accountancy_code_customer_general";
+					$sql .= ", accountancy_code_customer";
+					$sql .= ", accountancy_code_supplier_general";
+					$sql .= ", accountancy_code_supplier";
 					$sql .= ", accountancy_code_buy";
 					$sql .= ", accountancy_code_sell";
 					$sql .= ") VALUES (";
 					$sql .= $this->id;
 					$sql .= ", " . $conf->entity;
+					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer_general) . "'";
+					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer) . "'";
+					$sql .= ", '" . $this->db->escape($this->accountancy_code_supplier_general) . "'";
+					$sql .= ", '" . $this->db->escape($this->accountancy_code_supplier) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_buy) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_sell) . "'";
 					$sql .= ")";
@@ -1489,10 +1497,12 @@ class Societe extends CommonObject
 
 			if ($customer) {
 				$sql .= ", code_client = ".(!empty($this->code_client) ? "'".$this->db->escape($this->code_client)."'" : "null");
+				$sql .= ", code_compta = ".(!empty($this->code_compta_client) ? "'".$this->db->escape($this->code_compta_client)."'" : "null");
 			}
 
 			if ($supplier) {
 				$sql .= ", code_fournisseur = ".(!empty($this->code_fournisseur) ? "'".$this->db->escape($this->code_fournisseur)."'" : "null");
+				$sql .= ", code_compta_fournisseur = ".(($this->code_compta_fournisseur != "") ? "'".$this->db->escape($this->code_compta_fournisseur)."'" : "null");
 			}
 			$sql .= ", fk_user_modif = ".($user->id > 0 ? $user->id : "null");
 			$sql .= ", fk_multicurrency = ".(int) $this->fk_multicurrency;
