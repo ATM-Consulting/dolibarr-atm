@@ -5,7 +5,7 @@
  * Copyright (C) 2015       Florian Henry       <florian.henry@open-concept.pro>
  * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2016       Pierre-Henry Favre  <phf@atm-consulting.fr>
- * Copyright (C) 2016-2020  Alexandre Spangaro  <aspangaro@open-dsi.fr>
+ * Copyright (C) 2016-2021  Alexandre Spangaro  <aspangaro@open-dsi.fr>
  * Copyright (C) 2013-2017  Olivier Geffroy     <jeff@jeffinfo.com>
  * Copyright (C) 2017       Elarifr. Ari Elbaz  <github@accedinfo.com>
  * Copyright (C) 2017-2019  Frédéric France     <frederic.france@netlogic.fr>
@@ -332,9 +332,9 @@ class AccountancyExport
 			print length_accountg($line->numero_compte).$separator;
 			print length_accounta($line->subledger_account).$separator;
 			print $line->sens.$separator;
-			print price($line->montant).$separator;
-			print $line->label_operation.$separator;
-			print $line->doc_ref;
+			print price2fec(abs($line->montant)).$separator;
+			print dol_string_unaccent($line->label_operation).$separator;
+			print dol_string_unaccent($line->doc_ref);
 			print $end_line;
 		}
 	}
@@ -439,33 +439,43 @@ class AccountancyExport
 	}
 
 	/**
-	 * Export format : CIEL
+	 * Export format : CIEL (Format XIMPORT)
+	 * Format since 2003 compatible CIEL version > 2002 / Sage50
+	 * Last review for this format : 2021/07/28 Alexandre Spangaro (aspangaro@open-dsi.fr)
+	 *
+	 * Help : https://sage50c.online-help.sage.fr/aide-technique/
+	 * In sage software | Use menu : "Exchange" > "Importing entries..."
+	 *
+	 * If you want to force filename to "XIMPORT.TXT" for automatically import file present in a directory :
+	 * use constant ACCOUNTING_EXPORT_XIMPORT_FORCE_FILENAME
 	 *
 	 * @param array $TData data
 	 * @return void
 	 */
 	public function exportCiel(&$TData)
 	{
-		global $conf;
-
 		$end_line = "\r\n";
 
 		$i = 1;
-		$date_ecriture = dol_print_date(dol_now(), $conf->global->ACCOUNTING_EXPORT_DATE); // format must be yyyymmdd
+
 		foreach ($TData as $data) {
-			$code_compta = $data->numero_compte;
-			if (!empty($data->subledger_account))
-				$code_compta = $data->subledger_account;
+			$code_compta = length_accountg($data->numero_compte);
+			if (!empty($data->subledger_account)) {
+                $code_compta = length_accounta($data->subledger_account);
+            }
+
+			$date_document = dol_print_date($data->doc_date, '%Y%m%d');
+			$date_echeance = dol_print_date($data->date_lim_reglement, '%Y%m%d');
 
 			$Tab = array();
-			$Tab['num_ecriture'] = str_pad($i, 5);
+			$Tab['num_ecriture'] = str_pad($data->piece_num, 5);
 			$Tab['code_journal'] = str_pad($data->code_journal, 2);
-			$Tab['date_ecriture'] = $date_ecriture;
-			$Tab['date_ope'] = dol_print_date($data->doc_date, $conf->global->ACCOUNTING_EXPORT_DATE);
-			$Tab['num_piece'] = str_pad(self::trunc($data->piece_num, 12), 12);
+			$Tab['date_ecriture'] = str_pad($date_document, 8, ' ', STR_PAD_LEFT);
+			$Tab['date_echeance'] = str_pad($date_echeance, 8, ' ', STR_PAD_LEFT);
+			$Tab['num_piece'] = str_pad(self::trunc($data->doc_ref, 12), 12);
 			$Tab['num_compte'] = str_pad(self::trunc($code_compta, 11), 11);
 			$Tab['libelle_ecriture'] = str_pad(self::trunc(dol_string_unaccent($data->doc_ref).dol_string_unaccent($data->label_operation), 25), 25);
-			$Tab['montant'] = str_pad(abs($data->montant), 13, ' ', STR_PAD_LEFT);
+			$Tab['montant'] = str_pad(price2fec(abs($data->montant)), 13, ' ', STR_PAD_LEFT);
 			$Tab['type_montant'] = str_pad($data->sens, 1);
 			$Tab['vide'] = str_repeat(' ', 18);
 			$Tab['intitule_compte'] = str_pad(self::trunc(dol_string_unaccent($data->label_operation), 34), 34);
@@ -519,9 +529,8 @@ class AccountancyExport
 			$Tab['contrepartie'] = str_repeat(' ', 8);
 
 			// elarifr:  date format must be fixed format : 6 char ddmmyy = %d%m%yand not defined by user / dolibarr setting
-			if (!empty($data->date_echeance))
-				//$Tab['date_echeance'] = dol_print_date($data->date_echeance, $conf->global->ACCOUNTING_EXPORT_DATE);
-				$Tab['date_echeance'] = dol_print_date($data->date_echeance, '%d%m%y'); // elarifr:  format must be ddmmyy
+			if (!empty($data->date_lim_reglement))
+				$Tab['date_echeance'] = dol_print_date($data->date_lim_reglement, '%d%m%y'); // elarifr:  format must be ddmmyy
 			else
 				$Tab['date_echeance'] = '000000';
 
@@ -617,9 +626,8 @@ class AccountancyExport
 
 			$Tab['code_stat'] = str_repeat(' ', 4);
 
-			if (!empty($data->date_echeance))
-				//$Tab['date_echeance'] = dol_print_date($data->date_echeance, $conf->global->ACCOUNTING_EXPORT_DATE);
-				$Tab['date_echeance'] = dol_print_date($data->date_echeance, '%d%m%Y');
+			if (!empty($data->date_lim_reglement))
+				$Tab['date_echeance'] = dol_print_date($data->date_lim_reglement, '%d%m%Y');
 			else
 				$Tab['date_echeance'] = dol_print_date($data->doc_date, '%d%m%Y');
 
@@ -785,7 +793,7 @@ class AccountancyExport
 	public function exportFEC($objectLines)
 	{
 		$separator = "\t";
-		$end_line = "\n";
+		$end_line = "\r\n";
 
 		print "JournalCode".$separator;
 		print "JournalLib".$separator;
@@ -808,65 +816,70 @@ class AccountancyExport
 		print $end_line;
 
 		foreach ($objectLines as $line) {
-			$date_creation = dol_print_date($line->date_creation, '%Y%m%d');
-			$date_document = dol_print_date($line->doc_date, '%Y%m%d');
-			$date_validation = dol_print_date($line->date_validated, '%Y%m%d');
+			if ($line->debit == 0 && $line->credit == 0) {
+                unset($array[$line]);
+            } else {
+				$date_creation = dol_print_date($line->date_creation, '%Y%m%d');
+				$date_document = dol_print_date($line->doc_date, '%Y%m%d');
+				$date_lettering = dol_print_date($line->date_lettering, '%Y%m%d');
+				$date_validation = dol_print_date($line->date_validated, '%Y%m%d');
 
-			// FEC:JournalCode
-			print $line->code_journal.$separator;
+				// FEC:JournalCode
+				print $line->code_journal.$separator;
 
-			// FEC:JournalLib
-			print $line->journal_label.$separator;
+				// FEC:JournalLib
+				print $line->journal_label.$separator;
 
-			// FEC:EcritureNum
-			print $line->piece_num.$separator;
+				// FEC:EcritureNum
+				print $line->piece_num.$separator;
 
-			// FEC:EcritureDate
-			print $date_document . $separator;
+				// FEC:EcritureDate
+				print $date_document . $separator;
 
-			// FEC:CompteNum
-			print $line->numero_compte.$separator;
+				// FEC:CompteNum
+				print $line->numero_compte.$separator;
 
-			// FEC:CompteLib
-			print dol_string_unaccent($line->label_compte) . $separator;
+				// FEC:CompteLib
+				print dol_string_unaccent($line->label_compte) . $separator;
 
-			// FEC:CompAuxNum
-			print $line->subledger_account.$separator;
+				// FEC:CompAuxNum
+				print $line->subledger_account.$separator;
 
-			// FEC:CompAuxLib
-			print dol_string_unaccent($line->subledger_label) . $separator;
+				// FEC:CompAuxLib
+				print dol_string_unaccent($line->subledger_label).$separator;
 
-			// FEC:PieceRef
-			print $line->doc_ref.$separator;
+				// FEC:PieceRef
+				print $line->doc_ref.$separator;
 
-			// FEC:PieceDate
-			print dol_string_unaccent($date_creation) . $separator;
+				// FEC:PieceDate
+				print $date_creation.$separator;
 
-			// FEC:EcritureLib
-			print $line->label_operation.$separator;
+				// FEC:EcritureLib
+				print dol_string_unaccent($line->label_operation).$separator;
 
-			// FEC:Debit
-			print price2fec($line->debit).$separator;
+				// FEC:Debit
+				print price2fec($line->debit).$separator;
 
-			// FEC:Credit
-			print price2fec($line->credit).$separator;
+				// FEC:Credit
+				print price2fec($line->credit).$separator;
 
-			// FEC:EcritureLet
-			print $line->lettering_code.$separator;
+				// FEC:EcritureLet
+				print $line->lettering_code.$separator;
 
-			// FEC:DateLet
-			print $line->date_lettering.$separator;
+				// FEC:DateLet
+				print $date_lettering.$separator;
 
-			// FEC:ValidDate
-			print $date_validation . $separator;
+				// FEC:ValidDate
+				print $date_validation.$separator;
 
-			// FEC:Montantdevise
-			print $line->multicurrency_amount.$separator;
+				// FEC:Montantdevise
+				print $line->multicurrency_amount.$separator;
 
-			// FEC:Idevise
-			print $line->multicurrency_code;
+				// FEC:Idevise
+				print $line->multicurrency_code;
 
-			print $end_line;
+				print $end_line;
+			}
 		}
 	}
 

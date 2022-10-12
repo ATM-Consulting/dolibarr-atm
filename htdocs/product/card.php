@@ -16,7 +16,7 @@
  * Copyright (C) 2016		Charlie Benke		 <charlie@patas-monkey.com>
  * Copyright (C) 2016		Meziane Sof		     <virtualsof@yahoo.fr>
  * Copyright (C) 2017		Josep Lluís Amador	 <joseplluis@lliuretic.cat>
- * Copyright (C) 2019       Frédéric France      <frederic.france@netlogic.fr>
+ * Copyright (C) 2019-2021  Frédéric France      <frederic.france@netlogic.fr>
  * Copyright (C) 2019-2020  Thibault FOUCART     <support@ptibogxiv.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -85,6 +85,9 @@ $accountancy_code_sell_export = GETPOST('accountancy_code_sell_export', 'alpha')
 $accountancy_code_buy = GETPOST('accountancy_code_buy', 'alpha');
 $accountancy_code_buy_intra = GETPOST('accountancy_code_buy_intra', 'alpha');
 $accountancy_code_buy_export = GETPOST('accountancy_code_buy_export', 'alpha');
+
+// by default 'alphanohtml' (better security); hidden conf MAIN_SECURITY_ALLOW_UNSECURED_LABELS_WITH_HTML allows basic html
+$label_security_check = empty($conf->global->MAIN_SECURITY_ALLOW_UNSECURED_LABELS_WITH_HTML) ? 'alphanohtml' : 'restricthtml';
 
 if (!empty($user->socid)) $socid = $user->socid;
 
@@ -201,7 +204,7 @@ if (empty($reshook))
     {
         $error = 0;
 
-        if (!GETPOST('label', 'alphanohtml'))
+        if (!GETPOST('label', $label_security_check))
         {
             setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('Label')), null, 'errors');
             $action = "create";
@@ -225,7 +228,7 @@ if (empty($reshook))
 	        $units = GETPOST('units', 'int');
 
             $object->ref                   = $ref;
-            $object->label                 = GETPOST('label', 'alphanohtml');
+            $object->label                 = GETPOST('label', $label_security_check);
             $object->price_base_type       = GETPOST('price_base_type', 'aZ09');
 
             if ($object->price_base_type == 'TTC')
@@ -406,7 +409,7 @@ if (empty($reshook))
 				$object->oldcopy = clone $object;
 
                 $object->ref                    = $ref;
-                $object->label                  = GETPOST('label', 'alphanohtml');
+                $object->label                  = GETPOST('label', $label_security_check);
                 $object->description            = dol_htmlcleanlastbr(GETPOST('desc', 'none'));
             	$object->url = GETPOST('url');
     			if (!empty($conf->global->MAIN_DISABLE_NOTES_TAB))
@@ -484,7 +487,7 @@ if (empty($reshook))
 				if ($accountancy_code_buy_export <= 0) { $object->accountancy_code_buy_export = ''; } else { $object->accountancy_code_buy_export = $accountancy_code_buy_export; }
 
                 // Fill array 'array_options' with data from add form
-        		$ret = $extrafields->setOptionalsFromPost(null, $object);
+        		$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 				if ($ret < 0) $error++;
 
                 if (!$error && $object->check())
@@ -1005,7 +1008,7 @@ else
         print '</td></tr>';
 
         // Label
-        print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td colspan="3"><input name="label" class="minwidth300 maxwidth400onsmartphone" maxlength="255" value="'.dol_escape_htmltag(GETPOST('label', 'alphanohtml')).'"></td></tr>';
+        print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td colspan="3"><input name="label" class="minwidth300 maxwidth400onsmartphone" maxlength="255" value="'.dol_escape_htmltag(GETPOST('label', $label_security_check)).'"></td></tr>';
 
         // On sell
         print '<tr><td class="fieldrequired">'.$langs->trans("Status").' ('.$langs->trans("Sell").')</td><td colspan="3">';
@@ -1294,11 +1297,10 @@ else
 			// Accountancy_code_buy
 			print '<tr><td>'.$langs->trans("ProductAccountancyBuyCode").'</td>';
 			print '<td>';
-            if ($type == 0)
-            {
+            if ($type == 0) {
                 $accountancy_code_buy = (GETPOST('accountancy_code_buy', 'alpha') ? (GETPOST('accountancy_code_buy', 'alpha')) : $conf->global->ACCOUNTING_PRODUCT_BUY_ACCOUNT);
             } else {
-                $accountancy_code_buy = GETPOST('accountancy_code_buy', 'alpha');
+                $accountancy_code_buy = (GETPOST('accountancy_code_buy', 'alpha') ? (GETPOST('accountancy_code_buy', 'alpha')) : $conf->global->ACCOUNTING_SERVICE_BUY_ACCOUNT);
             }
 			print $formaccounting->select_account($accountancy_code_buy, 'accountancy_code_buy', 1, null, 1, 1, '');
 			print '</td></tr>';

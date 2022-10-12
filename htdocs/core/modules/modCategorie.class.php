@@ -150,7 +150,6 @@ class modCategorie extends DolibarrModules
 		$this->export_sql_end[$r] .= ' AND u.type = 1'; // Supplier categories
 
 		$r++;
-
 		$this->export_code[$r]='category_'.$r;
 		$this->export_label[$r]='CatCusList';
 		$this->export_icon[$r]='category';
@@ -225,10 +224,6 @@ class modCategorie extends DolibarrModules
             }
         }
         // End add axtra fields
-
-
-
-
 
 		$r++;
 		$this->export_code[$r] = 'category_'.$r;
@@ -414,7 +409,7 @@ class modCategorie extends DolibarrModules
             'ca.label'=>"Label*", 'ca.type'=>"Type*", 'ca.description'=>"Description",
             'ca.fk_parent' => 'Parent'
         );
-		$this->import_regex_array[$r] = array('ca.type'=>'^[0|1|2|3]');
+		$this->import_regex_array[$r] = array('ca.type'=>'^(0|1|2|3|4|5|6|7|8|9|10|11)$');
         $this->import_convertvalue_array[$r] = array(
             'ca.fk_parent' => array(
                 'rule'          => 'fetchidfromcodeandlabel',

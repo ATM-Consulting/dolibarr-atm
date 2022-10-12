@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2013-2016 Jean-François FERRY <hello@librethic.io>
- * Copyright (C) 2016      Christophe Battarel <christophe@altairis.fr>
- * Copyright (C) 2018      Laurent Destailleur <eldy@users.sourceforge.net>
+/* Copyright (C) 2013-2016 Jean-François FERRY  <hello@librethic.io>
+ * Copyright (C) 2016      Christophe Battarel  <christophe@altairis.fr>
+ * Copyright (C) 2018      Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2021      Alexandre Spangaro   <aspangaro@open-dsi.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -192,9 +193,15 @@ if (empty($reshook)) {
 					$result = $object->add_contact($contactid, GETPOST("type"), 'external');
 				}
 
-				// altairis: link ticket to project
-				if (GETPOST('projectid') > 0) {
-					$object->setProject(GETPOST('projectid'));
+				// Link ticket to project
+				if(GETPOST('origin', 'alpha') == 'projet') {
+					$projectid = GETPOST('originid', 'int');
+				} else {
+					$projectid = GETPOST('projectid', 'int');
+				}
+
+				if ($projectid > 0) {
+					$object->setProject($projectid);
 				}
 
 				// Auto assign user
@@ -449,7 +456,7 @@ if (empty($reshook)) {
 	}
 
 	// Set parent company
-	if ($action == 'set_thirdparty' && $user->rights->societe->creer) {
+	if ($action == 'set_thirdparty' && $user->rights->ticket->write) {
 		if ($object->fetch(GETPOST('id', 'int'), '', GETPOST('track_id', 'alpha')) >= 0) {
 			$result = $object->setCustomer(GETPOST('editcustomer', 'int'));
 			$url = 'card.php?action=view&track_id=' . GETPOST('track_id', 'alpha');
@@ -560,17 +567,21 @@ if (empty($reshook)) {
 	// Action to update one extrafield
 	if ($action == "update_extras" && !empty($permissiontoadd)) {
 		$object->fetch(GETPOST('id', 'int'), '', GETPOST('track_id', 'alpha'));
-		$attributekey = GETPOST('attribute', 'alpha');
-		$attributekeylong = 'options_' . $attributekey;
-		$object->array_options['options_' . $attributekey] = GETPOST($attributekeylong, ' alpha');
 
-		$result = $object->insertExtraFields(empty($triggermodname) ? '' : $triggermodname, $user);
-		if ($result > 0) {
-			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
-			$action = 'view';
-		} else {
+		$ret = $extrafields->setOptionalsFromPost(null, $object, GETPOST('attribute', 'none'));
+		if ($ret < 0) $error++;
+		if (!$error)
+		{
+			$result = $object->insertExtraFields(empty($triggermodname) ? '' : $triggermodname, $user);
+			if ($result < 0) { $error++; }
+		}
+
+		if ($error) {
 			setEventMessages($object->error, $object->errors, 'errors');
 			$action = 'edit_extras';
+		} else {
+			setEventMessages($langs->trans('RecordSaved'), null, 'mesgs');
+			$action = 'view';
 		}
 	}
 

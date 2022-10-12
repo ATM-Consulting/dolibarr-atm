@@ -44,7 +44,7 @@ $mode = GETPOST("mode") ?GETPOST("mode") : 'customer';
 if ($mode == 'customer' && !$user->rights->facture->lire) accessforbidden();
 if ($mode == 'supplier' && !$user->rights->fournisseur->facture->lire) accessforbidden();
 
-$object_status = GETPOST('object_status');
+$object_status = GETPOST('object_status', 'intcomma');
 $typent_id = GETPOST('typent_id', 'int');
 $categ_id = GETPOST('categ_id', 'categ_id');
 
@@ -59,7 +59,7 @@ if ($user->socid > 0)
 }
 
 $nowyear = strftime("%Y", dol_now());
-$year = GETPOST('year') > 0 ?GETPOST('year') : $nowyear;
+$year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
 if(!empty($conf->global->INVOICE_STATS_GRAPHS_SHOW_2_YEARS)) $startyear=$year-2;
 else $startyear=$year-1;
 $endyear = $year;
@@ -92,17 +92,23 @@ print load_fiche_titre($title, '', $picto);
 dol_mkdir($dir);
 
 $stats = new FactureStats($db, $socid, $mode, ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
-if ($mode == 'customer')
-{
-    if ($object_status != '' && $object_status >= 0) $stats->where .= ' AND f.fk_statut IN ('.$db->escape($object_status).')';
+if ($mode == 'customer') {
+	if ($object_status != '' && $object_status >= 0) {
+		$stats->where .= ' AND f.fk_statut IN ('.$db->escape($object_status).')';
+	}
     if (is_array($custcats) && !empty($custcats)) {
         $stats->from .= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as cat ON (f.fk_soc = cat.fk_soc)';
         $stats->where .= ' AND cat.fk_categorie IN ('.implode(',', $custcats).')';
     }
 }
-if ($mode == 'supplier')
-{
-    if ($object_status != '' && $object_status >= 0) $stats->where .= ' AND f.fk_statut IN ('.$db->escape($object_status).')';
+if ($mode == 'supplier') {
+	if ($object_status != '' && $object_status >= 0) {
+		$stats->where .= ' AND f.fk_statut IN ('.$db->escape($object_status).')';
+	}
+	if (is_array($custcats) && !empty($custcats)) {
+		$stats->from .= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_fournisseur as cat ON (f.fk_soc = cat.fk_soc)';
+		$stats->where .= ' AND cat.fk_categorie IN ('.implode(',', $custcats).')';
+	}
 }
 
 // Build graphic number of object
@@ -283,7 +289,7 @@ if (! empty($conf->category->enabled)) {
 	    $cat_label = $langs->trans("Category").' '.lcfirst($langs->trans("Supplier"));
 	}
 	print '<tr><td>'.$cat_label.'</td><td>';
-	$cate_arbo = $form->select_all_categories(Categorie::TYPE_CUSTOMER, null, 'parent', null, null, 1);
+	$cate_arbo = $form->select_all_categories($cat_type, null, 'parent', null, null, 1);
 	print $form->multiselectarray('custcats', $cate_arbo, GETPOST('custcats', 'array'), null, null, null, null, "90%");
 	//print $formother->select_categories($cat_type, $categ_id, 'categ_id', true);
 	print '</td></tr>';

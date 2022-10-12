@@ -110,6 +110,7 @@ if (empty($reshook))
 	    // We must define tva_tx, npr and local taxes
 	    $tva_tx = $tva_tx_txt;
 	    $vatratecode = '';
+	    $reg = array();
 	    if (preg_match('/\((.*)\)/', $tva_tx_txt, $reg))
 	    {
 	    	$vat_src_code = $reg[1];
@@ -226,6 +227,7 @@ if (empty($reshook))
 
 				$tva_tx = $tva_tx_txt;
 				$vatratecode = '';
+				$reg = array();
 				if (preg_match('/\((.*)\)/', $tva_tx_txt, $reg))
 				{
 					$vat_src_code = $reg[1];
@@ -261,8 +263,8 @@ if (empty($reshook))
         	    }
 
 				$pricestoupdate[$i] = array(
-					'price' => $newprice[$i],
-					'price_min' => $newprice_min[$i],
+					'price' => price2num($newprice[$i], '', 2),
+					'price_min' => price2num($newprice_min[$i], '', 2),
 					'price_base_type' => $newpricebase[$i],
 				    'default_vat_code' => $vatratecode,
 					'vat_tx' => $tva_tx, // default_vat_code should be used in priority in a future
@@ -278,10 +280,14 @@ if (empty($reshook))
 		}
 		elseif (!$error)
 		{
+			$newprice = price2num(GETPOST('price', 'alpha'), '', 2);
+			$newprice_min = price2num(GETPOST('price_min', 'alpha'), '', 2);
+			$newpricebase = GETPOST('price_base_type', 'alpha');
 			$tva_tx_txt = GETPOST('tva_tx', 'alpha'); // tva_tx can be '8.5'  or  '8.5*'  or  '8.5 (XXX)' or '8.5* (XXX)'
 
 			$tva_tx = $tva_tx_txt;
 			$vatratecode = '';
+			$reg = array();
 			if (preg_match('/\((.*)\)/', $tva_tx_txt, $reg))
 			{
 				$vat_src_code = $reg[1];
@@ -321,9 +327,9 @@ if (empty($reshook))
 		        }
 		    }
 			$pricestoupdate[0] = array(
-				'price' => $_POST["price"],
-				'price_min' => $_POST["price_min"],
-				'price_base_type' => $_POST["price_base_type"],
+				'price' => $newprice,
+				'price_min' => $newprice_min,
+				'price_base_type' => $newpricebase,
 			    'default_vat_code' => $vatratecode,
 				'vat_tx' => $tva_tx, // default_vat_code should be used in priority in a future
 				'npr' => $npr, // default_vat_code should be used in priority in a future
@@ -343,6 +349,7 @@ if (empty($reshook))
 
 				$newprice = price2num($newprice, 'MU');
 				$newprice_min = price2num($val['price_min'], 'MU');
+				$newvattx = price2num($val['vat_tx']);
 
 				if (!empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE) && $newprice_min < $maxpricesupplier) {
 					setEventMessages($langs->trans("MinimumPriceLimit", price($maxpricesupplier, 0, '', 1, - 1, - 1, 'auto')), null, 'errors');
@@ -350,10 +357,9 @@ if (empty($reshook))
 					break;
 				}
 
-				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'])
+				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'] || $object->multiprices_tva_tx[$key] != $newvattx)
        				$res = $object->updatePrice($newprice, $val['price_base_type'], $user, $val['vat_tx'], $newprice_min, $key, $val['npr'], $psq, 0, $val['localtaxes_array'], $val['default_vat_code']);
 				else $res = 0;
-
 
 				if ($res < 0) {
 					$error++;
@@ -1451,11 +1457,11 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_defaul
 
     		// Il doit au moins y avoir la ligne de prix initial.
     		// On l'ajoute donc pour remettre a niveau (pb vieilles versions)
-    		//$object->updatePrice($object->price, $object->price_base_type, $user, $object->tva_tx, $object->price_min);
+    		// We emulate the change of the price from interface with the same value than the one into table llx_product
             if (!empty($conf->global->PRODUIT_MULTIPRICES)) {
-            	$object->updatePrice($object->multiprices[1], $object->multiprices_base_type[1], $user, (empty($object->multiprices_tva_tx[1]) ? 0 : $object->multiprices_tva_tx[1]), $object->multiprices_min[1], 1);
+            	$object->updatePrice(($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_ttc[1] : $object->multiprices[1]), $object->multiprices_base_type[1], $user, (empty($object->multiprices_tva_tx[1]) ? 0 : $object->multiprices_tva_tx[1]), ($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_min_ttc[1] : $object->multiprices_min[1]), 1);
             } else {
-                $object->updatePrice($object->price, $object->price_base_type, $user, $object->tva_tx, $object->price_min);
+            	$object->updatePrice(($object->price_base_type == 'TTC' ? $object->price_ttc : $object->price), $object->price_base_type, $user, $object->tva_tx, ($object->price_base_type == 'TTC' ? $object->price_min_ttc : $object->price_min));
             }
 
     		$result = $db->query($sql);
@@ -1611,13 +1617,13 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_defaul
     			    elseif ($i > 0) $candelete = 1;
 
     				print '<td class="right">';
-    				if ($candelete)
-    				{
+    				if ($candelete || ($db->jdate($objp->dp) >= dol_now())) {		// Test on date is to be able to delete a corrupted record with a a date in future
     					print '<a href="'.$_SERVER["PHP_SELF"].'?action=delete&amp;id='.$object->id.'&amp;lineid='.$objp->rowid.'">';
     					print img_delete();
     					print '</a>';
-    				} else
+    				} else {
     					print '&nbsp;'; // Can not delete last price (it's current price)
+    				}
     				print '</td>';
     			}
 

@@ -240,7 +240,7 @@ if (empty($reshook))
 			$stockLocation = "ent1".$i."_0";
 	    	$qty = "qtyl".$i;
 
-			if ($objectsrc->lines[$i]->product_tobatch)      // If product need a batch number
+	    	if (!empty($conf->productbatch->enabled) && $objectsrc->lines[$i]->product_tobatch)      // If product need a batch number
 			{
 			    if (GETPOSTISSET($batch))
 			    {
@@ -435,16 +435,11 @@ if (empty($reshook))
 
 	    $result = $object->valid($user);
 
-	    if ($result < 0)
-	    {
-			$langs->load("errors");
-			setEventMessages($langs->trans($object->error), $object->errors, 'errors');
-	    }
-	    else
-	    {
+	    if ($result < 0) {
+			setEventMessages($object->error, $object->errors, 'errors');
+	    } else {
 	    	// Define output language
-	    	if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
-	    	{
+	    	if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 	    		$outputlangs = $langs;
 	    		$newlang = '';
 	    		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) $newlang = GETPOST('lang_id', 'aZ09');
@@ -1250,13 +1245,17 @@ if ($action == 'create')
 						{
 							// Quantity to send
 							print '<td class="center">';
-							if ($line->product_type == Product::TYPE_PRODUCT || !empty($conf->global->STOCK_SUPPORTS_SERVICES))
-							{
-	                            if (GETPOST('qtyl'.$indiceAsked, 'int')) $deliverableQty = GETPOST('qtyl'.$indiceAsked, 'int');
-	                            print '<input name="idl'.$indiceAsked.'" type="hidden" value="'.$line->id.'">';
+							print '<input name="idl'.$indiceAsked.'" type="hidden" value="'.$line->id.'">';
+							if ($line->product_type == Product::TYPE_PRODUCT || !empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
+								if (GETPOST('qtyl'.$indiceAsked, 'int')) $deliverableQty = GETPOST('qtyl'.$indiceAsked, 'int');
 								print '<input name="qtyl'.$indiceAsked.'" id="qtyl'.$indiceAsked.'" type="text" size="4" value="'.$deliverableQty.'">';
+							} else {
+								if (! empty($conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS)) {
+									print '<input name="qtyl'.$indiceAsked.'" id="qtyl'.$indiceAsked.'" type="hidden" value="0">';
+								}
+
+								print $langs->trans("NA");
 							}
-							else print $langs->trans("NA");
 							print '</td>';
 
 							// Stock
@@ -1425,8 +1424,13 @@ if ($action == 'create')
 									{
 										print '<input name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'" type="text" size="4" value="'.$deliverableQty.'">';
 										print '<input name="ent1'.$indiceAsked.'_'.$subj.'" type="hidden" value="'.$warehouse_id.'">';
+									} else {
+										if (! empty($conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS)) {
+											print '<input name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'" type="hidden" value="0">';
+										}
+
+										print $langs->trans("NA");
 									}
-									else print $langs->trans("NA");
 									print '</td>';
 
 									// Stock
@@ -1599,7 +1603,7 @@ if ($action == 'create')
 						$srcLine = new OrderLine($db);
 						$srcLine->id = $line->id;
 						$srcLine->fetch_optionals(); // fetch extrafields also available in orderline
-						$line->array_options = array_merge($line->array_options, $srcLine->array_options);
+						$expLine->array_options = array_merge($expLine->array_options, $srcLine->array_options);
 
 						print $expLine->showOptionals($extrafields, 'edit', array('style'=>'class="drag drop oddeven"', 'colspan'=>$colspan), $indiceAsked, '', 1);
 					}

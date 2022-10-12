@@ -10,7 +10,7 @@
  * Copyright (C) 2013       Cédric Salvador         <csalvador@gpcsolutions.fr>
  * Copyright (C) 2018       Nicolas ZABOURI			<info@inovea-conseil.com>
  * Copyright (C) 2018-2019  Frédéric France         <frederic.france@netlogic.fr>
- * Copyright (C) 2018       Ferran Marcet         	<fmarcet@2byte.es>
+ * Copyright (C) 2018-2021  Ferran Marcet         	<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -460,13 +460,18 @@ class CommandeFournisseur extends CommonOrder
     	$sql .= " l.date_start, l.date_end,";
     	$sql .= ' l.fk_multicurrency, l.multicurrency_code, l.multicurrency_subprice, l.multicurrency_total_ht, l.multicurrency_total_tva, l.multicurrency_total_ttc';
 		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
-			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging";
+			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging, MAX(pfp.quantity) as max_qty";
     	$sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet	as l";
     	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON l.fk_product = p.rowid';
-		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON l.fk_product = pfp.fk_product and l.ref = pfp.ref_fourn";
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON pfp.entity IN (".getEntity('product_fournisseur_price').") AND l.fk_product = pfp.fk_product and l.ref = pfp.ref_fourn AND pfp.fk_soc = ".((int) $this->socid);
+		}
     	$sql .= " WHERE l.fk_commande = ".$this->id;
     	if ($only_product) $sql .= ' AND p.fk_product_type = 0';
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql.= " AND l.qty >= pfp.quantity ";
+			$sql.= " GROUP BY l.rowid HAVING max_qty = MAX(pfp.quantity) ";
+		}
     	$sql .= " ORDER BY l.rang, l.rowid";
     	//print $sql;
 
@@ -1729,9 +1734,9 @@ class CommandeFournisseur extends CommonOrder
 						{
 							$coeff = intval($qty / $prod->packaging) + 1;
 							$qty = $prod->packaging * $coeff;
-							setEventMessage($langs->trans('QtyRecalculatedWithPackaging'), 'mesgs');
 						}
 					}
+					setEventMessage($langs->trans('QtyRecalculatedWithPackaging'), 'mesgs');
 				}
             }
             else
@@ -1775,8 +1780,6 @@ class CommandeFournisseur extends CommonOrder
 
             $localtax1_type = $localtaxes_type[0];
 			$localtax2_type = $localtaxes_type[2];
-
-            $subprice = price2num($pu, 'MU');
 
             $rangmax = $this->line_max();
             $rang = $rangmax + 1;
@@ -2635,9 +2638,11 @@ class CommandeFournisseur extends CommonOrder
             if (!$qty) $qty = 1;
             $pu = price2num($pu);
         	$pu_ht_devise = price2num($pu_ht_devise);
-            $txtva = price2num($txtva);
-            $txlocaltax1 = price2num($txlocaltax1);
-            $txlocaltax2 = price2num($txlocaltax2);
+        	if (!preg_match('/\((.*)\)/', $txtva)) {
+        		$txtva = price2num($txtva); // $txtva can have format '5.0(XXX)' or '5'
+        	}
+        	$txlocaltax1 = price2num($txlocaltax1);
+        	$txlocaltax2 = price2num($txlocaltax2);
 
             // Check parameters
             if ($type < 0) return -1;
@@ -2658,6 +2663,7 @@ class CommandeFournisseur extends CommonOrder
 
             // Clean vat code
             $vat_src_code = '';
+			$reg = array();
             if (preg_match('/\((.*)\)/', $txtva, $reg))
             {
                 $vat_src_code = $reg[1];
@@ -2683,8 +2689,6 @@ class CommandeFournisseur extends CommonOrder
             $localtax1_type = $localtaxes_type[0];
 			$localtax2_type = $localtaxes_type[2];
 
-            $subprice = price2num($pu_ht, 'MU');
-
             //Fetch current line from the database and then clone the object and set it in $oldline property
             $this->line = new CommandeFournisseurLigne($this->db);
             $this->line->fetch($rowid);
@@ -2708,7 +2712,7 @@ class CommandeFournisseur extends CommonOrder
 				}
 				else
 				{
-					if (($qty % $this->line->packaging) > 0)
+				    if (! empty($this->line->packaging) && ($qty % $this->line->packaging) > 0)
 					{
 						$coeff = intval($qty / $this->line->packaging) + 1;
 						$qty = $this->line->packaging * $coeff;
@@ -2905,11 +2909,11 @@ class CommandeFournisseur extends CommonOrder
                 if ($obj->fk_user_approve)  $this->user_approve_id = $obj->fk_user_approve;
                 if ($obj->fk_user_approve2) $this->user_approve_id2 = $obj->fk_user_approve2;
 
-                $this->date_creation     = $this->db->idate($obj->datec);
-                $this->date_modification = $this->db->idate($obj->datem);
-                $this->date_approve      = $this->db->idate($obj->datea);
-                $this->date_approve2     = $this->db->idate($obj->datea2);
-                $this->date_validation   = $this->db->idate($obj->date_validation);
+                $this->date_creation     = $this->db->jdate($obj->datec);
+                $this->date_modification = $this->db->jdate($obj->datem);
+                $this->date_approve      = $this->db->jdate($obj->datea);
+                $this->date_approve2     = $this->db->jdate($obj->datea2);
+                $this->date_validation   = $this->db->jdate($obj->date_validation);
             }
             $this->db->free($result);
         }
@@ -3016,7 +3020,8 @@ class CommandeFournisseur extends CommonOrder
             {
                 $response->nbtodo++;
 
-                $commandestatic->date_livraison = $this->db->jdate($obj->delivery_date);
+                $commandestatic->date_livraison = $this->db->jdate($obj->delivery_date);	// deprecated
+                $commandestatic->date_delivery = $this->db->jdate($obj->delivery_date);
                 $commandestatic->date_commande = $this->db->jdate($obj->date_commande);
                 $commandestatic->statut = $obj->fk_statut;
 
@@ -3175,7 +3180,7 @@ class CommandeFournisseur extends CommonOrder
         if (empty($this->date_delivery) && !empty($this->date_livraison)) $this->date_delivery = $this->date_livraison; // For backward compatibility
 
         $now = dol_now();
-        $date_to_test = empty($this->date_livraison) ? $this->date_commande : $this->date_livraison;
+        $date_to_test = empty($this->date_delivery) ? $this->date_commande : $this->date_delivery;
 
         return ($this->statut > 0 && $this->statut < 5) && $date_to_test && $date_to_test < ($now - $conf->commande->fournisseur->warning_delay);
     }
@@ -3234,6 +3239,7 @@ class CommandeFournisseur extends CommonOrder
     		{
     			if (is_array($supplierorderdispatch->lines) && count($supplierorderdispatch->lines) > 0)
     			{
+					require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
     				$date_liv = dol_now();
 
     				// Build array with quantity deliverd by product
@@ -3241,7 +3247,11 @@ class CommandeFournisseur extends CommonOrder
     					$qtydelivered[$line->fk_product] += $line->qty;
     				}
     				foreach ($this->lines as $line) {
-    					$qtywished[$line->fk_product] += $line->qty;
+						if ($line->product_type == Product::TYPE_PRODUCT ||
+							($line->product_type == Product::TYPE_SERVICE && !empty($conf->global->STOCK_SUPPORTS_SERVICES))
+						) {
+							$qtywished[$line->fk_product] += $line->qty;
+						}
     				}
     				//Compare array
     				$diff_array = array_diff_assoc($qtydelivered, $qtywished); // Warning: $diff_array is done only on common keys.
@@ -3483,12 +3493,15 @@ class CommandeFournisseurLigne extends CommonOrderLine
         $sql .= ' cd.date_start, cd.date_end, cd.fk_unit,';
 		$sql .= ' cd.multicurrency_subprice, cd.multicurrency_total_ht, cd.multicurrency_total_tva, cd.multicurrency_total_ttc';
 		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
-			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging";
+			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging, MAX(pfp.quantity) as max_qty";
         $sql .= ' FROM '.MAIN_DB_PREFIX.'commande_fournisseurdet as cd';
         $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON cd.fk_product = p.rowid';
 		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON cd.fk_product = pfp.fk_product and cd.ref = pfp.ref_fourn";
         $sql .= ' WHERE cd.rowid = '.$rowid;
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql .= " AND cd.qty >= pfp.quantity GROUP BY cd.rowid HAVING max_qty = MAX(pfp.quantity)";
+		}
         $result = $this->db->query($sql);
         if ($result)
         {

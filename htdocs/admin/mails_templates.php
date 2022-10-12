@@ -257,7 +257,7 @@ if (empty($reshook))
             $sql = "INSERT INTO ".$tabname[$id]." (";
             // List of fields
             $sql .= $tabfieldinsert[$id];
-            $sql .= ",active)";
+            $sql .= ",active,enabled)";
             $sql .= " VALUES(";
 
             // List of values
@@ -280,7 +280,7 @@ if (empty($reshook))
                 elseif ($keycode == 'content') {
                 	$sql .= "'".$db->escape(GETPOST($keycode, 'restricthtml'))."'";
                 }
-                elseif (in_array($keycode, array('joinfile', 'private', 'position', 'scale'))) {
+                elseif (in_array($keycode, array('joinfiles', 'private', 'position', 'scale'))) {
                 	$sql .= (int) GETPOST($keycode, 'int');
                 }
                 else {
@@ -289,7 +289,7 @@ if (empty($reshook))
 
                 $i++;
             }
-            $sql .= ", 1)";
+            $sql .= ", 1, 1)";
 
             dol_syslog("actionadd", LOG_DEBUG);
             $result = $db->query($sql);

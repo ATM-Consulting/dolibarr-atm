@@ -130,7 +130,10 @@ if ($object->client)
 	print '<tr><td class="titlefield">';
 	print $langs->trans('CustomerCode').'</td><td colspan="3">';
 	print $object->code_client;
-	if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
+	$tmpcheck = $object->check_codeclient();
+	if ($tmpcheck != 0 && $tmpcheck != -5) {
+		print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
+	}
 	print '</td></tr>';
 	$sql = "SELECT count(*) as nb from ".MAIN_DB_PREFIX."facture where fk_soc = ".$socid;
 	$resql = $db->query($sql);
@@ -153,7 +156,10 @@ if ($object->fournisseur)
 	print '<tr><td class="titlefield">';
 	print $langs->trans('SupplierCode').'</td><td colspan="3">';
 	print $object->code_fournisseur;
-	if ($object->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
+	$tmpcheck = $object->check_codefournisseur();
+	if ($tmpcheck != 0 && $tmpcheck != -5) {
+		print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
+	}
 	print '</td></tr>';
 	$sql = "SELECT count(*) as nb from ".MAIN_DB_PREFIX."commande_fournisseur where fk_soc = ".$socid;
 	$resql = $db->query($sql);
@@ -221,7 +227,7 @@ if ($type_element == 'propal')
 	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where .= " AND d.fk_propal = c.rowid";
 	$where .= " AND c.entity = ".$conf->entity;
-	$datePrint = 'c.datep';
+	$dateprint = 'c.datep';
 	$doc_number = 'c.ref';
 	$thirdTypeSelect = 'customer';
 }
@@ -312,7 +318,7 @@ if (!empty($sql_select))
 	if ($sref) $sql .= " AND ".$doc_number." LIKE '%".$db->escape($sref)."%'";
 	if ($sprod_fulldescr)
 	{
-	    $sql .= " AND (d.description LIKE '%".$db->escape($sprod_fulldescr)."%'";
+	    $sql .= " AND (d.description LIKE '%".$db->escape($sprod_fulldescr)."%' OR d.description LIKE '%".$db->escape(dol_htmlentities($sprod_fulldescr))."%'";
 	    if (GETPOST('type_element') != 'fichinter') $sql .= " OR p.ref LIKE '%".$db->escape($sprod_fulldescr)."%'";
 	    if (GETPOST('type_element') != 'fichinter') $sql .= " OR p.label LIKE '%".$db->escape($sprod_fulldescr)."%'";
 	    $sql .= ")";
@@ -416,6 +422,7 @@ if ($sql_select)
 		$documentstatic->statut = $objp->status;
 		$documentstatic->status = $objp->status;
 		$documentstatic->paye = $objp->paid;
+		$documentstatic->alreadypaid = $objp->paid;
 
 		if (is_object($documentstaticline)) $documentstaticline->statut = $objp->status;
 
@@ -430,6 +437,8 @@ if ($sql_select)
 		if ($type_element == 'contract')
 		{
 			print $documentstaticline->getLibStatut(2);
+		} elseif ($type_element == 'invoice') {
+			print $documentstatic->getLibStatut(5, $objp->paid);
 		}
 		else
 		{

@@ -783,6 +783,7 @@ class Facture extends CommonInvoice
 					if ($result < 0)
 					{
 						$this->error = $newinvoiceline->error;
+						$this->errors = $newinvoiceline->errors;
 						$error++;
 						break;
 					}
@@ -3227,6 +3228,7 @@ class Facture extends CommonInvoice
 			else
 			{
 				$this->error = $this->line->error;
+				$this->errors = $this->line->errors;
 				$this->db->rollback();
 				return -2;
 			}
@@ -3311,7 +3313,9 @@ class Facture extends CommonInvoice
 			$pu 			= price2num($pu);
         	$pu_ht_devise = price2num($pu_ht_devise);
 			$pa_ht			= price2num($pa_ht);
-			$txtva			= price2num($txtva);
+			if (!preg_match('/\((.*)\)/', $txtva)) {
+				$txtva = price2num($txtva); // $txtva can have format '5.0(XXX)' or '5'
+			}
 			$txlocaltax1	= price2num($txlocaltax1);
 			$txlocaltax2	= price2num($txlocaltax2);
 
@@ -3326,6 +3330,7 @@ class Facture extends CommonInvoice
 
 			// Clean vat code
     		$vat_src_code = '';
+    		$reg = array();
     		if (preg_match('/\((.*)\)/', $txtva, $reg))
     		{
     		    $vat_src_code = $reg[1];

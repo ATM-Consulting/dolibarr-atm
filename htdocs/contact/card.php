@@ -421,7 +421,7 @@ if (empty($reshook))
             $object->roles = GETPOST("roles", 'array');
 
             // Fill array 'array_options' with data from add form
-			$ret = $extrafields->setOptionalsFromPost(null, $object);
+			$ret = $extrafields->setOptionalsFromPost(null, $object, '@GETPOSTISSET');
 			if ($ret < 0) $error++;
 
 			if (!$error)
@@ -846,7 +846,7 @@ else
 		        print '<tr><td>'.$langs->trans("ContactByDefaultFor").'</td>';
 		        print '<td colspan="3">';
 		        $contactType = $object->listeTypeContacts('external', '', 1);
-		        print $form->multiselectarray('roles', $contactType);
+		        print $form->multiselectarray('roles', $contactType, array(), 0, 0, 'minwidth500');
 		        print '</td></tr>';
 	        }
 

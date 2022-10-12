@@ -744,38 +744,32 @@ class Contact extends CommonObject
 			$this->error = $this->db->lasterror();
 		}
 
-		// Mis a jour alerte birthday
-		if ($this->birthday_alert)
-		{
-			//check existing
-			$sql_check = "SELECT rowid FROM ".MAIN_DB_PREFIX."user_alert WHERE type=1 AND fk_contact=".$this->db->escape($id)." AND fk_user=".$user->id;
-			$result_check = $this->db->query($sql_check);
-			if (!$result_check || ($this->db->num_rows($result_check) < 1))
-			{
-				//insert
-				$sql = "INSERT INTO ".MAIN_DB_PREFIX."user_alert(type,fk_contact,fk_user) ";
-				$sql .= "VALUES (1,".$this->db->escape($id).",".$user->id.")";
-				$result = $this->db->query($sql);
-				if (!$result)
-				{
-                    $error++;
-                    $this->error = $this->db->lasterror();
+		if ($user) {
+			// Mis a jour alerte birthday
+			if ($this->birthday_alert) {
+				//check existing
+				$sql_check = "SELECT rowid FROM " . MAIN_DB_PREFIX . "user_alert WHERE type=1 AND fk_contact=" . $this->db->escape($id) . " AND fk_user=" . $user->id;
+				$result_check = $this->db->query($sql_check);
+				if (!$result_check || ($this->db->num_rows($result_check) < 1)) {
+					//insert
+					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "user_alert(type,fk_contact,fk_user) ";
+					$sql .= "VALUES (1," . $this->db->escape($id) . "," . $user->id . ")";
+					$result = $this->db->query($sql);
+					if (!$result) {
+						$error++;
+						$this->error = $this->db->lasterror();
+					}
+				} else {
+					$result = true;
 				}
-			}
-			else
-			{
-				$result = true;
-			}
-		}
-		else
-		{
-			$sql = "DELETE FROM ".MAIN_DB_PREFIX."user_alert ";
-			$sql .= "WHERE type=1 AND fk_contact=".$this->db->escape($id)." AND fk_user=".$user->id;
-			$result = $this->db->query($sql);
-			if (!$result)
-			{
-                $error++;
-                $this->error = $this->db->lasterror();
+			} else {
+				$sql = "DELETE FROM " . MAIN_DB_PREFIX . "user_alert ";
+				$sql .= "WHERE type=1 AND fk_contact=" . $this->db->escape($id) . " AND fk_user=" . $user->id;
+				$result = $this->db->query($sql);
+				if (!$result) {
+					$error++;
+					$this->error = $this->db->lasterror();
+				}
 			}
 		}
 
@@ -1700,7 +1694,7 @@ class Contact extends CommonObject
 
 		$this->db->begin();
 
-		$sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_contacts WHERE fk_soc=".$this->socid." AND fk_socpeople=".$this->id; ;
+		$sql = "DELETE FROM ".MAIN_DB_PREFIX."societe_contacts WHERE fk_soc=".((int) $this->socid)." AND fk_socpeople=".$this->id;
 
 		dol_syslog(__METHOD__, LOG_DEBUG);
 		$result = $this->db->query($sql);
@@ -1718,11 +1712,10 @@ class Contact extends CommonObject
 					$sql .= "fk_socpeople) ";
 					$sql .= " VALUES (".$conf->entity.",";
 					$sql .= "'".$this->db->idate(dol_now())."',";
-					$sql .= $this->socid.", ";
+					$sql .= ((int) $this->socid).", ";
 					$sql .= $valRoles." , ";
 					$sql .= $this->id;
 					$sql .= ")";
-					dol_syslog(__METHOD__, LOG_DEBUG);
 
 					$result = $this->db->query($sql);
 					if (!$result)

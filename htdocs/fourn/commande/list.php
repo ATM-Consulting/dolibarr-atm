@@ -73,7 +73,6 @@ $search_user = GETPOST('search_user', 'int');
 $search_request_author = GETPOST('search_request_author', 'alpha');
 $search_ht = GETPOST('search_ht', 'alpha');
 $search_ttc = GETPOST('search_ttc', 'alpha');
-$search_status = (GETPOST('search_status', 'alpha') != '' ?GETPOST('search_status', 'alpha') : GETPOST('statut', 'alpha')); // alpha and not intbecause it can be '6,7'
 $optioncss = GETPOST('optioncss', 'alpha');
 $socid = GETPOST('socid', 'int');
 $search_sale = GETPOST('search_sale', 'int');
@@ -91,8 +90,11 @@ $search_project_ref = GETPOST('search_project_ref', 'alpha');
 $search_btn = GETPOST('button_search', 'alpha');
 $search_remove_btn = GETPOST('button_removefilter', 'alpha');
 
-$status = GETPOST('statut', 'alpha');
-$search_status = GETPOST('search_status');
+if (is_array(GETPOST('search_status', 'intcomma'))) {
+	$search_status = join(',', GETPOST('search_status', 'intcomma'));
+} else {
+	$search_status = (GETPOST('search_status', 'intcomma') != '' ? GETPOST('search_status', 'intcomma') : GETPOST('statut', 'intcomma'));
+}
 
 // Security check
 $orderid = GETPOST('orderid', 'int');
@@ -127,7 +129,7 @@ $search_array_options = $extrafields->getOptionalsFromPost($object->table_elemen
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array(
 	'cf.ref'=>'Ref',
-	'cf.ref_supplier'=>'RefSupplierOrder',
+	'cf.ref_supplier'=>'RefOrderSupplier',
 	'pd.description'=>'Description',
 	's.nom'=>"ThirdParty",
 	'cf.note_public'=>'NotePublic',
@@ -173,6 +175,7 @@ if (is_array($extrafields->attributes[$object->table_element]['label']) && count
 $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
+$error = 0;
 
 
 /*
@@ -475,19 +478,22 @@ $formorder = new FormOrder($db);
 $formother = new FormOther($db);
 $formcompany = new FormCompany($db);
 
-$title = $langs->trans("SuppliersOrders");
+$title = $langs->trans("ListOfSupplierOrders");
 if ($socid > 0)
 {
 	$fourn = new Fournisseur($db);
 	$fourn->fetch($socid);
 	$title .= ' - '.$fourn->name;
 }
-if ($status)
+
+/*if ($search_status)
 {
-	if ($status == '1,2,3') $title .= ' - '.$langs->trans("StatusOrderToProcessShort");
-	if ($status == '6,7') $title .= ' - '.$langs->trans("StatusOrderCanceled");
-	else $title .= ' - '.$commandestatic->LibStatut($status);
-}
+	if ($search_status == '1,2') $title .= ' - '.$langs->trans("SuppliersOrdersToProcess");
+	elseif ($search_status == '3,4') $title .= ' - '.$langs->trans("SuppliersOrdersAwaitingReception");
+	elseif ($search_status == '1,2,3') $title .= ' - '.$langs->trans("StatusOrderToProcessShort");
+	elseif ($search_status == '6,7') $title .= ' - '.$langs->trans("StatusOrderCanceled");
+	elseif (is_numeric($search_status) && $search_status >= 0) $title .= ' - '.$commandestatic->LibStatut($search_status);
+}*/
 if ($search_billed > 0) $title .= ' - '.$langs->trans("Billed");
 
 //$help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
@@ -525,11 +531,6 @@ $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON cf.fk_user_author = u.rowid";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = cf.fk_projet";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (!$user->rights->societe->client->voir && !$socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-if ($search_user > 0)
-{
-	$sql .= ", ".MAIN_DB_PREFIX."element_contact as ec";
-	$sql .= ", ".MAIN_DB_PREFIX."c_type_contact as tc";
-}
 $sql .= ' WHERE cf.fk_soc = s.rowid';
 $sql .= ' AND cf.entity IN ('.getEntity('supplier_order').')';
 if ($socid > 0) $sql .= " AND s.rowid = ".$socid;
@@ -544,7 +545,7 @@ if ($search_product_category > 0) $sql .= " AND cp.fk_categorie = ".$search_prod
 //Required triple check because statut=0 means draft filter
 if (GETPOST('statut', 'intcomma') !== '')
 	$sql .= " AND cf.fk_statut IN (".$db->escape($db->escape(GETPOST('statut', 'intcomma'))).")";
-if ($search_status != '' && $search_status >= 0)
+if ($search_status != '' && $search_status != '-1')
 	$sql .= " AND cf.fk_statut IN (".$db->escape($search_status).")";
 $sql .= dolSqlDateFilter("cf.date_commande", $search_orderday, $search_ordermonth, $search_orderyear);
 $sql .= dolSqlDateFilter("cf.date_livraison", $search_deliveryday, $search_deliverymonth, $search_deliveryyear);
@@ -555,7 +556,15 @@ if ($search_country) $sql .= " AND s.fk_pays IN (".$db->escape($search_country).
 if ($search_type_thirdparty) $sql .= " AND s.fk_typent IN (".$db->escape($search_type_thirdparty).')';
 if ($search_company) $sql .= natural_search('s.nom', $search_company);
 if ($search_sale > 0) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = ".$db->escape($search_sale);
-if ($search_user > 0) $sql .= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='supplier_order' AND tc.source='internal' AND ec.element_id = cf.rowid AND ec.fk_socpeople = ".$db->escape($search_user);
+if ($search_user > 0) {
+	$sql .= " AND EXISTS (";
+	$sql .= " SELECT ec.rowid ";
+	$sql .= " FROM " . MAIN_DB_PREFIX . "element_contact as ec";
+	$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "c_type_contact as tc ON tc.rowid = ec.fk_c_type_contact";
+	$sql .= " WHERE ec.element_id = cf.rowid AND ec.fk_socpeople = " . ((int) $search_user);
+	$sql .= " AND tc.element = 'order_supplier' AND tc.source = 'internal'";
+	$sql .= ")";
+}
 if ($search_total_ht != '') $sql .= natural_search('cf.total_ht', $search_total_ht, 1);
 if ($search_total_vat != '') $sql .= natural_search('cf.tva', $search_total_vat, 1);
 if ($search_total_ttc != '') $sql .= natural_search('cf.total_ttc', $search_total_ttc, 1);
@@ -591,17 +600,6 @@ $sql .= $db->plimit($limit + 1, $offset);
 $resql = $db->query($sql);
 if ($resql)
 {
-	if ($socid > 0)
-	{
-		$soc = new Societe($db);
-		$soc->fetch($socid);
-		$title = $langs->trans('ListOfSupplierOrders').' - '.$soc->name;
-	}
-	else
-	{
-		$title = $langs->trans('ListOfSupplierOrders');
-	}
-
 	$num = $db->num_rows($resql);
 
 	$arrayofselected = is_array($toselect) ? $toselect : array();
@@ -640,7 +638,7 @@ if ($resql)
 	if ($search_multicurrency_montant_vat != '')  $param .= '&search_multicurrency_montant_vat='.urlencode($search_multicurrency_montant_vat);
 	if ($search_multicurrency_montant_ttc != '') $param .= '&search_multicurrency_montant_ttc='.urlencode($search_multicurrency_montant_ttc);
 	if ($search_refsupp) 		$param .= "&search_refsupp=".urlencode($search_refsupp);
-	if ($search_status >= 0)  	$param .= "&search_status=".urlencode($search_status);
+	if ($search_status != '' && $search_status != '-1') $param .= "&search_status=".urlencode($search_status);
 	if ($search_project_ref >= 0) $param .= "&search_project_ref=".urlencode($search_project_ref);
 	if ($search_billed != '')   $param .= "&search_billed=".urlencode($search_billed);
 	if ($show_files)            $param .= '&show_files='.urlencode($show_files);
@@ -927,7 +925,7 @@ if ($resql)
 	if (!empty($arrayfields['cf.fk_statut']['checked']))
 	{
 		print '<td class="liste_titre right">';
-		$formorder->selectSupplierOrderStatus((strstr($search_status, ',') ?-1 : $search_status), 1, 'search_status');
+		$formorder->selectSupplierOrderStatus($search_status, 1, 'search_status');
 		print '</td>';
 	}
 	// Status billed

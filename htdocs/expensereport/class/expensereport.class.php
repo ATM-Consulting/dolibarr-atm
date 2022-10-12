@@ -318,6 +318,7 @@ class ExpenseReport extends CommonObject
         	            if ($result < 0)
         	            {
         	                $this->error = $newndfline->error;
+							$this->errors = $newndfline->errors;
         	                $error++;
         	                break;
         	            }
@@ -1801,6 +1802,7 @@ class ExpenseReport extends CommonObject
 			$localtaxes_type = getLocalTaxesFromRate($vatrate, 0, $mysoc, $this->thirdparty);
 
 			$vat_src_code = '';
+			$reg = array();
 			if (preg_match('/\s*\((.*)\)/', $vatrate, $reg))
 			{
 				$vat_src_code = $reg[1];
@@ -2046,6 +2048,7 @@ class ExpenseReport extends CommonObject
 
             // Clean vat code
             $vat_src_code = '';
+            $reg = array();
             if (preg_match('/\((.*)\)/', $vatrate, $reg))
             {
                 $vat_src_code = $reg[1];
@@ -2060,10 +2063,6 @@ class ExpenseReport extends CommonObject
 
             $tx_tva = $vatrate / 100;
             $tx_tva = $tx_tva + 1;
-            $total_ht = price2num($total_ttc / $tx_tva, 'MT');
-
-            $total_tva = price2num($total_ttc - $total_ht, 'MT');
-            // fin calculs
 
             $this->line = new ExpenseReportLine($this->db);
             $this->line->comments        = $comments;
@@ -2236,7 +2235,7 @@ class ExpenseReport extends CommonObject
         $sql = "SELECT DISTINCT ur.fk_user";
         $sql .= " FROM ".MAIN_DB_PREFIX."user_rights as ur, ".MAIN_DB_PREFIX."rights_def as rd";
         $sql .= " WHERE ur.fk_id = rd.id and rd.module = 'expensereport' AND rd.perms = 'approve'"; // Permission 'Approve';
-        $sql .= "UNION";
+        $sql .= " UNION";
         $sql .= " SELECT DISTINCT ugu.fk_user";
         $sql .= " FROM ".MAIN_DB_PREFIX."usergroup_user as ugu, ".MAIN_DB_PREFIX."usergroup_rights as ur, ".MAIN_DB_PREFIX."rights_def as rd";
         $sql .= " WHERE ugu.fk_usergroup = ur.fk_usergroup AND ur.fk_id = rd.id and rd.module = 'expensereport' AND rd.perms = 'approve'"; // Permission 'Approve';
