@@ -199,6 +199,7 @@ foreach (array('internal', 'external') as $source) {
 		$entry = new stdClass();
 		$entry->id   = $contact['rowid'];
 		$entry->type = $contact['libelle'];
+		$entry->poste = "";
 		$entry->nature = "";
 		$entry->thirdparty_html = "";
 		$entry->thirdparty_name = "";
@@ -225,10 +226,12 @@ foreach (array('internal', 'external') as $source) {
 			$userstatic->fetch($contact['id']);
 			$entry->contact_html = $userstatic->getNomUrl(-1, '', 0, 0, 0, 0, '', 'valignmiddle');
 			$entry->contact_name = strtolower($userstatic->getFullName($langs));
+			$entry->poste = $userstatic->job;
 		} elseif ($contact['source'] == 'external') {
 			$contactstatic->fetch($contact['id']);
 			$entry->contact_html = $contactstatic->getNomUrl(1, '', 0, '', 0, 0);
 			$entry->contact_name = strtolower($contactstatic->getFullName($langs));
+			$entry->poste = $contactstatic->poste;
 		}
 
 		if ($contact['source'] == 'internal') {
@@ -261,6 +264,7 @@ $arrayfields = array(
 	'thirdparty' 	=> array('label'=>$langs->trans("ThirdParty"), 'checked'=>1),
 	'contact' 		=> array('label'=>$langs->trans("Users").'/'.$langs->trans("Contacts"), 'checked'=>1),
 	'type' 			=> array('label'=>$langs->trans("ContactType"), 'checked'=>1),
+	'poste' 		=> array('label'=>$langs->trans("PostOrFunction"), 'checked'=>1),
 	'status' 		=> array('label'=>$langs->trans("Status"), 'checked'=>1),
 	'link' 			=> array('label'=>$langs->trans("Link"), 'checked'=>1),
 );
@@ -287,6 +291,7 @@ print '<tr class="liste_titre">';
 print_liste_field_titre($arrayfields['thirdparty']['label'], $_SERVER["PHP_SELF"], "thirdparty_name", "", $param, "", $sortfield, $sortorder);
 print_liste_field_titre($arrayfields['contact']['label'], $_SERVER["PHP_SELF"], "contact_name", "", $param, "", $sortfield, $sortorder);
 print_liste_field_titre($arrayfields['nature']['label'], $_SERVER["PHP_SELF"], "nature", "", $param, "", $sortfield, $sortorder);
+print_liste_field_titre($arrayfields['poste']['label'], $_SERVER["PHP_SELF"], "poste", "", $param, "", $sortfield, $sortorder);
 print_liste_field_titre($arrayfields['type']['label'], $_SERVER["PHP_SELF"], "type", "", $param, "", $sortfield, $sortorder);
 print_liste_field_titre($arrayfields['status']['label'], $_SERVER["PHP_SELF"], "statut", "", $param, "", $sortfield, $sortorder, 'center ');
 print_liste_field_titre('', $_SERVER["PHP_SELF"], "", "", "", "", $sortfield, $sortorder, 'center maxwidthsearch ');
@@ -298,6 +303,7 @@ foreach ($list as $entry) {
 	print '<td class="tdoverflowmax200">'.$entry->thirdparty_html.'</td>';
 	print '<td class="tdoverflowmax200">'.$entry->contact_html.'</td>';
 	print '<td class="nowrap"><span class="opacitymedium">'.$entry->nature.'</span></td>';
+	print '<td class="nowrap">'.$entry->poste.'</td>';
 	print '<td class="tdoverflowmax200">'.$entry->type.'</td>';
 	print '<td class="tdoverflowmax200 center">'.$entry->status.'</td>';
 
