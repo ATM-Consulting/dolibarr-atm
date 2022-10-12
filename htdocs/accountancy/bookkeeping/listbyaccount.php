@@ -156,7 +156,7 @@ if (empty($search_date_start) && empty($search_date_end) && !GETPOSTISSET('searc
 }
 
 $arrayfields = array(
-	// 't.subledger_account'=>array('label'=>$langs->trans("SubledgerAccount"), 'checked'=>1),
+	't.numero_compte'=>array('label'=>$langs->trans("AccountAccountingShort"), 'checked'=>0),
 	't.piece_num'=>array('label'=>$langs->trans("TransactionNumShort"), 'checked'=>1),
 	't.code_journal'=>array('label'=>$langs->trans("Codejournal"), 'checked'=>1),
 	't.doc_date'=>array('label'=>$langs->trans("Docdate"), 'checked'=>1),
@@ -280,6 +280,10 @@ if (empty($reshook)) {
 	if (!empty($search_doc_date)) {
 		$filter['t.doc_date'] = $search_doc_date;
 		$param .= '&doc_datemonth='.GETPOST('doc_datemonth', 'int').'&doc_dateday='.GETPOST('doc_dateday', 'int').'&doc_dateyear='.GETPOST('doc_dateyear', 'int');
+	}
+	if (!empty($search_accountancy_code)) {
+		$filter['t.numero_compte'] = $search_accountancy_code;
+		$param .= '&search_accountancy_code=' . urlencode($search_accountancy_code);
 	}
 	if (!empty($search_accountancy_code_start)) {
 		if ($type == 'sub') {
@@ -712,6 +716,12 @@ print '<table class="tagtable liste centpercent">';
 // Filters lines
 print '<tr class="liste_titre_filter">';
 
+// Accounting Account
+if (!empty($arrayfields['t.numero_compte']['checked'])) {
+	print '<td class="liste_titre">';
+	//print $formaccounting->select_account($search_accountancy_code, 'search_accountancy_code', 1, array(), 1, 1, 'maxwidth200');
+	print '</td>';
+}
 // Movement number
 if (!empty($arrayfields['t.piece_num']['checked'])) {
 	print '<td class="liste_titre"><input type="text" name="search_mvt_num" size="6" value="'.dol_escape_htmltag($search_mvt_num).'"></td>';
@@ -799,6 +809,9 @@ print '</td>';
 print "</tr>\n";
 
 print '<tr class="liste_titre">';
+if (!empty($arrayfields['t.numero_compte']['checked'])) {
+	print_liste_field_titre($arrayfields['t.numero_compte']['label'], $_SERVER['PHP_SELF'], "t.numero_compte", "", $param, '', $sortfield, $sortorder);
+}
 if (!empty($arrayfields['t.piece_num']['checked'])) {
 	print_liste_field_titre($arrayfields['t.piece_num']['label'], $_SERVER['PHP_SELF'], "t.piece_num", "", $param, '', $sortfield, $sortorder);
 }
@@ -865,6 +878,7 @@ while ($i < min($num, $limit)) {
 
 	$colspan = 0;			// colspan before field 'label of operation'
 	$colspanend = 3;		// colspan after debit/credit
+	if (!empty($arrayfields['t.numero_compte']['checked'])) { $colspan++; }
 	if (!empty($arrayfields['t.piece_num']['checked'])) { $colspan++; }
 	if (!empty($arrayfields['t.code_journal']['checked'])) { $colspan++; }
 	if (!empty($arrayfields['t.doc_date']['checked'])) { $colspan++; }
@@ -944,6 +958,16 @@ while ($i < min($num, $limit)) {
 	}
 
 	print '<tr class="oddeven">';
+
+	// Accounting account
+	if (!empty($arrayfields['t.numero_compte']['checked'])) {
+		print '<td>';
+		print length_accountg($line->numero_compte);
+		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
 
 	// Piece number
 	if (!empty($arrayfields['t.piece_num']['checked'])) {
