@@ -5505,9 +5505,13 @@ if ($action == 'create') {
 				}
 				// For deposit invoice
 				if ($object->type == Facture::TYPE_DEPOSIT && $usercancreate && $object->statut > Facture::STATUS_DRAFT && empty($discount->id)) {
-					if (price2num($sumofpaymentall, 'MT') <= price2num($object->total_ttc, 'MT')) {
-						// We can close a down payment only if paid amount is same than amount of down payment (by definition)
-						print '<a class="butAction'.($conf->use_javascript_ajax ? ' reposition' : '').'" href="'.$_SERVER["PHP_SELF"].'?facid='.$object->id.'&amp;action=converttoreduc">'.$langs->trans('ConvertToReduc').'</a>';
+					if ($resteapayer != 0) {
+						if (price2num($sumofpaymentall, 'MT') <= price2num($object->total_ttc, 'MT')) {
+							// We can close a down payment only if paid amount is same than amount of down payment (by definition)
+							print '<a class="butAction' . ($conf->use_javascript_ajax ? ' reposition' : '') . '" href="' . $_SERVER["PHP_SELF"] . '?facid=' . $object->id . '&amp;action=converttoreduc">' . $langs->trans('ConvertToReduc') . '</a>';
+						} else {
+							print '<span class="butActionRefused" title="'.$langs->trans("AmountPaidMustMatchAmountOfDownPayment").'">'.$langs->trans('ConvertToReduc').'</span>';
+						}
 					} else {
 						print '<span class="butActionRefused" title="'.$langs->trans("AmountPaidMustMatchAmountOfDownPayment").'">'.$langs->trans('ConvertToReduc').'</span>';
 					}
