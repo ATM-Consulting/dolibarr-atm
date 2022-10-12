@@ -11,6 +11,7 @@ BillsSuppliersUnpaidForCompany=Factures fournisseur impayées pour %s
 BillsLate=Retards de paiement
 BillsStatistics=Statistiques factures clients
 BillsStatisticsSuppliers=Statistiques factures fournisseurs
+DisabledBecauseEditedAnInvoiceIsProhibited=Action désactivée car l'édition des factures est interdite
 DisabledBecauseDispatchedInBookkeeping=Action désactivée car facture comptabilisée dans le grand livre
 DisabledBecauseNotLastInvoice=Action désactivée car facture non supprimable. Des factures ont été créées après celle-ci et cela va créer un trou dans la numérotation des factures.
 DisabledBecauseNotErasable=Désactivé car non supprimable

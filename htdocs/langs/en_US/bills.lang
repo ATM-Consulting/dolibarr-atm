@@ -11,6 +11,7 @@ BillsSuppliersUnpaidForCompany=Unpaid vendors invoices for %s
 BillsLate=Late payments
 BillsStatistics=Customers invoices statistics
 BillsStatisticsSuppliers=Vendors invoices statistics
+DisabledBecauseEditedAnInvoiceIsProhibited=Disabled because edited an invoice is prohibited
 DisabledBecauseDispatchedInBookkeeping=Disabled because invoice was dispatched into bookkeeping
 DisabledBecauseNotLastInvoice=Disabled because invoice is not erasable. Some invoices were recorded after this one and it will create holes in the counter.
 DisabledBecauseNotErasable=Disabled because cannot be erased

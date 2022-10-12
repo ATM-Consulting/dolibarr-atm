@@ -5383,18 +5383,22 @@ if ($action == 'create') {
 				$ventilExportCompta = $object->getVentilExportCompta();
 
 				if ($ventilExportCompta == 0) {
-					if (!empty($conf->global->INVOICE_CAN_ALWAYS_BE_EDITED) || ($resteapayer == price2num($object->total_ttc, 'MT', 1) && empty($object->paye))) {
-						if (!$objectidnext && $object->is_last_in_cycle()) {
-							if ($usercanunvalidate) {
-								print '<a class="butAction'.($conf->use_javascript_ajax ? ' reposition' : '').'" href="'.$_SERVER['PHP_SELF'].'?facid='.$object->id.'&amp;action=modif">'.$langs->trans('Modify').'</a>';
+					if (empty($conf->global->INVOICE_CAN_NEVER_BE_EDITED)) {
+						if (!empty($conf->global->INVOICE_CAN_ALWAYS_BE_EDITED) || ($resteapayer == price2num($object->total_ttc, 'MT', 1) && empty($object->paye))) {
+							if (!$objectidnext && $object->is_last_in_cycle()) {
+								if ($usercanunvalidate) {
+									print '<a class="butAction' . ($conf->use_javascript_ajax ? ' reposition' : '') . '" href="' . $_SERVER['PHP_SELF'] . '?facid=' . $object->id . '&amp;action=modif">' . $langs->trans('Modify') . '</a>';
+								} else {
+									print '<span class="butActionRefused classfortooltip" title="' . $langs->trans("NotEnoughPermissions") . '">' . $langs->trans('Modify') . '</span>';
+								}
+							} elseif (!$object->is_last_in_cycle()) {
+								print '<span class="butActionRefused classfortooltip" title="' . $langs->trans("NotLastInCycle") . '">' . $langs->trans('Modify') . '</span>';
 							} else {
-								print '<span class="butActionRefused classfortooltip" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans('Modify').'</span>';
+								print '<span class="butActionRefused classfortooltip" title="' . $langs->trans("DisabledBecauseReplacedInvoice") . '">' . $langs->trans('Modify') . '</span>';
 							}
-						} elseif (!$object->is_last_in_cycle()) {
-							print '<span class="butActionRefused classfortooltip" title="'.$langs->trans("NotLastInCycle").'">'.$langs->trans('Modify').'</span>';
-						} else {
-							print '<span class="butActionRefused classfortooltip" title="'.$langs->trans("DisabledBecauseReplacedInvoice").'">'.$langs->trans('Modify').'</span>';
 						}
+					} else {
+						print '<span class="butActionRefused classfortooltip" title="' . $langs->trans("DisabledBecauseEditedAnInvoiceIsProhibited") . '">' . $langs->trans('Modify') . '</span>';
 					}
 				} else {
 					print '<span class="butActionRefused classfortooltip" title="'.$langs->trans("DisabledBecauseDispatchedInBookkeeping").'">'.$langs->trans('Modify').'</span>';
