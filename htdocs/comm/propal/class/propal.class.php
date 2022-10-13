@@ -1324,6 +1324,7 @@ class Propal extends CommonObject
 	 *      @param	    User	$user		    User making the clone
 	 *		@param		int		$socid			Id of thirdparty
 	 *		@param		int		$forceentity	Entity id to force
+	 *		@param		bool	$targetThirdPartyVat	whether to use the VAT rate of the target third party
 	 * 	 	@return		int						New id of clone
 	 */
 	public function createFromClone(User $user, $socid = 0, $forceentity = null, $targetThirdPartyVat = false)
