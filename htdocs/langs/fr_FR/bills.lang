@@ -608,3 +608,4 @@ SearchUnpaidInvoicesWithDueDate=Rechercher les factures impayées avec date d'é
 NoPaymentAvailable=Aucun paiement disponible pour %s
 PaymentRegisteredAndInvoiceSetToPaid=Paiement enregistré et facture %s passée à payée
 SendEmailsRemindersOnInvoiceDueDate=Envoyer un rappel par e-mail pour les factures impayées
+targetThirdPartyVat=Modifier le taux de TVA pour utiliser le taux par défaut en fonction du nouveau tiers

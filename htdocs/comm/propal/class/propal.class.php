@@ -1326,7 +1326,7 @@ class Propal extends CommonObject
 	 *		@param		int		$forceentity	Entity id to force
 	 * 	 	@return		int						New id of clone
 	 */
-	public function createFromClone(User $user, $socid = 0, $forceentity = null)
+	public function createFromClone(User $user, $socid = 0, $forceentity = null, $targetThirdPartyVat = false)
 	{
 		global $conf, $hookmanager;
 
@@ -1393,6 +1393,16 @@ class Propal extends CommonObject
 			$object->note_private = '';
 			$object->note_public = '';
 		}
+
+		// we have a different thirdparty selected and we checked $targetThirdPartyVat
+		if ($objFrom->socid != $object->socid && $targetThirdPartyVat) {
+			global $mysoc;
+
+			foreach ($object->lines as $line) {
+				$line->tva_tx = get_default_tva($mysoc, $objsoc, $line->fk_product);
+			}
+		}
+
 		// Create clone
 		$object->context['createfromclone'] = 'createfromclone';
 		$result = $object->create($user);
