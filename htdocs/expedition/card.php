@@ -1058,6 +1058,9 @@ if ($action == 'create') {
 				}
 				print '<span id="autoreset" class="opacitymedium link cursor cursorpointer">'.img_picto($langs->trans("Reset"), 'eraser').'</span>';
 				print '</td>';
+
+				print '<td class="center">'.$langs->trans("StockEntryDate").'</td>';
+
 				if (!empty($conf->stock->enabled)) {
 					if (empty($conf->productbatch->enabled)) {
 						print '<td class="left">'.$langs->trans("Warehouse").' ('.$langs->trans("Stock").')</td>';
@@ -1204,6 +1207,8 @@ if ($action == 'create') {
 							}
 							print '</td>';
 
+							print '<td></td>';
+
 							// Stock
 							if (!empty($conf->stock->enabled)) {
 								print '<td class="left">';
@@ -1283,6 +1288,11 @@ if ($action == 'create') {
 									print '<input class="qtyl" name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'_'.$subj.'" type="text" size="4" value="'.$deliverableQty.'">';
 									print '</td>';
 
+									// Stock Entry Date
+									print '<td class="center">';
+									print 'banane';
+									print '</td>';
+
 									print '<!-- Show details of lot -->';
 									print '<td class="left">';
 
@@ -1313,6 +1323,9 @@ if ($action == 'create') {
 								print '<!-- Case there is no details of lot at all -->';
 								print '<tr class="oddeven"><td colspan="3"></td><td class="center">';
 								print '<input class="qtyl" name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'_'.$subj.'" type="text" size="4" value="0" disabled="disabled"> ';
+								print '</td>';
+
+								print '<td>';
 								print '</td>';
 
 								print '<td class="left">';
@@ -1533,6 +1546,8 @@ if ($action == 'create') {
 								print $langs->trans("NA");
 							}
 							print '</td>';
+
+							print '<td></td>';
 
 							print '<td class="left">';
 							if ($line->product_type == Product::TYPE_PRODUCT || !empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
