@@ -264,3 +264,4 @@ ProductBatchDoesNotExist=Le produit avec ce lot/série n'existe pas
 ProductBarcodeDoesNotExist=Le produit avec ce code-barres n'existe pas
 WarehouseId=ID entrepôt
 WarehouseRef=Réf entrepôt
+StockEntryDate=Dernière date <br>d'entrée en stock
