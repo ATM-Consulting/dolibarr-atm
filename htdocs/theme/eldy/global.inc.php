@@ -7119,6 +7119,7 @@ tr.liste_titre th {
 	position: sticky;
 	top: 50px;
 	background: #e9eaed;
+	z-index: 1;
 }
 
 
