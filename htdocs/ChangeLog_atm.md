@@ -3,5 +3,8 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 
+## [1.1.0] - 18-10-2022
+- NEW : Ajout d'une colonne "Dernière date d'entrée en stock" sur la fiche expédition
+
 ## [1.0.0] - 05-07-2022
 - FIX : import standard sur mauvaise entité
