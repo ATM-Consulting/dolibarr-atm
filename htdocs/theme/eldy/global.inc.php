@@ -7108,6 +7108,19 @@ if (!empty($conf->global->THEME_CUSTOM_CSS)) {
 
 ?>
 
+
+/* ============================================================================== */
+/* Specific Eurochef - sticky table header                                        */
+/* ============================================================================== */
+.div-table-responsive-no-min {
+	overflow-x: unset;
+}
+tr.liste_titre th {
+	position: sticky;
+	top: 0;
+}
+
+
 	div.extra_inline_chkbxlst,
 	div.extra_inline_checkbox {
 		min-width:150px;
