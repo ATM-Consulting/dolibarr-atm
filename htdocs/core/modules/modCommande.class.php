@@ -140,6 +140,14 @@ class modCommande extends DolibarrModules
 		$this->rights[$r][5] = 'validate';
 
 		$r++;
+		$this->rights[$r][0] = 85;
+		$this->rights[$r][1] = 'Classify billed / unbilled';
+		$this->rights[$r][2] = 'd';
+		$this->rights[$r][3] = 0;
+		$this->rights[$r][4] = 'order_advance';
+		$this->rights[$r][5] = 'classifybilled';
+
+		$r++;
 		$this->rights[$r][0] = 86;
 		$this->rights[$r][1] = 'Send sale orders by email';
 		$this->rights[$r][2] = 'd';
