@@ -7117,7 +7117,8 @@ if (!empty($conf->global->THEME_CUSTOM_CSS)) {
 }
 tr.liste_titre th {
 	position: sticky;
-	top: 0;
+	top: 50px;
+	background: #e9eaed;
 }
 
 
