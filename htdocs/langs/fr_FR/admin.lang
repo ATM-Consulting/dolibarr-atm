@@ -737,6 +737,7 @@ Permission79=Créer/modifier les cotisations
 Permission81=Consulter les commandes clients
 Permission82=Créer/modifier les commandes clients
 Permission84=Valider les commandes clients
+Permission85=Classifier la commande facturée / non facturée
 Permission86=Envoyer les commandes clients
 Permission87=Clôturer les commandes clients
 Permission88=Annuler les commandes clients
