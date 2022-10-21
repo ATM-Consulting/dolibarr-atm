@@ -162,7 +162,7 @@ $search_array_options_task = $extrafields->getOptionalsFromPost('projet_task', '
 
 // T2004 (retour) - filtrer sur état "EN COURS" quand on arrive sur la page, mais permettre à l’utilisateur
 // de modifier ce filtrage
-if (!isset($_REQUEST['search_task_options_statut'])) {
+if (!isset($_REQUEST['search_task_options_statut']) && empty(GETPOST('button_search_x', 'alpha'))) {
 	$search_array_options_task['search_task_options_statut'] = 2;
 }
 
