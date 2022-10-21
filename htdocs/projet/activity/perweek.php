@@ -45,8 +45,8 @@ $taskid = GETPOST('taskid', 'int');
 
 $contextpage = GETPOST('contextpage', 'aZ') ?GETPOST('contextpage', 'aZ') : 'perweekcard';
 
-$mine = 1;
-if ($mode === 'view_all') $mine=0;
+if ($mode === 'mine') $mine=0;
+else $mine=1;
 
 $projectid = GETPOSTISSET("id") ? GETPOST("id", "int", 1) : GETPOST("projectid", "int");
 
@@ -769,7 +769,8 @@ if ($conf->use_javascript_ajax) {
 
 
 // By default, we can edit only tasks we are assigned to
-$restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 2 : $conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED);
+//BACKPORT SYAGE : update line to associate to FilterOutTasksNotAssignedToUser spec dev
+$restrictviewformytask = ((!isset($conf->global->PROJECT_TIME_SHOW_TASK_NOT_ASSIGNED)) ? 1 : 0);
 if (count($tasksarray) > 0) {
 	//var_dump($tasksarray);				// contains only selected tasks
 	//var_dump($tasksarraywithoutfilter);	// contains all tasks (if there is a filter, not defined if no filter)
