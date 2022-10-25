@@ -455,9 +455,15 @@ if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlin
 	$coldisplay = $coldisplay + 3;
 }
 
-if ($action == 'selectlines') { ?>
-	<td class="linecolcheck center"><input type="checkbox" class="linecheckbox" name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
-<?php }
+if ($conf->global->PROPAL_CARD_ENABLED_SELECTLINES_TEST && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
+	$checked = '';
+	if (in_array($line->id,$toselect)){
+		$checked = 'checked';
+	}
+	?>
+	<td class="linecolcheck center"><input type="checkbox" class="linecheckbox"<?php print $checked; ?> name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
+	<?php
+}
 
 print "</tr>\n";
 

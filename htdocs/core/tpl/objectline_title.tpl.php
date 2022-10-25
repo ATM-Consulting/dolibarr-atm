@@ -155,10 +155,9 @@ print '<th class="linecoldelete" style="width: 10px"></th>';
 
 print '<th class="linecolmove" style="width: 10px"></th>';
 
-if ($action == 'selectlines') {
+if ($conf->global->PROPAL_CARD_ENABLED_SELECTLINES_TEST && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
 	print '<th class="linecolcheckall center">';
 	print '<input type="checkbox" class="linecheckboxtoggle" />';
-	print '<script>$(document).ready(function() {$(".linecheckboxtoggle").click(function() {var checkBoxes = $(".linecheckbox");checkBoxes.prop("checked", this.checked);})});</script>';
 	print '</th>';
 }
 
