@@ -1032,6 +1032,9 @@ textarea.centpercent {
 .cursormove {
 	cursor: move;
 }
+.cursorwait {
+	cursor: wait;
+}
 .cursornotallowed {
 	cursor: not-allowed;
 }
@@ -2542,6 +2545,11 @@ a.tmenudisabled:link, a.tmenudisabled:visited, a.tmenudisabled:hover, a.tmenudis
 	white-space: nowrap;
 	color: #<?php echo $colortextbackhmenu; ?>;
 	text-decoration: none;
+	cursor: not-allowed;
+}
+span.mainmenuaspan.tmenudisabled {
+	color: var(--colortextbackhmenu);
+	opacity: 0.5;
 	cursor: not-allowed;
 }
 
@@ -4676,8 +4684,13 @@ span.buttonpaymentsmall {
 #tablepublicpayment tr.liste_total td { border-top: none; }
 
 .divmainbodylarge { margin-left: 40px; margin-right: 40px; }
+.publicnewmemberform div.titre { font-size: 2em; }
 #divsubscribe { max-width: 900px; }
+#divsubscribe .eventlabel { font-size: 1.5em; }
 #tablesubscribe { width: 100%; }
+#tablesubscribe tr td { font-size: 1.15em; }
+#tablesubscribe .price-registration { font-size: 1.5em; }
+
 
 div#card-element {
 	border: 1px solid #ccc;

@@ -1293,7 +1293,8 @@ if ($resql) {
 		print '<td>';
 		if (!empty($conf->stock->enabled) && !empty($conf->global->STOCK_CALCULATE_ON_BILL)) {
 			print $form->selectyesno('validate_invoices', 0, 1, 1);
-			print ' ('.$langs->trans("AutoValidationNotPossibleWhenStockIsDecreasedOnInvoiceValidation").')';
+			$langs->load("errors");
+			print ' ('.$langs->trans("WarningAutoValNotPossibleWhenStockIsDecreasedOnInvoiceVal").')';
 		} else {
 			print $form->selectyesno('validate_invoices', 0, 1);
 		}
@@ -2333,7 +2334,7 @@ if ($resql) {
 
 							// Get local and virtual stock and store it into cache
 							if (empty($productstat_cache[$generic_commande->lines[$lig]->fk_product])) {
-								$generic_product->load_stock('nobatch'); // ->load_virtual_stock() is already included into load_stock()
+								$generic_product->load_stock('nobatch,warehouseopen'); // ->load_virtual_stock() is already included into load_stock()
 								$productstat_cache[$generic_commande->lines[$lig]->fk_product]['stock_reel'] = $generic_product->stock_reel;
 								$productstat_cachevirtual[$generic_commande->lines[$lig]->fk_product]['stock_reel'] = $generic_product->stock_theorique;
 							} else {

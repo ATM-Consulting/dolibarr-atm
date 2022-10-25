@@ -136,22 +136,32 @@ class Facture extends CommonInvoice
 	/**
 	 * @var int	Date expected for delivery
 	 * @deprecated
+	 * @see delivery_date
 	 */
-	public $date_livraison; // deprecated; Use delivery_date instead.
+	public $date_livraison;
 
+	/**
+	 * @var int	Date expected for delivery
+	 */
 	public $delivery_date; // Date expected of shipment (date starting shipment, not the reception that occurs some days after)
 
 	/**
 	 * @var string customer ref
+	 * @deprecated
+	 * @see ref_customer
 	 */
-	public $ref_client;		// deprecated; use ref_customer instead
+	public $ref_client;
+
+	/**
+	 * @var string customer ref
+	 */
 	public $ref_customer;
 
 	/**
 	 * @var int Ref Int
 	 * @deprecated
 	 */
-	public $ref_int; // deprecated
+	public $ref_int;
 
 	//Check constants for types
 	public $type = self::TYPE_STANDARD;
@@ -872,7 +882,7 @@ class Facture extends CommonInvoice
 						);
 
 						// Defined the new fk_parent_line
-						if ($result > 0) {
+						if ($result > 0 && $newinvoiceline->product_type == 9) {
 							$fk_parent_line = $result;
 						}
 					}
@@ -3623,7 +3633,7 @@ class Facture extends CommonInvoice
 
 		global $mysoc, $conf, $langs;
 
-		dol_syslog(get_class($this)."::addline id=$this->id,desc=$desc,pu_ht=$pu_ht,qty=$qty,txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product,remise_percent=$remise_percent,date_start=$date_start,date_end=$date_end,ventil=$ventil,info_bits=$info_bits,fk_remise_except=$fk_remise_except,price_base_type=$price_base_type,pu_ttc=$pu_ttc,type=$type, fk_unit=$fk_unit", LOG_DEBUG);
+		dol_syslog(get_class($this)."::addline id=$this->id, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product, remise_percent=$remise_percent, date_start=$date_start, date_end=$date_end, ventil=$ventil, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, type=$type, fk_unit=$fk_unit, desc=".dol_trunc($desc, 25), LOG_DEBUG);
 
 		if ($this->statut == self::STATUS_DRAFT) {
 			include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
