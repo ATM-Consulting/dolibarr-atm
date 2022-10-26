@@ -244,7 +244,7 @@ function convertSecondToTime($iSecond, $format = 'all', $lengthOfDay = 86400, $l
 		$lengthOfWeek = 7; // 1 week = 7 days
 	}
 
-	if ($format == 'all' || $format == 'allwithouthour' || $format == 'allhour' || $format == 'allhourmin' || $format == 'allhourminsec') {
+	if ($format == 'all' || $format == 'allwithouthour' || $format == 'allhour' || $format == 'allhourmin' || $format == 'allhourminsec'|| $format == 'alldaydecimal') {
 		if ((int) $iSecond === 0) {
 			return '0'; // This is to avoid having 0 return a 12:00 AM for en_US
 		}
@@ -296,6 +296,20 @@ function convertSecondToTime($iSecond, $format = 'all', $lengthOfDay = 86400, $l
 		} elseif ($format == 'allhour') {
 			return sprintf("%02d", ($sWeek * $lengthOfWeek * 24 + $sDay * 24 + (int) floor($iSecond / 3600)));
 		}
+		//SPECIFIQUE CLIENT SYAGE
+		elseif ($format == 'alldaydecimal')
+		{
+			$total_days = ($sWeek * $lengthOfWeek + $sDay) + ($iSecond/$lengthOfDay);
+			if ($total_days == 0) $sTime = '';
+			else
+			{
+				if ($total_days >= 2) $dayTranslate = $langs->trans("Days");
+				else $dayTranslate = $langs->trans("Day");
+				$frounding = isset($conf->global->PROJECT_FORCE_ROUNDING_DECIMAL_DAY) ? $conf->global->PROJECT_FORCE_ROUNDING_DECIMAL_DAY : 3;
+				$sTime = price($total_days, 0, '', 1 , -1, $frounding).' '.$dayTranslate;
+			}
+		}
+		//SPECIFIQUE CLIENT SYAGE
 	} elseif ($format == 'hour') {	// only hour part
 		$sTime = dol_print_date($iSecond, '%H', true);
 	} elseif ($format == 'fullhour') {

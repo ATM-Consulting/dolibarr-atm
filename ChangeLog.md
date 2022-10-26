@@ -1,0 +1,1 @@
+- FIX : Gestion du type "alldaydecimal" dans la fonction convertSecondToTime - **26-10-2022**
