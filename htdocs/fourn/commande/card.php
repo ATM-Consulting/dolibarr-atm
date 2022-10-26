@@ -78,6 +78,8 @@ $lineid         = GETPOST('lineid', 'int');
 $rank = (GETPOST('rank', 'int') > 0) ? GETPOST('rank', 'int') : -1;
 $origin = GETPOST('origin', 'alpha');
 $originid = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int')); // For backward compatibility
+$massaction = GETPOST('massaction', 'alpha');
+$toselect = GETPOST('line_checkbox', 'array');
 
 //PDF
 $hidedetails = (GETPOST('hidedetails', 'int') ? GETPOST('hidedetails', 'int') : (!empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS) ? 1 : 0));
@@ -168,6 +170,14 @@ if (empty($reshook)) {
 				$backtopage = DOL_URL_ROOT.'/fourn/commande/card.php?id='.($id > 0 ? $id : '__ID__');
 			}
 		}
+	}
+
+	if (!empty($toselect)){
+		$objectclass = 'CommandeFournisseurLigne';
+		$uploaddir = $conf->fournisseur->commande->dir_output;
+		$permissiontodelete = $usercandelete;
+		include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
+		$action = '';
 	}
 
 	include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php'; // Must be include, not include_once
@@ -2310,6 +2320,19 @@ if ($action == 'create') {
 		include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
 	}
 
+	// List of mass actions available
+	$arrayofmassactions = array();
+
+	if ($usercandelete) {
+		$arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"') . $langs->trans('Delete');
+	}
+
+	if (in_array($massaction, array('predelete'))) {
+		$arrayofmassactions = array();
+	}
+
+	$massactionbutton = $form->selectMassAction('', $arrayofmassactions,0,'massaction','linecheckbox , .linecheckboxtoggle');
+
 	/*
 	 * Lines
 	 */
@@ -2328,6 +2351,9 @@ if ($action == 'create') {
 	if (!empty($conf->use_javascript_ajax) && $object->statut == 0) {
 		include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
 	}
+
+	print $massactionbutton;
+	include DOL_DOCUMENT_ROOT.'/core/tpl/massactions_pre.tpl.php';
 
 	print '<div class="div-table-responsive-no-min">';
 	print '<table id="tablelines" class="noborder noshadow centpercent">';
