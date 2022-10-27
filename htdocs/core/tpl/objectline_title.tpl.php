@@ -57,6 +57,7 @@ print '<th class="linecoldescription">'.$langs->trans('Description').'</th>';
 // Supplier ref
 if ($this->element == 'supplier_proposal' || $this->element == 'order_supplier' || $this->element == 'invoice_supplier') {
 	print '<th class="linerefsupplier maxwidth125"><span id="title_fourn_ref">'.$langs->trans("SupplierRef").'</span></th>';
+	print '<td></td>';
 }
 
 // Eurochef - Catalogue - Prix de vente et prix achat
@@ -155,7 +156,7 @@ print '<th class="linecoldelete" style="width: 10px"></th>';
 
 print '<th class="linecolmove" style="width: 10px"></th>';
 
-if ($conf->global->PROPAL_CARD_ENABLED_SELECTLINES_TEST && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
+if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
 	print '<th class="linecolcheckall center">';
 	print '<input type="checkbox" class="linecheckboxtoggle" />';
 	print '</th>';

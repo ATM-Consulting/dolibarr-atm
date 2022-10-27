@@ -163,6 +163,10 @@ if (empty($reshook)) {
 		$uploaddir = $conf->propal->multidir_output[$conf->entity];
 		$permissiontodelete = $usercandelete;
 		include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
+		if ($action == 'delete'){
+			header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $id);
+			exit();
+		}
 		$action = '';
 	}
 

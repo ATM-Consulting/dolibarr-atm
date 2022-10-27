@@ -4571,7 +4571,7 @@ abstract class CommonObject
 	 */
 	public function formAddObjectLine($dateSelector, $seller, $buyer, $defaulttpldir = '/core/tpl')
 	{
-		global $conf, $user, $langs, $object, $hookmanager, $extrafields;
+		global $conf, $user, $langs, $object, $hookmanager, $extrafields, $usercandelete;
 		global $form;
 
 		// Line extrafield
@@ -4691,7 +4691,7 @@ abstract class CommonObject
 			$i++;
 		}
 		print "</tbody><!-- end printObjectLines() -->\n";
-		if ($conf->global->PROPAL_CARD_ENABLED_SELECTLINES_TEST && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
+		if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
 			print '<script>$(".linecheckboxtoggle").click(function() {var checkBoxes = $(".linecheckbox");checkBoxes.prop("checked", this.checked);});</script>';
 		}
 	}
