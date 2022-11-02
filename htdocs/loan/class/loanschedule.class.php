@@ -23,6 +23,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/loan/class/loan.class.php';
 
 
 /**
@@ -60,6 +61,8 @@ class LoanSchedule extends CommonObject
     public $amount_capital;    // Total amount of payment
 	public $amount_insurance;
 	public $amount_interest;
+
+	public $payment_periodicity; // same as parent loan's Period duration
 
     /**
      * @var int Payment Type ID
@@ -154,12 +157,12 @@ class LoanSchedule extends CommonObject
 			$sql.= " fk_typepayment, fk_user_creat, fk_bank)";
 			$sql.= " VALUES (".$this->fk_loan.", '".$this->db->idate($now)."',";
 			$sql.= " '".$this->db->idate($this->datep)."',";
-			$sql.= " ".$this->amount_capital.",";
-			$sql.= " ".$this->amount_insurance.",";
-			$sql.= " ".$this->amount_interest.",";
-			$sql.= " ".$this->fk_typepayment.", ";
-			$sql.= " ".$user->id.",";
-			$sql.= " ".$this->fk_bank . ")";
+			$sql.= " ".(double) $this->amount_capital.",";
+			$sql.= " ".(double) $this->amount_insurance.",";
+			$sql.= " ".(double) $this->amount_interest.",";
+			$sql.= " ".(int) $this->fk_typepayment.", ";
+			$sql.= " ".(int) $user->id.",";
+			$sql.= " ".(int) $this->fk_bank . ")";
 
 			dol_syslog(get_class($this)."::create", LOG_DEBUG);
 			$resql=$this->db->query($sql);
@@ -169,7 +172,8 @@ class LoanSchedule extends CommonObject
 			}
 			else
 			{
-                $this->error=$this->db->lasterror();
+				$this->error = __FILE__ . ':' . __LINE__ . ":\n" . $this->db->lasterror() . "\n" . $this->db->lastqueryerror();
+                $this->errors[] = $this->error;
 				$error++;
 			}
 		}
@@ -402,17 +406,17 @@ class LoanSchedule extends CommonObject
 	/**
 	 * Calculate Monthly Payments
 	 *
-	 * @param   double  $capital        Capital
-	 * @param   double  $rate           rate
-	 * @param   int     $nbterm         nb term
-	 * @return  double                  mensuality
+	 * @param   double  $capital            Capital
+	 * @param   double  $rate               rate
+	 * @param   int     $nbPeriods          nb Period
+	 * @param   int     $nbMonthsPerPeriod  periodicity
+	 * @return  double  mensuality
 	 */
-	public function calcMonthlyPayments($capital, $rate, $nbterm)
+	public function calcMonthlyPayments($capital, $rate, $nbPeriods)
 	{
 		$result='';
-
-		if (!empty($capital) && !empty($rate) && !empty($nbterm)) {
-			$result = ($capital*($rate/12))/(1-pow((1+($rate/12)), ($nbterm*-1)));
+		if (!empty($capital) && !empty($rate) && !empty($nbPeriods)) {
+			$result = (($capital * ($rate / 12)) / (1 - pow((1 + ($rate / 12)), ($nbPeriods * -1))));
 		}
 
 		return $result;

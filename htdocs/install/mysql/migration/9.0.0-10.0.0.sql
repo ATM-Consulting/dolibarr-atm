@@ -96,7 +96,7 @@ ALTER TABLE llx_adherent ADD gender VARCHAR(10);
 ALTER TABLE llx_adherent_type ADD morphy VARCHAR(3);
 ALTER TABLE llx_subscription ADD fk_type integer;
 
-UPDATE llx_subscription as s SET fk_type = (SELECT fk_adherent_type FROM llx_adherent as a where a.rowid = s.fk_adherent) where fk_type IS NULL; 
+UPDATE llx_subscription as s SET fk_type = (SELECT fk_adherent_type FROM llx_adherent as a where a.rowid = s.fk_adherent) where fk_type IS NULL;
 
 -- Add url_id into unique index of bank_url
 ALTER TABLE llx_bank_url DROP INDEX uk_bank_url;
@@ -214,22 +214,22 @@ CREATE TABLE llx_bom_bom(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
 	entity integer DEFAULT 1 NOT NULL,
-	ref varchar(128) NOT NULL, 
-	label varchar(255), 
-	description text, 
-	note_public text, 
-	note_private text, 
-	fk_product integer, 
+	ref varchar(128) NOT NULL,
+	label varchar(255),
+	description text,
+	note_public text,
+	note_private text,
+	fk_product integer,
 	qty double(24,8),
 	efficiency double(8,4),
-	date_creation datetime NOT NULL, 
-	tms timestamp, 
-	date_valid datetime, 
-	fk_user_creat integer NOT NULL, 
-	fk_user_modif integer, 
-	fk_user_valid integer, 
-	import_key varchar(14), 
-	status integer NOT NULL 
+	date_creation datetime NOT NULL,
+	tms timestamp,
+	date_valid datetime,
+	fk_user_creat integer NOT NULL,
+	fk_user_modif integer,
+	fk_user_valid integer,
+	import_key varchar(14),
+	status integer NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;
 
@@ -247,13 +247,13 @@ create table llx_bom_bom_extrafields
 
 CREATE TABLE llx_bom_bomline(
 	-- BEGIN MODULEBUILDER FIELDS
-	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL, 
-	fk_bom integer NOT NULL, 
+	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	fk_bom integer NOT NULL,
 	fk_product integer NOT NULL,
-	fk_bom_child integer NULL, 
-	description text, 
-	import_key varchar(14), 
-	qty double(24,8) NOT NULL, 
+	fk_bom_child integer NULL,
+	description text,
+	import_key varchar(14),
+	qty double(24,8) NOT NULL,
 	efficiency double(8,4) NOT NULL DEFAULT 1,
 	position integer NOT NULL
 	-- END MODULEBUILDER FIELDS
@@ -320,8 +320,8 @@ ALTER TABLE llx_emailcollector_emailcollector ADD COLUMN maxemailpercollect inte
 DELETE FROM llx_const WHERE name = __ENCRYPT('THEME_ELDY_USE_HOVER')__ AND value = __ENCRYPT('0')__;
 DELETE FROM llx_const WHERE name = __ENCRYPT('THEME_ELDY_USE_CHECKED')__ AND value = __ENCRYPT('0')__;
 
-ALTER TABLE llx_inventorydet DROP COLUMN pmp; 
-ALTER TABLE llx_inventorydet DROP COLUMN pa; 
+ALTER TABLE llx_inventorydet DROP COLUMN pmp;
+ALTER TABLE llx_inventorydet DROP COLUMN pa;
 ALTER TABLE llx_inventorydet DROP COLUMN new_pmp;
 
 UPDATE llx_c_shipment_mode SET label = 'https://www.laposte.fr/outils/suivre-vos-envois?code={TRACKID}' WHERE code IN ('COLSUI');
@@ -340,23 +340,23 @@ create table llx_reception
   entity                integer  DEFAULT 1 NOT NULL,	-- multi company id
   fk_soc                integer            NOT NULL,
   fk_projet  		integer  DEFAULT NULL,
-  
+
   ref_ext               varchar(30),					-- reference into an external system (not used by dolibarr)
   ref_int				varchar(30),					-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_supplier          varchar(30),					-- customer number
-  
+
   date_creation         datetime,						-- date de creation
   fk_user_author        integer,						-- author of creation
   fk_user_modif         integer,						-- author of last change
   date_valid            datetime,						-- date de validation
   fk_user_valid         integer,						-- valideur
   date_delivery			datetime	DEFAULT NULL,		-- date planned of delivery
-  date_reception       datetime,						
+  date_reception       datetime,
   fk_shipping_method    integer,
   tracking_number       varchar(50),
   fk_statut             smallint	DEFAULT 0,			-- 0 = draft, 1 = validated, 2 = billed or closed depending on WORKFLOW_BILL_ON_SHIPMENT option
   billed                smallint    DEFAULT 0,
-  
+
   height                float,							-- height
   width                 float,							-- with
   size_units            integer,						-- unit of all sizes (height, width, depth)
@@ -368,7 +368,7 @@ create table llx_reception
   model_pdf             varchar(255),
   fk_incoterms          integer,						-- for incoterms
   location_incoterms    varchar(255),					-- for incoterms
-  
+
   import_key			varchar(14),
   extraparams			varchar(255)							-- for other parameters with json format
 )ENGINE=innodb;
@@ -540,3 +540,27 @@ ALTER TABLE llx_facture_fourn ADD fk_fac_rec_source integer;
 /*
 * FIN BACKPORT - 10/01/2022
 */
+
+
+ALTER TABLE llx_loan ADD COLUMN fk_periodicity INTEGER NULL;
+
+ALTER TABLE llx_loan ADD COLUMN calc_mode INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE llx_loan ADD COLUMN future_value INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE llx_loan_schedule ADD CONSTRAINT fk_loan_schedule_fk_loan FOREIGN KEY (fk_loan) REFERENCES llx_loan(rowid) ON DELETE CASCADE;
+
+-- spécifique cpro, cf. plus bas pour la version non spécifique (commentée)
+
+CREATE OR REPLACE VIEW llx_c_periodicity AS SELECT * FROM llx_c_financement_periodicite;
+
+--  Version non spécifique: create table llx_c_term_duration (
+--    rowid INTEGER AUTO_INCREMENT PRIMARY KEY,
+--    entity int        default 1 not null, --
+--    code   varchar(10)          not null, -- code de périodicité
+--    label  varchar(15)          not null, -- clé de traduction
+--    value  tinyint unsigned     not null, -- durée (en mois) du type de périodicité
+--    active tinyint(1) default 1 not null,
+--    constraint uc_entity_code unique (entity, code),
+--    constraint llx_c_financement_periodicite_ibfk foreign key (entity) references llx_entity (rowid)
+-- ) ENGINE=innodb;
