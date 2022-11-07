@@ -1883,7 +1883,7 @@ if ($action == 'create') {
 
 		// Eurochef
 		// Spécifique Lanef
-		if ($conf->entity = 4 && !empty($objectsrc->ref_supplier)) {
+		if ($conf->entity == 4 && !empty($objectsrc->ref_supplier)) {
 			$objectsrc->label = $objectsrc->ref_supplier;
 			$objectsrc->libelle = $objectsrc->ref_supplier;
 		}

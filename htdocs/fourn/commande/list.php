@@ -297,7 +297,7 @@ if (empty($reshook)) {
 				$default_ref_supplier+=1;
 
 				// Eurochef - Spécifique Lanef
-				if ($conf->entity = 4 && !empty($cmd->ref_supplier)) {
+				if ($conf->entity == 4 && !empty($cmd->ref_supplier)) {
 					$objecttmp->label = $cmd->ref_supplier;
 				}
 
