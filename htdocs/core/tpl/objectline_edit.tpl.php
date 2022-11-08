@@ -316,11 +316,6 @@ $coldisplay++;
 		<input type="submit" class="button buttongen marginbottomonly button-save" id="savelinebutton marginbottomonly" name="save" value="<?php echo $langs->trans("Save"); ?>"><br>
 		<input type="submit" class="button buttongen marginbottomonly button-cancel" id="cancellinebutton" name="cancel" value="<?php echo $langs->trans("Cancel"); ?>">
 	</td>
-	<?php
-	if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete){
-		print '<td></td>';
-	}
-		?>
 </tr>
 
 <?php if (!empty($conf->service->enabled) && $line->product_type == 1 && $dateSelector) { ?>
@@ -354,11 +349,6 @@ $coldisplay++;
 	print '</script>'
 	?>
 	</td>
-	<?php
-	if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete){
-		print '<td></td>';
-	}
-	?>
 </tr>
 <?php }
 ?>

@@ -154,8 +154,11 @@ if ($nolinesbefore) {
 		?>
 		<td class="linecoledit" colspan="<?php echo $colspan; ?>">&nbsp;</td>
 		<?php
-		if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete){
-			print '<td></td>';
+		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+		if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)){
+			if (!empty($object->lines) && $object->element != 'commande'){
+				print '<td></td>';
+			}
 			if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
 				print '<td></td>';
 			}
@@ -484,7 +487,8 @@ if ($nolinesbefore) {
 		<input type="submit" class="button reposition" value="<?php echo $langs->trans('Add'); ?>" name="addline" id="addline">
 	</td>
 	<?php
-	if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete){
+	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+	if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)){
 		print '<td></td>';
 		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
 			print '<td></td>';
@@ -579,7 +583,8 @@ if ((!empty($conf->service->enabled) || ($object->element == 'contrat')) && $dat
 	print '</script>';
 	print '</td>';
 
-	if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete) {
+	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+	if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)) {
 		print '<td></td>';
 		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
 			print '<td></td>';

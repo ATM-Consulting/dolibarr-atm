@@ -456,14 +456,24 @@ if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlin
 	$coldisplay = $coldisplay + 3;
 }
 
-if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
+$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines' && in_array($object->element,$Telement)){
 	$checked = '';
 	if (in_array($line->id,$toselect)){
 		$checked = 'checked';
 	}
-	?>
-	<td class="linecolcheck center"><input type="checkbox" class="linecheckbox"<?php print $checked; ?> name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
-	<?php
+//	if ($action == 'editline' && $this->element == 'commande'){
+//	print '<td></td>';
+//	print '<td></td>';
+//}
+$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+if ($action != 'editline'&& in_array($object->element,$Telement)){
+		//print '<td class="linecolcheck center"><input type="checkbox" class="linecheckbox"'. $checked . 'name="line_checkbox["'.$i.' + 1] value= '. $line->id . '></td>';
+		?>
+		<td class='linecolcheck center'><input type='checkbox' class='linecheckbox' <?php print $checked; ?> name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
+			<?php
+}
+
 }
 
 print "</tr>\n";

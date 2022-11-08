@@ -4691,7 +4691,8 @@ abstract class CommonObject
 			$i++;
 		}
 		print "</tbody><!-- end printObjectLines() -->\n";
-		if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
+		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+		if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement) || $action =='selectlines'){
 			print '<script>$(".linecheckboxtoggle").click(function() {var checkBoxes = $(".linecheckbox");checkBoxes.prop("checked", this.checked);});</script>';
 		}
 	}

@@ -54,6 +54,10 @@ if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 // Description
 print '<th class="linecoldescription">'.$langs->trans('Description').'</th>';
 
+//if ($action == 'editline' && $this->element == 'commande'){
+//	print '<td></td>';
+//}
+
 // Supplier ref
 if ($this->element == 'supplier_proposal' || $this->element == 'order_supplier' || $this->element == 'invoice_supplier') {
 	print '<th class="linerefsupplier maxwidth125"><span id="title_fourn_ref">'.$langs->trans("SupplierRef").'</span></th>';
@@ -156,10 +160,15 @@ print '<th class="linecoldelete" style="width: 10px"></th>';
 
 print '<th class="linecolmove" style="width: 10px"></th>';
 
-if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines'){
-	print '<th class="linecolcheckall center">';
-	print '<input type="checkbox" class="linecheckboxtoggle" />';
-	print '</th>';
+$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete  && in_array($object->element,$Telement) || $action =='selectlines'){
+
+	if ($action !='editline'){
+		print '<th class="linecolcheckall center">';
+		print '<input type="checkbox" class="linecheckboxtoggle" />';
+		print '</th>';
+	}
+
 }
 
 print "</tr>\n";
