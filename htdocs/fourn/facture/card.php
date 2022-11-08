@@ -1871,6 +1871,15 @@ if ($action == 'create') {
 
 		$soc = $objectsrc->thirdparty;
 
+		// Eurochef
+		// Spécifique Lanef
+		if ($conf->entity == 4 && !empty($objectsrc->ref_supplier)) {
+			$objectsrc->label = $objectsrc->ref_supplier;
+			$objectsrc->libelle = $objectsrc->ref_supplier;
+		}
+
+		$objectsrc->ref_supplier = dol_print_date(dol_now(), '%Y%m%d%H%M%S');
+
 		$cond_reglement_id = 0;
 		$mode_reglement_id = 0;
 		$fk_account = 0;
@@ -2294,7 +2303,8 @@ if ($action == 'create') {
 	}
 
 	// Label
-	print '<tr><td>'.$langs->trans('Label').'</td><td><input class="minwidth200" name="label" value="'.dol_escape_htmltag(GETPOST('label')).'" type="text"></td></tr>';
+	//print '<tr><td>'.$langs->trans('Label').'</td><td><input class="minwidth200" name="label" value="'.dol_escape_htmltag(GETPOST('label')).'" type="text"></td></tr>';
+	print '<tr><td>'.$langs->trans('Label').'</td><td><input class="minwidth200" name="label" value="'.(isset($_POST['label']) ? dol_escape_htmltag($_POST['label']) : dol_escape_htmltag($objectsrc->label)).'" type="text"></td></tr>';
 
 	// Date invoice
 	print '<tr><td class="fieldrequired">'.$langs->trans('DateInvoice').'</td><td>';

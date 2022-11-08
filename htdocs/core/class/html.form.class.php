@@ -1380,8 +1380,8 @@ class Form
 				if ($i > 0) {
 					$sql .= " AND ";
 				}
-				//$sql .= "(s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
-				$sql .= "(s.name_alias LIKE '".$this->db->escape($prefix.$crit)."%')";
+				$sql .= "(s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
+				$sql .= " OR (s.name_alias LIKE '".$this->db->escape($prefix.$crit)."%')";
 				$i++;
 			}
 			if (count($scrit) > 1) {
@@ -2521,9 +2521,11 @@ class Form
 			$sql .= " AND p.finished = ".((int) $finished);
 			if ($status >= 0) {
 				$sql .= " AND p.tosell = ".((int) $status);
+				$sql .= " AND p.stock > 0";
 			}
 		} elseif ($status >= 0) {
 			$sql .= " AND p.tosell = ".((int) $status);
+			$sql .= " AND p.stock > 0";
 		}
 		// Filter by product type
 		if (strval($filtertype) != '') {

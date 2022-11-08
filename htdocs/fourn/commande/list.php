@@ -292,8 +292,14 @@ if (empty($reshook)) {
 				$objecttmp->mode_reglement_id	= $cmd->mode_reglement_id;
 				$objecttmp->fk_project = $cmd->fk_project;
 				$objecttmp->multicurrency_code = $cmd->multicurrency_code;
-				$objecttmp->ref_supplier = !empty($cmd->ref_supplier) ? $cmd->ref_supplier : $default_ref_supplier;
+				//$objecttmp->ref_supplier = !empty($cmd->ref_supplier) ? $cmd->ref_supplier : $default_ref_supplier;
+				$objecttmp->ref_supplier = $default_ref_supplier;
 				$default_ref_supplier+=1;
+
+				// Eurochef - Spécifique Lanef
+				if ($conf->entity == 4 && !empty($cmd->ref_supplier)) {
+					$objecttmp->label = $cmd->ref_supplier;
+				}
 
 				$datefacture = dol_mktime(12, 0, 0, GETPOST('remonth', 'int'), GETPOST('reday', 'int'), GETPOST('reyear', 'int'));
 				if (empty($datefacture)) {
