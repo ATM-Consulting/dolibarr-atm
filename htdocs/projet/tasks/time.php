@@ -1542,7 +1542,9 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 			if (GETPOSTISSET('timespent_durationhour') || GETPOSTISSET('timespent_durationmin')) {
 				$durationtouse = (GETPOST('timespent_durationhour') * 3600 + GETPOST('timespent_durationmin') * 60);
 			}
-			print $form->select_duration('timespent_duration', $durationtouse, 0, 'text');
+			//SPECIFIQUE CLIENT SYAGE//
+			print $form->select_duration('timespent_duration', $durationtouse, 0, (empty($conf->global->PROJECT_USE_DECIMAL_DAY) ? 'text' : 'days'));
+			//SPECIFIQUE CLIENT SYAGE//
 			print '</td>';
 
 			// Progress declared
@@ -1843,7 +1845,9 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				print '<td class="right nowraponall">';
 				if ($action == 'editline' && GETPOST('lineid', 'int') == $task_time->rowid) {
 					print '<input type="hidden" name="old_duration" value="'.$task_time->task_duration.'">';
-					print $form->select_duration('new_duration', $task_time->task_duration, 0, 'text');
+					//SPECIFIQUE CLIENT SYAGE//
+					print $form->select_duration('new_duration', $task_time->task_duration, 0, (empty($conf->global->PROJECT_USE_DECIMAL_DAY) ? 'text' : 'days'));
+					//SPECIFIQUE CLIENT SYAGE//
 				} else {
 					$fulltime = convertSecondToTime($task_time->task_duration, $task_duration_outputformat);
 					print $fulltime;
