@@ -895,6 +895,7 @@ class Loan extends CommonObject implements \JsonSerializable
 	 */
 	public static function getCalcModeSelector($selected)
 	{
+		global $langs;
 		return Form::selectarray(
 			'calc_mode',
 			self::CALC_MODES,
@@ -912,6 +913,13 @@ class Loan extends CommonObject implements \JsonSerializable
 			'',
 			0,
 			0,
+		) . img_help(
+			1,
+			$langs->trans('CalcInArrear') . ': '
+			. $langs->trans('CalcInArrearHelp')
+			. ' — '
+			. $langs->trans('CalcInAdvance') . ': '
+			. $langs->trans('CalcInAdvanceHelp')
 		);
 	}
 }

@@ -147,7 +147,7 @@ if (empty($reshook))
 			if ($rate == '')
 			{
 				$error++; $action = 'create';
-				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('Rate')), array(), 'errors');
+				setEventMessages($langs->trans('ErrorFieldRequired', $langs->transnoentities('InterestRate')), array(), 'errors');
 			}
 			if ($fk_periodicity === -1)
 			{
@@ -339,10 +339,10 @@ if ($action == 'create')
 
 	print '<tr><td class="fieldrequired">' . $langs->trans('CalcMode') . '</td><td>' . Loan::getCalcModeSelector($calc_mode) . '</td></tr>';
 
-	print '<tr><td class="fieldrequired">' . $langs->trans('Periodicity') . '</td><td>' . $periodicityInput . '</td></tr>';
+	print '<tr><td class="fieldrequired">' . $langs->trans('Periodicity').img_help(1, $langs->trans('PeriodicityHelp')) . '</td><td>' . $periodicityInput . '</td></tr>';
 
 	// Rate
-	print '<tr><td class="fieldrequired">'.$langs->trans('Rate').'</td><td><input name="rate" size="5" value="' . dol_escape_htmltag($rate) . '"> %</td></tr>';
+	print '<tr><td class="fieldrequired">'.$langs->trans('InterestRate').img_help(1, $langs->trans('YearlyRate')).'</td><td><input name="rate" size="5" value="' . dol_escape_htmltag($rate) . '"> %</td></tr>';
 
 	// Insurance amount
 	print '<tr><td>'.$langs->trans('Insurance').'</td><td><input name="insurance_amount" size="10" value="' . dol_escape_htmltag($insurance_amount) . '" placeholder="'.$langs->trans('Amount').'"></td></tr>';
@@ -581,7 +581,7 @@ if ($id > 0)
 		print '</td></tr>';
 
 		// Periodicity
-		print '<tr><td>'.$langs->trans('Periodicity').'</td>';
+		print '<tr><td>'.$langs->trans('Periodicity').img_help(1, $langs->trans('PeriodicityHelp')).'</td>';
 		print '<td>';
 		if ($action == 'edit')
 		{
@@ -601,7 +601,12 @@ if ($id > 0)
 		print '</td></tr>';
 
 		// Repay Option
-		print '<tr><td>'.$langs->trans('CalcMode').'</td>';
+		print '<tr><td>'.$langs->trans('CalcMode').img_help(1,
+				$langs->trans('CalcInArrear') . ': '
+				. $langs->trans('CalcInArrearHelp')
+				. ' — '
+				. $langs->trans('CalcInAdvance') . ': '
+				. $langs->trans('CalcInAdvanceHelp')).'</td>';
 		print '<td>';
 		if ($action == 'edit')
 		{
@@ -614,7 +619,7 @@ if ($id > 0)
 		print '</td></tr>';
 
 		// Rate
-		print '<tr><td>'.$langs->trans('Rate').'</td>';
+		print '<tr><td>'.$langs->trans('InterestRate').img_help(1, $langs->trans('YearlyRate')).'</td>';
 		print '<td>';
 		if ($action == 'edit')
 		{
