@@ -48,7 +48,7 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	<tr class="<?php echo $trclass; ?>">
 		<td class="linkedcol-element"><?php echo $langs->trans("SupplierOrder"); ?></td>
 		<td class="linkedcol-name nowraponall"><a href="<?php echo DOL_URL_ROOT.'/fourn/commande/card.php?id='.$objectlink->id ?>"><?php echo img_object($langs->trans("ShowOrder"), "order").' '.$objectlink->ref; ?></a></td>
-		<td class="linkedcol-ref center"><?php echo $objectlink->ref_supplier . ' ' . $objectlink->thirdparty->getNomUrl(1); ?></td>
+		<td class="linkedcol-ref tdoverflowmax100"><?php echo $objectlink->ref_supplier . '<br>' . $objectlink->thirdparty->getNomUrl(1); ?></td>
 		<td class="linkedcol-date center">
 			<?php echo img_picto($langs->trans("Date"), 'generic', 'class="pictofixedwidth"').dol_print_date($objectlink->date, 'day'); ?>
 			<br>

@@ -52,7 +52,7 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	}
 	echo '</td>';
 	echo '<td class="linkedcol-name nowraponall" >'.$objectlink->getNomUrl(1).'</td>';
-	echo '<td class="linkedcol-ref center">'.$objectlink->ref_client.'</td>';
+	echo '<td class="linkedcol-ref tdoverflowmax100">'.$objectlink->ref_client.'</td>';
 	echo '<td class="linkedcol-date center">';
 	echo img_picto($langs->trans("Date"), 'generic', 'class="pictofixedwidth"').dol_print_date($objectlink->date, 'day');
 	echo '<br>';
