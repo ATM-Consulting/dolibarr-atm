@@ -78,6 +78,9 @@ $list_account[] = '---Others---';
 $list_account[] = 'ACCOUNTING_VAT_BUY_ACCOUNT';
 $list_account[] = 'ACCOUNTING_VAT_SOLD_ACCOUNT';
 $list_account[] = 'ACCOUNTING_VAT_PAY_ACCOUNT';
+$list_account[] = 'ACCOUNTING_ACCOUNT_VAT_BUY_REVERSE_CHARGES_CREDIT';
+$list_account[] = 'ACCOUNTING_ACCOUNT_VAT_BUY_REVERSE_CHARGES_DEBIT';
+
 $list_account[] = 'ACCOUNTING_ACCOUNT_SUSPENSE';
 if ($conf->banque->enabled) {
 	$list_account[] = 'ACCOUNTING_ACCOUNT_TRANSFER_CASH';
