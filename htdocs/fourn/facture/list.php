@@ -385,6 +385,40 @@ if (empty($reshook)) {
 				}
 			}
 		}
+	} elseif ($massaction == 'classify_paid') {
+		$usercancreate = ($user->rights->fournisseur->facture->creer || $user->rights->supplier_invoice->creer);
+
+		if (!empty($usercancreate)) {
+			$arrayofselected = is_array($toselect) ? $toselect : array();
+
+			$line = 0;
+
+			foreach ($arrayofselected as $arrayofselectedlines) {
+				$currentInvoice = explode("_", $arrayofselectedlines);
+				$invoiceId = $currentInvoice[0];
+
+				// Classify "paid"
+				$facturestatic = new FactureFournisseur($db);
+				$facturestatic->fetch($invoiceId);
+
+				if ($facturestatic->statut == FactureFournisseur::STATUS_VALIDATED && $facturestatic->paid == 0) {
+					$result = $facturestatic->setPaid($user);
+				}
+				dol_syslog("fourn/facture/list.php setPaid Invoice id=".$invoiceId, LOG_DEBUG);
+				if ($result < 0) {
+					setEventMessages($object->error, $object->errors, 'errors');
+				}
+
+				$line++;
+			}
+
+			setEventMessages('EndProcessing', null, 'mesgs');
+			header('Location: '.$_SERVER['PHP_SELF']);
+			exit;
+		}
+		setEventMessages('Vous n avez pas le droit de classifier payée les factures fournisseurs', null, 'mesgs');
+		header('Location: '.$_SERVER['PHP_SELF']);
+		exit;
 	}
 }
 
@@ -825,6 +859,7 @@ if ($resql) {
 	// List of mass actions available
 	$arrayofmassactions = array(
 		'validate'=>img_picto('', 'check', 'class="pictofixedwidth"').$langs->trans("Validate"),
+		'classify_paid'=>img_picto('', 'payment', 'class="pictofixedwidth"').$langs->trans("ClassifyPaid"),
 		'generate_doc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("ReGeneratePDF"),
 		//'builddoc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("PDFMerge"),
 		//'presend'=>img_picto('', 'email', 'class="pictofixedwidth"').$langs->trans("SendByMail"),

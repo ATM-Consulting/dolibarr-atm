@@ -91,7 +91,11 @@ $search_multicurrency_tx = GETPOST('search_multicurrency_tx', 'alpha');
 $search_multicurrency_montant_ht = GETPOST('search_multicurrency_montant_ht', 'alpha');
 $search_multicurrency_montant_vat = GETPOST('search_multicurrency_montant_vat', 'alpha');
 $search_multicurrency_montant_ttc = GETPOST('search_multicurrency_montant_ttc', 'alpha');
-$search_login = GETPOST('search_login', 'alpha');
+
+// Spécifique Eurochef
+//$search_login = GETPOST('search_login', 'alpha');
+$search_login = GETPOST('search_login', 'array');
+
 $search_categ_cus = GETPOST("search_categ_cus", 'int');
 $optioncss = GETPOST('optioncss', 'alpha');
 $search_billed = GETPOSTISSET('search_billed') ? GETPOST('search_billed', 'int') : GETPOST('billed', 'int');
@@ -250,7 +254,11 @@ if (empty($reshook)) {
 		$search_multicurrency_montant_ht = '';
 		$search_multicurrency_montant_vat = '';
 		$search_multicurrency_montant_ttc = '';
-		$search_login = '';
+
+		// Spécifique Eurochef
+		//$search_login = '';
+		$search_login = array();
+
 		$search_dateorder_start = '';
 		$search_dateorder_end = '';
 		$search_datedelivery_start = '';
@@ -594,7 +602,14 @@ if ($search_multicurrency_montant_ttc != '') {
 	$sql .= natural_search('c.multicurrency_total_ttc', $search_multicurrency_montant_ttc, 1);
 }
 if ($search_login) {
-	$sql .= natural_search(array("u.login", "u.firstname", "u.lastname"), $search_login);
+	if (is_array($search_login)) {
+		//$sql .= natural_search(array("u.rowid"), join(',', $search_login), 4);
+		if ($db->sanitize(join(',', $search_login)) > 0) {
+			$sql .= " AND u.rowid IN (" . $db->sanitize(join(',', $search_login)) . ')';
+		}
+	} else {
+		$sql .= natural_search(array("u.login", "u.firstname", "u.lastname"), $search_login);
+	}
 }
 if ($search_project_ref != '') {
 	$sql .= natural_search("p.ref", $search_project_ref);
@@ -766,7 +781,11 @@ if ($resql) {
 		$param .= '&search_warehouse='.urlencode($search_warehouse);
 	}
 	if ($search_login) {
-		$param .= '&search_login='.urlencode($search_login);
+		// Spécifique Eurochef
+		//$param .= '&search_login='.urlencode($search_login);
+		foreach ($search_login as $author) {
+			$param .= '&search_login=' . urlencode($author);
+		}
 	}
 	if ($search_multicurrency_code != '') {
 		$param .= '&search_multicurrency_code='.urlencode($search_multicurrency_code);
@@ -1184,8 +1203,10 @@ if ($resql) {
 	}
 	if (!empty($arrayfields['u.login']['checked'])) {
 		// Author
-		print '<td class="liste_titre" align="center">';
-		print '<input class="flat" size="4" type="text" name="search_login" value="'.dol_escape_htmltag($search_login).'">';
+		print '<td class="liste_titre center">';
+		// Spécifique Eurochef
+		//print '<input class="flat" size="4" type="text" name="search_login" value="'.dol_escape_htmltag($search_login).'">';
+		print $form->select_dolusers($search_login, 'search_login', 1, '', 0, '', '', 0, 0, 0, '', 1, '', 'widthcentpercentminusx minwidth150 maxwidth300', 0, 0, 1);
 		print '</td>';
 	}
 	// Extra fields

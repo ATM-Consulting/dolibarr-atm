@@ -32,7 +32,7 @@ $langs = $GLOBALS['langs'];
 $linkedObjectBlock = $GLOBALS['linkedObjectBlock'];
 
 // Load translation files required by the page
-$langs->load("orders");
+$langs->load("orders", "sendings");
 
 $linkedObjectBlock = dol_sort_array($linkedObjectBlock, 'date', 'desc', 0, 0, 1);
 
@@ -52,9 +52,15 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	}
 	echo '</td>';
 	echo '<td class="linkedcol-name nowraponall" >'.$objectlink->getNomUrl(1).'</td>';
-	echo '<td class="linkedcol-ref" align="center">'.$objectlink->ref_client.'</td>';
-	echo '<td class="linkedcol-date" align="center">'.dol_print_date($objectlink->date, 'day').'</td>';
-	echo '<td class="linkedcol-amount right">';
+	echo '<td class="linkedcol-ref tdoverflowmax100">'.$objectlink->ref_client.'</td>';
+	echo '<td class="linkedcol-date center">';
+	echo img_picto($langs->trans("Date"), 'generic', 'class="pictofixedwidth"').dol_print_date($objectlink->date, 'day');
+	echo '<br>';
+	if (!empty($objectlink->date_livraison)) {
+		echo img_picto($langs->trans("DateDeliveryPlanned"), 'reception', 'class="pictofixedwidth"') . dol_print_date($objectlink->date_livraison, 'day');
+	}
+	echo '</td>';
+	echo '<td class="linkedcol-amount right nowrap">';
 	if ($user->rights->commande->lire) {
 		$total = $total + $objectlink->total_ht;
 		echo price($objectlink->total_ht);
