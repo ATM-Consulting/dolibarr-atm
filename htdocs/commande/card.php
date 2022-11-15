@@ -685,7 +685,9 @@ if (empty($reshook)) {
 			}
 		}
 
-		if (!$error && ($qty >= 0) && (!empty($product_desc) || (!empty($idprod) && $idprod > 0))) {
+		$commande_qty_requirement = !empty($conf->global->COMMANDE_ENABLE_NEGATIVE_QTY) ? ($qty >= 0 || $qty <= 0) : $qty >= 0;
+
+		if (!$error && $commande_qty_requirement && (!empty($product_desc) || (!empty($idprod) && $idprod > 0))) {
 			// Clean parameters
 			$date_start = dol_mktime(GETPOST('date_start'.$predef.'hour'), GETPOST('date_start'.$predef.'min'), GETPOST('date_start'.$predef.'sec'), GETPOST('date_start'.$predef.'month'), GETPOST('date_start'.$predef.'day'), GETPOST('date_start'.$predef.'year'));
 			$date_end = dol_mktime(GETPOST('date_end'.$predef.'hour'), GETPOST('date_end'.$predef.'min'), GETPOST('date_end'.$predef.'sec'), GETPOST('date_end'.$predef.'month'), GETPOST('date_end'.$predef.'day'), GETPOST('date_end'.$predef.'year'));
