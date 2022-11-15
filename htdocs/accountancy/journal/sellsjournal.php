@@ -259,7 +259,7 @@ if ($result) {
 		}
 
 		$total_ttc = $obj->total_ttc * $situation_ratio;
-		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
 			$retained_warranty = (double)price2num($total_ttc * $obj->retained_warranty / 100, 'MT');
 			$tabwarranty[$obj->rowid][$compta_soc] += $retained_warranty;
 			$total_ttc -= $retained_warranty;
@@ -368,7 +368,7 @@ if ($action == 'writebookkeeping') {
 		}
 
 		// Warranty
-		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
 			if (!$errorforline) {
 				foreach ($tabwarranty[$key] as $k => $mt) {
 					$bookkeeping = new BookKeeping($db);
@@ -702,7 +702,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 		}
 
 		// Warranty
-		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
 			foreach ($tabwarranty[$key] as $k => $mt) {
 				//if ($mt) {
 				print '"'.$key.'"'.$sep;
@@ -949,7 +949,7 @@ if (empty($action) || $action == 'view') {
 		}
 
 		// Warranty
-		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
 			foreach ($tabwarranty[$key] as $k => $mt) {
 				print '<tr class="oddeven">';
 				print "<!-- Thirdparty -->";
