@@ -32,7 +32,7 @@ global $noMoreLinkedObjectBlockAfter;
 $langs = $GLOBALS['langs'];
 $linkedObjectBlock = $GLOBALS['linkedObjectBlock'];
 
-$langs->load("orders");
+$langs->load("orders", "sendings");
 
 $total = 0;
 $ilink = 0;
@@ -46,17 +46,25 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	}
 	?>
 	<tr class="<?php echo $trclass; ?>">
-		<td><?php echo $langs->trans("SupplierOrder"); ?></td>
-		<td><a href="<?php echo DOL_URL_ROOT.'/fourn/commande/card.php?id='.$objectlink->id ?>"><?php echo img_object($langs->trans("ShowOrder"), "order").' '.$objectlink->ref; ?></a></td>
-		<td class="left"><?php echo $objectlink->ref_supplier . ' ' . $objectlink->thirdparty->getNomUrl(1); ?></td>
-		<td class="center"><?php echo dol_print_date($objectlink->date, 'day'); ?></td>
-		<td class="right"><?php
+		<td class="linkedcol-element"><?php echo $langs->trans("SupplierOrder"); ?></td>
+		<td class="linkedcol-name nowraponall"><a href="<?php echo DOL_URL_ROOT.'/fourn/commande/card.php?id='.$objectlink->id ?>"><?php echo img_object($langs->trans("ShowOrder"), "order").' '.$objectlink->ref; ?></a></td>
+		<td class="linkedcol-ref center"><?php echo $objectlink->ref_supplier . ' ' . $objectlink->thirdparty->getNomUrl(1); ?></td>
+		<td class="linkedcol-date center">
+			<?php echo img_picto($langs->trans("Date"), 'generic', 'class="pictofixedwidth"').dol_print_date($objectlink->date, 'day'); ?>
+			<br>
+			<?php
+			if (!empty($objectlink->delivery_date)) {
+				echo img_picto($langs->trans("DateDeliveryPlanned"), 'reception', 'class="pictofixedwidth"') . dol_print_date($objectlink->delivery_date, 'day');
+			}
+			?>
+		</td>
+		<td class="linkedcol-amount right nowrap"><?php
 		if ($user->rights->fournisseur->commande->lire) {
 			$total = $total + $objectlink->total_ht;
 			echo price($objectlink->total_ht);
 		} ?></td>
-		<td class="right"><?php echo $objectlink->getLibStatut(3); ?></td>
-		<td class="right"><a class="reposition" href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=dellink&dellinkid='.$key; ?>"><?php echo img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink'); ?></a></td>
+		<td class="linkedcol-statut right"><?php echo $objectlink->getLibStatut(3); ?></td>
+		<td class="linkedcol-action right"><a class="reposition" href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=dellink&dellinkid='.$key; ?>"><?php echo img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink'); ?></a></td>
 	</tr>
 	<?php
 }
