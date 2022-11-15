@@ -39,6 +39,8 @@ InterestRate=Interest rate
 InterestRateHelp=Yearly proportional interest rate
 YearlyRate=Yearly proportional interest rate
 PeriodicRate=Periodic interest rate
+FutureValue=Future value
+
 # Admin
 ConfigLoan=Configuration of the module loan
 LOAN_ACCOUNTING_ACCOUNT_CAPITAL=Accounting account capital by default

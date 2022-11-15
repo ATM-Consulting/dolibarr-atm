@@ -39,6 +39,7 @@ InterestRate=Taux
 InterestRateHelp=Taux d'intérêt proportionnel annuel
 YearlyRate=Taux d'intérêt proportionnel annuel
 PeriodicRate=Taux d'intérêt périodique
+FutureValue=Valeur résiduelle
 
 # Admin
 ConfigLoan=Configuration du module Emprunt
