@@ -784,7 +784,7 @@ if ($resql) {
 		// Spécifique Eurochef
 		//$param .= '&search_login='.urlencode($search_login);
 		foreach ($search_login as $author) {
-			$param .= '&search_login=' . urlencode($author);
+			$param .= '&search_login[]=' . urlencode($author);
 		}
 	}
 	if ($search_multicurrency_code != '') {
