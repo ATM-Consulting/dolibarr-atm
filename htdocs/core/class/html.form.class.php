@@ -2521,11 +2521,11 @@ class Form
 			$sql .= " AND p.finished = ".((int) $finished);
 			if ($status >= 0) {
 				$sql .= " AND p.tosell = ".((int) $status);
-				$sql .= " OR p.stock > 0";
+				//$sql .= " OR p.stock > 0";
 			}
 		} elseif ($status >= 0) {
 			$sql .= " AND p.tosell = ".((int) $status);
-			$sql .= " OR p.stock > 0";
+			//$sql .= " OR p.stock > 0";
 		}
 		// Filter by product type
 		if (strval($filtertype) != '') {
