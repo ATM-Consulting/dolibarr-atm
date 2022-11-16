@@ -226,7 +226,6 @@ if ($object->element == 'supplier_proposal' || $object->element == 'order_suppli
 	print '<td class="linecolrefsupplier">';
 	print ($line->ref_fourn ? $line->ref_fourn : $line->ref_supplier);
 	print '</td>';
-	print '<td></td>';
 }
 // InfraS add begin
 if ($object->element == 'invoice_supplier' && $conf->global->MAIN_MODULE_INFRASPRP) {

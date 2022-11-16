@@ -61,7 +61,6 @@ print '<th class="linecoldescription">'.$langs->trans('Description').'</th>';
 // Supplier ref
 if ($this->element == 'supplier_proposal' || $this->element == 'order_supplier' || $this->element == 'invoice_supplier') {
 	print '<th class="linerefsupplier maxwidth125"><span id="title_fourn_ref">'.$langs->trans("SupplierRef").'</span></th>';
-	print '<td></td>';
 }
 
 // Eurochef - Catalogue - Prix de vente et prix achat
