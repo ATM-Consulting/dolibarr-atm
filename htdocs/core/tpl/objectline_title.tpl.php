@@ -160,7 +160,7 @@ print '<th class="linecoldelete" style="width: 10px"></th>';
 print '<th class="linecolmove" style="width: 10px"></th>';
 
 $Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
-if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete  && in_array($object->element,$Telement) || $action =='selectlines'){
+if (!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES) && $object->status == $object::STATUS_DRAFT && $usercandelete  && in_array($object->element,$Telement) || $action =='selectlines'){
 
 	if ($action !='editline'){
 		print '<th class="linecolcheckall center">';
