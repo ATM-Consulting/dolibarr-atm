@@ -156,17 +156,18 @@ if ($nolinesbefore) {
 		<?php
 		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
 		if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)){
-			if (!empty($object->lines) && $object->element != 'commande'){
+//			if (!empty($object->lines)){
 				print '<td></td>';
-			}
-			if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-				print '<td></td>';
-			}
-		}else{
-			if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-				print '<td></td>';
-			}
+//			}
+//			if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//				print '<td></td>';
+//			}
 		}
+//		else{
+//			if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//				print '<td></td>';
+//			}
+//		}
 		?>
 	</tr>
 	<?php
@@ -490,13 +491,13 @@ if ($nolinesbefore) {
 	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
 	if($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)){
 		print '<td></td>';
-		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-			print '<td></td>';
-		}
-	}else{
-		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-			print '<td></td>';
-		}
+//		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//			print '<td></td>';
+//		}
+//	}else{
+//		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//			print '<td></td>';
+//		}
 	}
 	?>
 </tr>
@@ -586,13 +587,13 @@ if ((!empty($conf->service->enabled) || ($object->element == 'contrat')) && $dat
 	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
 	if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)) {
 		print '<td></td>';
-		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-			print '<td></td>';
-		}
-	}else{
-		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
-			print '<td></td>';
-		}
+//		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//			print '<td></td>';
+//		}
+//	}else{
+//		if ($object->element == 'supplier_proposal' || $object->element == 'order_supplier' || $object->element == 'invoice_supplier'){
+//			print '<td></td>';
+//		}
 	}
 	print '</tr>'."\n";
 }
