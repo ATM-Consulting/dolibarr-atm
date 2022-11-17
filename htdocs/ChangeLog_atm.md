@@ -3,6 +3,10 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 
+
+## [1.2.0] - 18-10-2022
+- NEW : Ajout massaction de suppression sur les card
+
 ## [1.1.0] - 18-10-2022
 - NEW : Ajout d'une colonne "Dernière date d'entrée en stock" sur la fiche expédition
 

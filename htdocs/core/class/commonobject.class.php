@@ -4571,7 +4571,7 @@ abstract class CommonObject
 	 */
 	public function formAddObjectLine($dateSelector, $seller, $buyer, $defaulttpldir = '/core/tpl')
 	{
-		global $conf, $user, $langs, $object, $hookmanager, $extrafields;
+		global $conf, $user, $langs, $object, $hookmanager, $extrafields, $usercandelete;
 		global $form;
 
 		// Line extrafield
@@ -4624,7 +4624,7 @@ abstract class CommonObject
 	 */
 	public function printObjectLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
 	{
-		global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
+		global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object, $usercandelete ,$toselect;
 		// TODO We should not use global var for this
 		global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove, $outputalsopricetotalwithtax;
 
@@ -4691,6 +4691,10 @@ abstract class CommonObject
 			$i++;
 		}
 		print "</tbody><!-- end printObjectLines() -->\n";
+		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+		if ($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement) || $action =='selectlines'){
+			print '<script>$(".linecheckboxtoggle").click(function() {var checkBoxes = $(".linecheckbox");checkBoxes.prop("checked", this.checked);});</script>';
+		}
 	}
 
 	/**
@@ -4712,7 +4716,7 @@ abstract class CommonObject
 	 */
 	public function printObjectLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
 	{
-		global $conf, $langs, $user, $object, $hookmanager;
+		global $conf, $langs, $user, $object, $hookmanager, $usercandelete, $toselect;
 		global $form;
 		global $object_rights, $disableedit, $disablemove, $disableremove; // TODO We should not use global var for this !
 
