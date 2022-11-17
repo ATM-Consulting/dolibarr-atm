@@ -158,15 +158,10 @@ class LoanSchedule extends CommonObject implements \JsonSerializable
         $totalamount = price2num($totalamount);
 
         // Check parameters
-        if ($totalamount == 0) {
-        	$this->errors[]='step1';
-        	return -1; // Negative amounts are accepted for reject prelevement but not null
-        }
-
 
 		$this->db->begin();
 
-		if ($totalamount != 0)
+		if (true /* $totalamount == 0 */)
 		{
 			$sql = "INSERT INTO ".MAIN_DB_PREFIX.$this->table_element." (fk_loan, datec, datep, amount_capital, amount_insurance, amount_interest,";
 			$sql.= " fk_typepayment, fk_user_creat, fk_bank)";
@@ -193,7 +188,7 @@ class LoanSchedule extends CommonObject implements \JsonSerializable
 			}
 		}
 
-		if ($totalamount != 0 && ! $error)
+		if (! $error)
 		{
 		    $this->db->commit();
 			return $this->id;
