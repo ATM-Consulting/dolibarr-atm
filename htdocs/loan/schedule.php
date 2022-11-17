@@ -16,17 +16,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- *  \file       htdocs/loan/createschedule.php
- *  \ingroup    loan
- *  \brief      Schedule card
- */
-
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/loan/class/loan.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/loan.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/loan/lib/loan.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/loan/class/loanschedule.class.php';
+
+/**
+ * @var DoliDB $db
+ * @var Conf $conf
+ * @var User $user
+ * @var HookManager $hookmanager
+ * @var Translate $langs
+ */
 
 $loanid = GETPOST('loanid', 'int');
 $action = GETPOST('action', 'aZ09');
@@ -35,37 +38,44 @@ $object = new Loan($db);
 $object->fetch($loanid);
 
 // Load translation files required by the page
-$langs->loadLangs(array("compta","bills","loan"));
+$langs->loadLangs(array('compta', 'bills', 'loan'));
 
-$title = $langs->trans("Loan") . ' - ' . $langs->trans("Card");
+$title = $langs->trans('Loan') . ' - ' . $langs->trans('Card');
 $help_url = 'EN:Module_Loan|FR:Module_Emprunt';
-llxHeader("", $title, $help_url);
+$arrayofjs = array('/loan/js/loan.js');
+$arrayofcss = array('/loan/css/loan.css');
+llxHeader('', $title, $help_url, '', 0, 0, $arrayofjs, $arrayofcss);
+
+/** @var Form $form  Defined globally during call to left_menu() in llxHeader() */
 
 $head=loan_prepare_head($object);
-dol_fiche_head($head, 'FinancialCommitment', $langs->trans("Loan"), -1, 'bill');
+dol_fiche_head($head, 'FinancialCommitment', $langs->trans('Loan'), -1, 'bill');
 
-$linkback = '<a href="' . DOL_URL_ROOT . '/loan/list.php?restore_lastsearch_values=1">' . $langs->trans("BackToList") . '</a>';
+$linkback = '<a href="' . DOL_URL_ROOT . '/loan/list.php?restore_lastsearch_values=1">' . $langs->trans('BackToList') . '</a>';
 
 $morehtmlref='<div class="refidno">';
 // Ref loan
-$morehtmlref.=$form->editfieldkey("Label", 'label', $object->label, $object, $user->rights->loan->write, 'string', '', 0, 1);
-$morehtmlref.=$form->editfieldval("Label", 'label', $object->label, $object, $user->rights->loan->write, 'string', '', null, null, '', 1);
+$morehtmlref.=$form->editfieldkey('Label', 'label', $object->label, $object, $user->rights->loan->write, 'string', '', 0, 1);
+$morehtmlref.=$form->editfieldval('Label', 'label', $object->label, $object, $user->rights->loan->write, 'string', '', null, null, '', 1);
 // Project
 if (! empty($conf->projet->enabled))
 {
-	$langs->loadLangs(array("projects"));
+	$langs->loadLangs(array('projects'));
 	$morehtmlref.='<br>'.$langs->trans('Project') . ' ';
 	if ($user->rights->loan->write)
 	{
 		if ($action != 'classify')
 			$morehtmlref.='<a href="' . $_SERVER['PHP_SELF'] . '?action=classify&amp;id=' . $object->id . '">' . img_edit($langs->transnoentitiesnoconv('SetProject')) . '</a> : ';
 		if ($action == 'classify') {
+			require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
+			$formproject = new FormProjets($db);
+			$maxlength = 16;
 			//$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid', 0, 0, 1, 1);
 			$morehtmlref.='<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
 			$morehtmlref.='<input type="hidden" name="action" value="classin">';
 			$morehtmlref.='<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 			$morehtmlref.=$formproject->select_projects($object->socid, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
-			$morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
+			$morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans('Modify').'">';
 			$morehtmlref.='</form>';
 		} else {
 			$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none', 0, 0, 0, 1);
@@ -83,209 +93,147 @@ if (! empty($conf->projet->enabled))
 	}
 }
 $morehtmlref.='</div>';
+$morehtmlright = '';
 dol_banner_tab($object, 'id', $linkback, 1, 'rowid', 'ref', $morehtmlref, '', 0, '', $morehtmlright);
 
-if ($action == 'createecheancier') {
-
+if ($action == 'save') {
     $i=1;
-    while($i <$object->nbterm+1){
+	$installmentsFromPost = GETPOST('installment', 'array');
+	$nbEcheancierCreated = 0;
+	$object->deleteSchedule();
+	foreach ($installmentsFromPost as $p => $installmentFromPost) {
+		if ($object->nbPeriods === 0) break; // should never be the case
+		// make sure all values are properly typed
+		$p = (int) $p;
+		$installmentFromPost['ppmt'] = parseLocalizedNumberStr($installmentFromPost['ppmt']);
+		$installmentFromPost['ipmt'] = parseLocalizedNumberStr($installmentFromPost['ipmt']);
+		$installmentFromPost['fv']   = parseLocalizedNumberStr($installmentFromPost['fv']);
 
-        $date =  GETPOST('hi_date'.$i, 'int');
-        $mens = GETPOST('mens'.$i);
-        $int = GETPOST('hi_interets'.$i);
-        $insurance = GETPOST('hi_insurance'.$i);
-
-        $echeance = new LoanSchedule($db);
-
-        $echeance->fk_loan = $object->id;
-        $echeance->datec = dol_now();
-        $echeance->tms = dol_now();
-        $echeance->datep = $date;
-        $echeance->amount_capital = $mens-$int;
-        $echeance->amount_insurance = $insurance;
-        $echeance->amount_interest = $int;
-        $echeance->fk_typepayment = 3;
-        $echeance->fk_bank = 0;
-        $echeance->fk_user_creat = $user->id;
-        $echeance->fk_user_modif = $user->id;
-        $result=$echeance->create($user);
-        if ($result<0) {
-            setEventMessages($echeance->error, $echeance->errors, 'errors');
-        }
-        $i++;
-    }
-}
-
-if ($action == 'updateecheancier') {
-
-    $i=1;
-    while($i <$object->nbterm+1){
-
-        $mens = GETPOST('mens'.$i);
-        $int = GETPOST('hi_interets'.$i);
-        $id = GETPOST('hi_rowid'.$i);
-        $insurance = GETPOST('hi_insurance'.$i);
-
-        $echeance = new LoanSchedule($db);
-        $echeance->fetch($id);
-        $echeance->tms = dol_now();
-        $echeance->amount_capital = $mens-$int;
-        $echeance->amount_insurance = $insurance;
-        $echeance->amount_interest = $int;
-        $echeance->fk_user_modif = $user->id;
-        $result= $echeance->update($user, 0);
-        if ($result<0) {
-            setEventMessages(null, $echeance->errors, 'errors');
-        }
-        $i++;
-    }
-}
-
-$echeance = new LoanSchedule($db);
-$echeance->fetchAll($object->id);
-
-$var = ! $var;
-
-
-?>
-<script type="text/javascript" language="javascript">
-$(document).ready(function() {
-	$('[name^="mens"]').focusout(function() {
-		var echeance=$(this).attr('ech');
-		var mens=$(this).val();
-		var idcap=echeance-1;
-		idcap = '#hi_capital'+idcap;
-		var capital=$(idcap).val();
-		console.log("Change montly amount echeance="+echeance+" idcap="+idcap+" capital="+capital);
-		$.ajax({
-			  dataType: 'json',
-			  url: 'calcmens.php',
-			  data: { echeance: echeance, mens: mens, capital:capital, rate:<?php echo $object->rate/100;?> , nbterm : <?php echo $object->nbterm;?>},
-			  success: function(data) {
-				$.each(data, function(index, element) {
-					var idcap_res='#hi_capital'+index;
-					var idcap_res_srt='#capital'+index;
-					var interet_res='#hi_interets'+index;
-					var interet_res_str='#interets'+index;
-					var men_res='#mens'+index;
-					$(idcap_res).val(element.cap_rest);
-					$(idcap_res_srt).text(element.cap_rest_str);
-					$(interet_res).val(element.interet);
-					$(interet_res_str).text(element.interet_str);
-					$(men_res).val(element.mens);
-				});
-			}
-		});
-	});
-});
-</script>
-<?php
-
-
-print '<form name="createecheancier" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
-print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
-print '<input type="hidden" name="loanid" value="' . $loanid . '">';
-if(count($echeance->lines)>0)
-{
-	print '<input type="hidden" name="action" value="updateecheancier">';
-}else{
-	print '<input type="hidden" name="action" value="createecheancier">';
-}
-print '<table class="border" width="100%">';
-print '<tr class="liste_titre">';
-$colspan = 6;
-if (count($echeance->lines)>0) $colspan++;
-print '<th class="center" colspan="'.$colspan.'">';
-print $langs->trans("FinancialCommitment");
-print '</th>';
-print '</tr>';
-
-print '<tr class="liste_titre">';
-print '<th width="5%" class="center">'.$langs->trans("Term").'</th>';
-print '<th width="5%" class="center">'.$langs->trans("Date").'</th>';
-print '<th width="15%" class="center">'.$langs->trans("Insurance");
-print '<th width="15%" class="center">'.$langs->trans("InterestAmount").'</th>';
-print '<th width="10%" class="center">'.$langs->trans("Amount").'</th>';
-print '<th width="40%" class="center">'.$langs->trans("CapitalRemain");
-print '<br>('.price($object->capital, 0, '', 1, -1, -1, $conf->currency).')';
-print '<input type="hidden" name="hi_capital0" id ="hi_capital0" value="'.$object->capital.'">';
-print '</th>';
-if (count($echeance->lines)>0) print '<th>'.$langs->trans('DoPayment').'</th>';
-print '</tr>'."\n";
-
-if ($object->nbterm > 0 && count($echeance->lines)==0)
-{
-	$i=1;
-	$capital = $object->capital;
-	$insurance = $object->insurance_amount/$object->nbterm;
-	$insurance = price2num($insurance, 'MT');
-	$regulInsurance = price2num($object->insurance_amount - ($insurance * $object->nbterm));
-	while($i <$object->nbterm+1)
-	{
-		$mens = price2num($echeance->calcMonthlyPayments($capital, $object->rate/100, $object->nbterm-$i+1), 'MT');
-		$int = ($capital*($object->rate/12))/100;
-		$int = price2num($int, 'MT');
-		$insu = ($insurance+(($i == 1) ? $regulInsurance : 0));
-		$cap_rest = price2num($capital - ($mens-$int), 'MT');
-		print '<tr>';
-		print '<td class="center" id="n'.$i.'">' . $i .'</td>';
-		print '<td class="center" id ="date' .$i .'"><input type="hidden" name="hi_date' .$i .'" id ="hi_date' .$i .'" value="' . dol_time_plus_duree($object->datestart, $i-1, 'm') . '">' . dol_print_date(dol_time_plus_duree($object->datestart, $i-1, 'm'), 'day') . '</td>';
-		print '<td class="center" id="insurance'.$i.'">'.price($insurance+(($i == 1) ? $regulInsurance : 0), 0, '', 1, -1, -1, $conf->currency).'</td><input type="hidden" name="hi_insurance' .$i .'" id ="hi_insurance' .$i .'" value="' . ($insurance+(($i == 1) ? $regulInsurance : 0)) . '">';
-		print '<td class="center" id="interets'.$i.'">'.price($int, 0, '', 1, -1, -1, $conf->currency).'</td><input type="hidden" name="hi_interets' .$i .'" id ="hi_interets' .$i .'" value="' . $int . '">';
-		print '<td class="center"><input name="mens'.$i.'" id="mens'.$i.'" size="5" value="'.$mens.'" ech="'.$i.'"></td>';
-		print '<td class="center" id="capital'.$i.'">'.price($cap_rest).'</td><input type="hidden" name="hi_capital' .$i .'" id ="hi_capital' .$i .'" value="' . $cap_rest . '">';
-		print '</tr>'."\n";
-		$i++;
-		$capital = $cap_rest;
+		$echeancier = new LoanSchedule($db);
+        $echeancier->fk_loan = $object->id;
+        $echeancier->datec = dol_now();
+        $echeancier->tms = dol_now();
+        $echeancier->datep = $object->getDateOfPeriod($p);
+        $echeancier->amount_capital = $installmentFromPost['ppmt'];
+		$echeancier->amount_interest = $installmentFromPost['ipmt'];
+		$echeancier->amount_insurance = $object->insurance_amount / $object->nbPeriods;
+        $echeancier->fk_typepayment = 3;
+//        $echeancier->fk_bank = $object->fk_bank;
+        $echeancier->fk_user_creat = $user->id;
+        $echeancier->fk_user_modif = $user->id;
+		$nbEcheancierCreated += ($echeancier->create($user) > 0);
+	}
+	if ($nbEcheancierCreated !== count($installmentsFromPost)) {
+		setEventMessages($echeancier->error, $echeancier->errors, 'errors');
+	} else {
+		setEventMessage($langs->trans('ScheduleSaved'));
 	}
 }
-elseif(count($echeance->lines)>0)
+
+$echeancier = new LoanSchedule($db);
+$echeancier->fetchAll($object->id);
+
+$var = false;
+$var = ! $var;
+
+$capital = $object->capital;
+$futureValue = $object->capital;
+$insurance = 0;
+if ($object->nbPeriods) {
+	$insurance = $object->insurance_amount / $object->nbPeriods;
+}
+$insurance = price2num($insurance, 'MT');
+$regulInsurance = price2num($object->insurance_amount - ($insurance * $object->nbPeriods));
+$periodicInterestRate = getPeriodicRate($object->rate, $object->periodicity);
+$jsContext = array(
+	'ajaxURL' => DOL_URL_ROOT . '/loan/ajax/loan.ajax.php',
+	'loan' => $object->jsonSerialize(),
+	'MAIN_LANG_DEFAULT' => $conf->global->MAIN_LANG_DEFAULT,
+	'nbDecimals' => 2, // for rounding
+);
+$cssPaymentColumnVisibility = $object->hasEcheancier() ? 'table-cell' : 'none';
+echo '<style>:root {--payment-column-visibility: ' . $cssPaymentColumnVisibility . '; }</style>';
+echo '<link rel="stylesheet" type="text/css" href="' . DOL_URL_ROOT . '/loan/css/loan.css" />';
+echo '<script type="application/javascript">LoanModule.initLoanSchedule(' . json_encode($jsContext) . ')</script>';
+
+print '<form class="loanschedule" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
+print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+print '<input type="hidden" name="loanid" value="' . $loanid . '">';
+
+$columns = array('period', 'date', 'insurance', 'ppmt', 'ipmt', 'pmt', 'fv', 'payment');
+$colspan = count($columns);
+print '<table class="liste loanschedule">';
+print '<colgroup>' . implode('', array_map(function ($colon) {
+		return '<col class="' . $colon . '">';
+	}, $columns)) . '</colgroup>';
+
+print '<tr class="liste_titre"><th class="center" colspan="'.$colspan.'">'.$langs->trans('FinancialCommitment').'</th></tr>';
+
+print '<tr class="liste_titre">'
+	. '<th class="period">'    . $langs->trans('Period') . '</th>'
+	. '<th class="date">'      . $langs->trans('Date') . '</th>'
+	. '<th class="insurance">' . $langs->trans('Insurance') . '</th>'
+	. '<th class="ppmt">'      . $langs->trans('Principal') . '</th>'
+	. '<th class="ipmt">'      . $langs->trans('InterestAmount') . '</th>'
+	. '<th class="pmt">'       . $langs->trans('Amount') . '</th>'
+	. '<th class="fv">'        . $langs->trans('CapitalRemain')
+	. '    <br>('.price($object->capital, 0, '', 1, -1, -1, $object->currency).')'
+	. '    </th>'
+	. '<th class="payment">'.$langs->trans('DoPayment').'</th>' // hidden by CSS as long as the loan schedule is not saved
+	. '</tr>'."\n";
+
+// Nouvel échéancier
+if ($object->nbPeriods > 0)
 {
-	$i=1;
-	$capital = $object->capital;
-	$insurance = $object->insurance_amount/$object->nbterm;
-	$insurance = price2num($insurance, 'MT');
-	$regulInsurance = price2num($object->insurance_amount - ($insurance * $object->nbterm));
-	$printed = false;
-	foreach ($echeance->lines as $line){
-		$mens = $line->amount_capital+$line->amount_interest;
-		$int = $line->amount_interest;
-		$insu = ($insurance+(($i == 1) ? $regulInsurance : 0));
-		$cap_rest = price2num($capital - ($mens-$int), 'MT');
+	// FIXME: gestion des erreurs d'arrondis
+	//        pour info, avant la réécriture, l'erreur d'arrondi sur l'assurance était calculée ainsi:
+	//        $regulInsurance = price2num($object->insurance_amount - ($insurance * $object->nbPeriods))
+	//        et elle était ajouté au montant d'assurance de la première échéance
+	if ($object->hasEcheancier()) {
+		$installments = loadScheduleLinesToInstallments($object, $echeancier->lines);
+	} else {
+		$installments = computeAmortizationSchedule(
+			$periodicInterestRate,
+			$object->nbPeriods,
+			$object->capital,
+			$object->future_value,
+			$object->calc_mode === Loan::IN_ADVANCE
+		);
+	}
 
-		print '<tr>';
-		print '<td class="center" id="n'.$i.'"><input type="hidden" name="hi_rowid' .$i .'" id ="hi_rowid' .$i .'" value="' . $line->id . '">' . $i .'</td>';
-		print '<td class="center" id ="date' .$i .'"><input type="hidden" name="hi_date' .$i .'" id ="hi_date' .$i .'" value="' . $line->datep . '">' . dol_print_date($line->datep, 'day') . '</td>';
-		print '<td class="center" id="insurance'.$i.'">'.price($insu, 0, '', 1, -1, -1, $conf->currency).'</td><input type="hidden" name="hi_insurance' .$i .'" id ="hi_insurance' .$i .'" value="' . $insu . '">';
-		print '<td class="center" id="interets'.$i.'">'.price($int, 0, '', 1, -1, -1, $conf->currency).'</td><input type="hidden" name="hi_interets' .$i .'" id ="hi_interets' .$i .'" value="' . $int . '">';
-		if($line->datep > dol_now() && empty($line->fk_bank)){
-			print '<td class="center"><input name="mens'.$i.'" id="mens'.$i.'" size="5" value="'.$mens.'" ech="'.$i.'"></td>';
-		}else{
-			print '<td class="center">' . price($mens, 0, '', 1, -1, -1, $conf->currency) . '</td><input type="hidden" name="mens' .$i .'" id ="mens' .$i .'" value="' . $mens . '">';
-		}
+	$paymentBtnShown = false;
+	foreach ($installments as $i => $installment) {
 
-		print '<td class="center" id="capital'.$i.'">'.price($cap_rest, 0, '', 1, -1, -1, $conf->currency).'</td><input type="hidden" name="hi_capital' .$i .'" id ="hi_capital' .$i .'" value="' . $cap_rest . '">';
-		print '<td class="center">';
-		if (!empty($line->fk_bank)) print $langs->trans('Paid');
-		elseif (!$printed)
-		{
-		    print '<a class="butAction" href="'.DOL_URL_ROOT.'/loan/payment/payment.php?id='.$object->id.'&amp;action=create&line_id='.$line->id.'">'.$langs->trans('DoPayment').'</a>';
-		    $printed = true;
+		// FIXME: le paiement devrait être intégré à Installment
+		if ($object->hasEcheancier() && $line = $echeancier->lines[$i]) {
+			if ($line->datep > dol_now() && empty($line->fk_bank)) {
+				$isPaid = false;
+			} else {
+				$isPaid = true;
+			}
 		}
-		print '</td>';
-		print '</tr>'."\n";
-		$i++;
-		$capital = $cap_rest;
+		$paymentCell = '';
+		if (!$isPaid && $object->hasEcheancier() && !$paymentBtnShown) {
+			$paymentCell = '<a class="butAction" href="'.DOL_URL_ROOT.'/loan/payment/payment.php?id='.$object->id.'&amp;action=create&line_id='.$line->id.'">'.$langs->trans('DoPayment').'</a>';
+			$paymentBtnShown = true;
+		} elseif ($isPaid) {
+			$paymentCell = '☑'; // FIXME: afficher le montant du règlement à la place ? regarder comment c'était avant
+		}
+		$tr = getInstallmentTableRow($object, $installment, $isPaid);
+		$tr = str_replace('__PAYMENT__', $paymentCell, $tr);
+		echo $tr;
 	}
 }
 
 print '</table>';
+echo '&#8505;&#65039; ' . $langs->trans('AmountsAreInCurrency', $object->currency); // FIXME: utiliser méthode dolibarrienne pour afficher le symbole
 print '</br>';
 print '</br>';
-if (count($echeance->lines)==0) $label = $langs->trans("Create");
-else $label = $langs->trans("Save");
-print '<div class="center"><input class="button" type="submit" value="'.$label.'"></div>';
+if (count($echeancier->lines)==0) $label = $langs->trans('Create');
+else $label = $langs->trans('Save');
+print '<div class="center"><button name="action" value="save" class="button" type="submit">' . $label . '</div>';
 print '</form>';
+
 
 // End of page
 llxFooter();

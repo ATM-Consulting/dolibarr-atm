@@ -21,14 +21,23 @@
  *  \ingroup    loan
  *  \brief      Class for loan module
  */
+require_once DOL_DOCUMENT_ROOT.'/loan/class/loanschedule.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 
 
 /**
  *  Loan
  */
-class Loan extends CommonObject
+class Loan extends CommonObject implements \JsonSerializable
 {
+	const IN_ARREAR = 0;
+	const IN_ADVANCE = 1;
+	const CALC_MODES = array(
+		self::IN_ARREAR => 'CalcInArrear',
+		self::IN_ADVANCE => 'CalcInAdvance',
+	);
+
 	/**
 	 * @var string ID to identify managed object
 	 */
@@ -48,25 +57,75 @@ class Loan extends CommonObject
 	 */
 	public $rowid;
 
-	public $datestart;
+	/** @var int $datestart  timestamp */
 	public $dateend;
 
-    /**
+	/** @var int $dateend  timestamp */
+	public $datestart;
+
+	/**
      * @var string Loan label
      */
     public $label;
 
+	/** @var int $fk_periodicity  Points to llx_c_payment_periodicity which links Period types to their duration in months */
+	public $fk_periodicity;
+
+	/** @var int $periodicity  Duration of a Period in months */
+	public $periodicity;
+
+	/** @var int $periodicity_label  Translation key for the name of the Period duration (month, quarter, semester, year…) */
+	public $periodicity_label;
+
+	/** @var double $capital */
 	public $capital;
-	public $nbterm;
+
+	/** @var int $nbPeriods  Number of Periods */
+	public $nbPeriods;
+
+	/**
+	 * @var double $rate  (Proportional) annual interest rate of the loan
+	 *                    (= 12 * monthly rate if periodicity = 1 month)
+	 *                    Expressed as a percentage.
+	 *                    $myLoan->rate == 5.0;  // the annual rate is 0.05
+	 */
 	public $rate;
+
+	/**
+	 * @var int $calc_mode  Whether the payments are made in advance or in arrear.
+	 *                         Typical loans are in advance (the borrower pays at the start of each period).
+	 *                         in advance = terme à échoir
+	 *                         in arrear = terme échu
+	 */
+	public $calc_mode;
+	/**
+	 * @var double $future_value  Value of the loan after the last installment of its lifecycle is paid. (usually 0)
+	 * TODO: add on card + list to enable user to choose a non-zero future value + modify it
+	 */
+	public $future_value = 0;
+
+	/** @var double $paid */
 	public $paid;
+
+	/** @var double $account_capital */
 	public $account_capital;
+
+	/** @var double $account_insurance */
 	public $account_insurance;
+
+	/** @var double $account_interest */
 	public $account_interest;
+
+	/** @var int $date_creation */
 	public $date_creation;
+
+	/** @var int $date_modification */
 	public $date_modification;
+
+	/** @var int $date_validation */
 	public $date_validation;
 
+	/** @var double $insurance_amount */
 	public $insurance_amount;
 
 	/**
@@ -89,6 +148,64 @@ class Loan extends CommonObject
      */
 	public $fk_project;
 
+	/**
+	 * @var int $currency  TODO
+	 */
+	public $currency;
+	/**
+	 * @var string[] Names of fields to include when encoding the object as JSON
+	 */
+	protected $jsonEncodableFields = array(
+		'id',
+		'element',
+		'dateend',
+		'datestart',
+		'label',
+		'periodicity',
+		'periodicity_label',
+		'capital',
+		'nbPeriods',
+		'rate',
+		'calc_mode',
+		'future_value',
+		'paid',
+		'account_capital',
+		'account_insurance',
+		'account_interest',
+		'insurance_amount',
+		'currency',
+	);
+
+	// TODO: complete this fields definition to make the module compatible with the helpers shipped with ModuleBuilder
+	public $fields = array(
+		'rowid' => array('type' => 'integer', 'label' => 'TechnicalID', 'enabled' => 1, 'position' => 1, 'notnull' => 1, 'visible' => 2, 'index' => 1, 'css' => 'left', 'comment' => 'Id'),
+		'entity' => array(),
+		'date_creation' => array('type' => 'datetime', 'label' => 'DateCreation', 'enabled' => 1, 'position' => 500, 'notnull' => 1, 'visible' => -2,),
+		'label' => array('type' => 'text', 'label' => 'Label', 'enabled' => 1, 'position' => 60, 'notnull' => 0, 'visible' => 3,),
+		'fk_bank' => array('type' => 'integer:Account:compta/bank/class/account.class.php', 'label' => 'Account', 'enabled' => 1, 'position' => 60, 'notnull' => 0, 'visible' => 3,),
+		'capital' => array('type' => 'price', 'label' => 'Capital', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'insurance_amount' => array('type' => 'price', 'label' => 'Insurance', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'nbPeriods' => array('type' => 'integer', 'label' => 'nbPeriods', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'rate' => array('type' => 'double', 'label' => 'rate', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'note_private' => array('type' => 'double', 'label' => 'NotePrivate', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'note_public' => array('type' => 'double', 'label' => 'NotePublic', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+
+		'capital_position' => array('type' => 'double', 'label' => 'CapitalPosition', 'enabled' => 0, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'date_position' => array('type' => 'datetime', 'label' => 'DatePosition', 'enabled' => 0, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+
+		'accountancy_account_capital' => array('type' => 'double', 'label' => 'accountancy_account_capital', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'accountancy_account_insurance' => array('type' => 'double', 'label' => 'accountancy_account_insurance', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'accountancy_account_interest' => array('type' => 'double', 'label' => 'accountancy_account_interest', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+
+		'fk_project' => array('type' => 'integer:Project:projet/class/project.class.php', 'label' => 'Account', 'enabled' => 1, 'position' => 60, 'notnull' => 0, 'visible' => 3,),
+		'fk_user_author' => array('type' => 'integer:User:user/class/user.class.php', 'label' => 'UserAuthor', 'enabled' => '1', 'position' => 510, 'notnull' => 1, 'visible' => -2, 'foreignkey' => 'user.rowid',),
+		'fk_user_modif' => array('type' => 'integer:User:user/class/user.class.php', 'label' => 'UserModif', 'enabled' => '1', 'position' => 511, 'notnull' => -1, 'visible' => -2, 'foreignkey' => 'user.rowid',),
+
+		'fk_periodicity' => array('type' => 'integer', 'label' => 'Periodicity', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'calc_mode' => array('type' => 'integer', 'label' => 'CalcMode', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+		'future_value' => array('type' => 'price', 'label' => 'FutureValue', 'enabled' => 1, 'position' => 60, 'notnull' => 1, 'visible' => 3,),
+	);
+
 
 	/**
 	 * Constructor
@@ -97,7 +214,10 @@ class Loan extends CommonObject
 	 */
 	public function __construct($db)
 	{
+		global $langs, $conf;
 		$this->db = $db;
+		$langs->load('errors');
+		$this->currency = $conf->currency; // TODO: handle multi-currency
 	}
 
 	/**
@@ -108,12 +228,33 @@ class Loan extends CommonObject
 	 */
 	public function fetch($id)
 	{
-		$sql = "SELECT l.rowid, l.label, l.capital, l.datestart, l.dateend, l.nbterm, l.rate, l.note_private, l.note_public, l.insurance_amount,";
-		$sql.= " l.paid, l.accountancy_account_capital, l.accountancy_account_insurance, l.accountancy_account_interest, l.fk_projet as fk_project";
-		$sql.= " FROM ".MAIN_DB_PREFIX."loan as l";
-		$sql.= " WHERE l.rowid = ".$id;
+		$sql = /* @lang SQL */
+			'SELECT l.rowid,'
+			. ' l.label,'
+			. ' l.capital,'
+			. ' l.datestart,'
+			. ' l.dateend,'
+			. ' l.nbterm AS nbPeriods,'
+			. ' l.rate,'
+			. ' l.note_private,'
+			. ' l.note_public,'
+			. ' l.insurance_amount,'
+			. ' l.paid,'
+			. ' l.accountancy_account_capital,'
+			. ' l.accountancy_account_insurance,'
+			. ' l.accountancy_account_interest,'
+			. ' l.fk_projet AS fk_project, '
+			. ' l.calc_mode,'
+			. ' l.fk_periodicity,'
+			. ' l.future_value,'
+			. ' d.value AS periodicity,'
+			. ' d.label AS periodicity_label'
+			. ' FROM ' . MAIN_DB_PREFIX . 'loan AS l'
+			. ' LEFT JOIN ' . MAIN_DB_PREFIX . 'c_periodicity AS d'
+			. '    ON d.rowid = l.fk_periodicity AND d.entity IN (' . getEntity('loan') . ')'
+			. ' WHERE l.rowid = ' . intval($id);
 
-		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
+		dol_syslog(get_class($this). '::fetch', LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -121,23 +262,27 @@ class Loan extends CommonObject
 			{
 				$obj = $this->db->fetch_object($resql);
 
-				$this->id					= $obj->rowid;
-				$this->ref					= $obj->rowid;
-				$this->datestart			= $this->db->jdate($obj->datestart);
-				$this->dateend				= $this->db->jdate($obj->dateend);
-				$this->label				= $obj->label;
-				$this->capital				= $obj->capital;
-				$this->nbterm				= $obj->nbterm;
-				$this->rate					= $obj->rate;
-				$this->note_private			= $obj->note_private;
-				$this->note_public			= $obj->note_public;
-				$this->insurance_amount     = $obj->insurance_amount;
-				$this->paid					= $obj->paid;
-
-				$this->account_capital		= $obj->accountancy_account_capital;
-				$this->account_insurance	= $obj->accountancy_account_insurance;
-				$this->account_interest		= $obj->accountancy_account_interest;
-				$this->fk_project			= $obj->fk_project;
+				$this->id                  = (int) $obj->rowid;
+				$this->ref                 = $obj->rowid;
+				$this->datestart           = (int) $this->db->jdate($obj->datestart);
+				$this->dateend             = (int) $this->db->jdate($obj->dateend);
+				$this->label               = $obj->label;
+				$this->capital             = (double) $obj->capital;
+				$this->nbPeriods           = (int) $obj->nbPeriods;
+				$this->rate                = (double) $obj->rate;
+				$this->note_private        = $obj->note_private;
+				$this->note_public         = $obj->note_public;
+				$this->insurance_amount    = (double) $obj->insurance_amount;
+				$this->paid                = (bool) $obj->paid;
+				$this->account_capital     = $obj->accountancy_account_capital;
+				$this->account_insurance   = $obj->accountancy_account_insurance;
+				$this->account_interest    = $obj->accountancy_account_interest;
+				$this->fk_project          = (int) $obj->fk_project;
+				$this->calc_mode           = (int) $obj->calc_mode;
+				$this->fk_periodicity      = (int) $obj->fk_periodicity;
+				$this->future_value        = (double) $obj->future_value;
+				$this->periodicity         = $obj->periodicity === null ? 1 : (int) $obj->periodicity;
+				$this->periodicity_label   = $obj->periodicity_label === null ? 'Monthly' : $obj->periodicity_label;
 
 				$this->db->free($resql);
 				return 1;
@@ -159,10 +304,10 @@ class Loan extends CommonObject
 	/**
 	 *  Create a loan into database
 	 *
-	 *  @param	User	$user	User making creation
-	 *  @return int				<0 if KO, id if OK
+	 *  @param	User  $user   User making creation
+	 *  @return int           success/error: <0 if KO, id if OK
 	 */
-	public function create($user)
+	public function create($user, $notrigger = false)
 	{
 		global $conf, $langs;
 
@@ -187,54 +332,82 @@ class Loan extends CommonObject
 		// Check parameters
 		if (! $newcapital > 0 || empty($this->datestart) || empty($this->dateend))
 		{
-			$this->error="ErrorBadParameter";
+			$this->error= 'ErrorBadParameter';
 			return -2;
 		}
 		if (($conf->accounting->enabled) && empty($this->account_capital))
 		{
-			$this->error=$langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("LoanAccountancyCapitalCode"));
+			$this->error=$langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('LoanAccountancyCapitalCode'));
 			return -2;
 		}
 		if (($conf->accounting->enabled) && empty($this->account_insurance))
 		{
-			$this->error=$langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("LoanAccountancyInsuranceCode"));
+			$this->error=$langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('LoanAccountancyInsuranceCode'));
 			return -2;
 		}
 		if (($conf->accounting->enabled) && empty($this->account_interest))
 		{
-			$this->error=$langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("LoanAccountancyInterestCode"));
+			$this->error=$langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('LoanAccountancyInterestCode'));
+			return -2;
+		}
+		if (! in_array($this->calc_mode, array_keys(self::CALC_MODES))) {
+			$this->error = $langs->trans('ErrorBadValueForParameter', $this->calc_mode, $langs->transnoentitiesnoconv('CalcMode'));
+
 			return -2;
 		}
 
 		$this->db->begin();
 
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."loan (label, fk_bank, capital, datestart, dateend, nbterm, rate, note_private, note_public,";
-		$sql.= " accountancy_account_capital, accountancy_account_insurance, accountancy_account_interest, entity,";
-		$sql.= " datec, fk_projet, fk_user_author, insurance_amount)";
-		$sql.= " VALUES ('".$this->db->escape($this->label)."',";
-		$sql.= " '".$this->db->escape($this->fk_bank)."',";
-		$sql.= " '".price2num($newcapital)."',";
-		$sql.= " '".$this->db->idate($this->datestart)."',";
-		$sql.= " '".$this->db->idate($this->dateend)."',";
-		$sql.= " '".$this->db->escape($this->nbterm)."',";
-		$sql.= " '".$this->db->escape($this->rate)."',";
-		$sql.= " '".$this->db->escape($this->note_private)."',";
-		$sql.= " '".$this->db->escape($this->note_public)."',";
-		$sql.= " '".$this->db->escape($this->account_capital)."',";
-		$sql.= " '".$this->db->escape($this->account_insurance)."',";
-		$sql.= " '".$this->db->escape($this->account_interest)."',";
-		$sql.= " ".$conf->entity.",";
-		$sql.= " '".$this->db->idate($now)."',";
-		$sql.= " ".(empty($this->fk_project)?'NULL':$this->fk_project).",";
-		$sql.= " ".$user->id.",";
-		$sql.= " '".price2num($newinsuranceamount)."'";
-		$sql.= ")";
+		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . 'loan ('
+			. ' label,'
+			. ' fk_bank,'
+			. ' capital,'
+			. ' datestart,'
+			. ' dateend,'
+			. ' nbterm,'
+			. ' rate,'
+			. ' note_private,'
+			. ' note_public,'
+			. ' accountancy_account_capital,'
+			. ' accountancy_account_insurance,'
+			. ' accountancy_account_interest,'
+			. ' entity,'
+			. ' datec,'
+			. ' fk_projet,'
+			. ' fk_periodicity,'
+			. ' future_value,'
+			. ' fk_user_author,'
+			. ' insurance_amount,'
+			. ' calc_mode'
+			. ')'
+			. ' VALUES ('
+			. " '" . $this->db->escape($this->label) . "',"
+			. " '" . $this->db->escape($this->fk_bank) . "',"
+			. " '" . price2num($newcapital) . "',"
+			. " '" . $this->db->idate($this->datestart) . "',"
+			. " '" . $this->db->idate($this->dateend) . "',"
+			. " '" . $this->db->escape($this->nbPeriods) . "',"
+			. " '" . $this->db->escape($this->rate) . "',"
+			. " '" . $this->db->escape($this->note_private) . "',"
+			. " '" . $this->db->escape($this->note_public) . "',"
+			. " '" . $this->db->escape($this->account_capital) . "',"
+			. " '" . $this->db->escape($this->account_insurance) . "',"
+			. " '" . $this->db->escape($this->account_interest) . "',"
+			. ' ' . (int) $conf->entity . ','
+			. " '" . $this->db->idate($now) . "',"
+			. ' ' . (empty($this->fk_project) ? 'NULL' : $this->fk_project) . ','
+			. ' ' . (int) $this->fk_periodicity . ','
+			. ' ' . (double) $this->future_value . ','
+			. ' ' . (int) $user->id . ','
+			. " '" . price2num($newinsuranceamount) . "',"
+			. ' ' . (int) $this->calc_mode . ''
+			. ')';
 
-		dol_syslog(get_class($this)."::create", LOG_DEBUG);
+		dol_syslog(get_class($this). '::create', LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
-			$this->id=$this->db->last_insert_id(MAIN_DB_PREFIX."loan");
+			$this->id=$this->db->last_insert_id(MAIN_DB_PREFIX. 'loan');
 
 			//dol_syslog("Loans::create this->id=".$this->id);
 			$this->db->commit();
@@ -248,18 +421,22 @@ class Loan extends CommonObject
 		}
 	}
 
-
 	/**
 	 *  Delete a loan
 	 *
-	 *  @param	User	$user	Object user making delete
-	 *  @return int 			<0 if KO, >0 if OK
+	 *  @param	User $user  Object user making delete
+	 *  @return int         success/error: <0 if KO, >0 if OK
 	 */
-	public function delete($user)
+	public function delete($user, $notrigger = false)
 	{
 		$error=0;
 
 		$this->db->begin();
+
+		// suppression des liens vers ou depuis cet emprunt
+		if ($this->deleteObjectLinked() < 0) {
+			$error++;
+		}
 
 		// Get bank transaction lines for this loan
 		include_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
@@ -284,8 +461,8 @@ class Loan extends CommonObject
 		// Delete payments
 		if (! $error)
 		{
-			$sql = "DELETE FROM ".MAIN_DB_PREFIX."payment_loan where fk_loan=".$this->id;
-			dol_syslog(get_class($this)."::delete", LOG_DEBUG);
+			$sql = 'DELETE FROM ' .MAIN_DB_PREFIX. 'payment_loan where fk_loan=' .$this->id;
+			dol_syslog(get_class($this). '::delete', LOG_DEBUG);
 			$resql=$this->db->query($sql);
 			if (! $resql)
 			{
@@ -296,8 +473,9 @@ class Loan extends CommonObject
 
 		if (! $error)
 		{
-			$sql = "DELETE FROM ".MAIN_DB_PREFIX."loan where rowid=".$this->id;
-			dol_syslog(get_class($this)."::delete", LOG_DEBUG);
+			$sql = 'DELETE FROM ' .MAIN_DB_PREFIX. 'loan WHERE rowid = ' . (int) $this->id;
+			// no need to delete the loan_schedule elements (the foreign key has ON DELETE CASCADE)
+			dol_syslog(get_class($this). '::delete', LOG_DEBUG);
 			$resql=$this->db->query($sql);
 			if (! $resql)
 			{
@@ -318,49 +496,82 @@ class Loan extends CommonObject
 		}
 	}
 
+	/**
+	 * Deletes all loan schedule elements associated with this loan
+	 * @return int
+	 */
+	public function deleteSchedule() {
+		$loanScheduleStatic = new LoanSchedule($this->db);
+		$this->db->begin();
+		$error = 0;
+		$sql = 'DELETE FROM ' . MAIN_DB_PREFIX . $loanScheduleStatic->table_element
+			. ' WHERE fk_loan = ' . (int) $this->id;
+		$resql = $this->db->query($sql);
+		if (! $resql) {
+			$error++;
+			$this->error = __FILE__ . ':' . __LINE__ . ":\n" . $this->db->lasterror();
+			$this->errors[] = $this->error;
+		}
+		if ($error) {
+			$this->db->rollback();
+			return -$error;
+		}
+		$this->db->commit();
+		return 1;
+	}
 
 	/**
 	 *  Update loan
 	 *
-	 *  @param	User	$user	User who modified
-	 *  @return int				<0 if error, >0 if ok
+	 *  @param	User $user  User who modified
+	 *  @return int         success/error: <0 if error, >0 if ok
 	 */
-	public function update($user)
+	public function update($user, $notrigger = false)
 	{
+		global $langs;
 		$this->db->begin();
 
-		if (! is_numeric($this->nbterm))
-		{
-			$this->error='BadValueForParameterForNbTerm';
+		if (! is_numeric($this->nbPeriods)) {
+			$this->errors[] = 'BadValueForParameterForNbTerm';
+
+			return -1;
+		}
+		if (! in_array($this->calc_mode, array_keys(self::CALC_MODES))) {
+			$this->errors[] = $langs->trans('ErrorBadValueForParameter', $this->calc_mode, $langs->transnoentitiesnoconv('CalcMode'));
+
 			return -1;
 		}
 
-		$sql = "UPDATE ".MAIN_DB_PREFIX."loan";
-		$sql.= " SET label='".$this->db->escape($this->label)."',";
-		$sql.= " capital='".price2num($this->db->escape($this->capital))."',";
-		$sql.= " datestart='".$this->db->idate($this->datestart)."',";
-		$sql.= " dateend='".$this->db->idate($this->dateend)."',";
-		$sql.= " nbterm=".$this->nbterm.",";
-		$sql.= " rate=".$this->db->escape($this->rate).",";
-		$sql.= " accountancy_account_capital = '".$this->db->escape($this->account_capital)."',";
-		$sql.= " accountancy_account_insurance = '".$this->db->escape($this->account_insurance)."',";
-		$sql.= " accountancy_account_interest = '".$this->db->escape($this->account_interest)."',";
-		$sql.= " fk_projet=".(empty($this->fk_project)?'NULL':$this->fk_project).",";
-		$sql.= " fk_user_modif = ".$user->id.",";
-		$sql.= " insurance_amount = '".price2num($this->db->escape($this->insurance_amount))."'";
-		$sql.= " WHERE rowid=".$this->id;
+		$sql = /* @lang SQL */
+			'UPDATE ' . MAIN_DB_PREFIX . 'loan'
+			. ' SET'
+			. " label                         = '" . $this->db->escape($this->label) . "',"
+			. " capital                       = '" . price2num($this->db->escape($this->capital)) . "',"
+			. " datestart                     = '" . $this->db->idate($this->datestart) . "',"
+			. " dateend                       = '" . $this->db->idate($this->dateend) . "',"
+			. ' nbterm                        = ' . $this->nbPeriods . ','
+			. ' rate                          = ' . $this->db->escape($this->rate) . ','
+			. ' fk_periodicity                = ' . (int) $this->fk_periodicity . ','
+			. ' future_value                  = ' . (double) $this->future_value . ','
+			. ' calc_mode                     = ' . (int) $this->calc_mode . ','
+			. " accountancy_account_capital   = '" . $this->db->escape($this->account_capital) . "',"
+			. " accountancy_account_insurance = '" . $this->db->escape($this->account_insurance) . "',"
+			. " accountancy_account_interest  = '" . $this->db->escape($this->account_interest) . "',"
+			. ' fk_projet                     = ' . (empty($this->fk_project) ? 'NULL' : $this->fk_project) . ','
+			. ' fk_user_modif                 = ' . $user->id . ','
+			. " insurance_amount              = '" . price2num($this->db->escape($this->insurance_amount)) . "'"
+			. ' WHERE rowid                   = ' . (int) $this->id;
 
-		dol_syslog(get_class($this)."::update", LOG_DEBUG);
-		$resql=$this->db->query($sql);
-		if ($resql)
-		{
+		dol_syslog(get_class($this) . '::update', LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql) {
 			$this->db->commit();
+
 			return 1;
-		}
-		else
-		{
-			$this->error=$this->db->error();
+		} else {
+			$this->error = $this->db->error();
 			$this->db->rollback();
+
 			return -1;
 		}
 	}
@@ -370,19 +581,19 @@ class Loan extends CommonObject
 	 *  Tag loan as payed completely
 	 *
 	 *  @param	User	$user	Object user making change
-	 *  @return	int				<0 if KO, >0 if OK
+	 *  @return	int             success/error: <0 if KO, >0 if OK
 	 */
 	public function set_paid($user)
 	{
-        // phpcs:enable
-		$sql = "UPDATE ".MAIN_DB_PREFIX."loan SET";
-		$sql.= " paid = 1";
-		$sql.= " WHERE rowid = ".$this->id;
+		// phpcs:enable
+		$sql = 'UPDATE ' . MAIN_DB_PREFIX . 'loan SET';
+		$sql .= ' paid = 1';
+		$sql .= ' WHERE rowid = ' . $this->id;
 		$return = $this->db->query($sql);
 		if ($return) {
 			return 1;
 		} else {
-			$this->error=$this->db->lasterror();
+			$this->error = $this->db->lasterror();
 			return -1;
 		}
 	}
@@ -412,45 +623,45 @@ class Loan extends CommonObject
 	{
         // phpcs:enable
 		global $langs;
-		$langs->loadLangs(array("customers","bills"));
+		$langs->loadLangs(array('customers', 'bills'));
 
 		if ($mode == 0 || $mode == 1)
 		{
-			if ($statut ==  0) return $langs->trans("Unpaid");
-			elseif ($statut ==  1) return $langs->trans("Paid");
+			if ($statut ==  0) return $langs->trans('Unpaid');
+			elseif ($statut ==  1) return $langs->trans('Paid');
 		}
 		elseif ($mode == 2)
 		{
-			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
-			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
-			elseif ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
+			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans('Unpaid'), 'statut1').' '.$langs->trans('Unpaid');
+			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans('BillStatusStarted'), 'statut3').' '.$langs->trans('BillStatusStarted');
+			elseif ($statut ==  1) return img_picto($langs->trans('Paid'), 'statut6').' '.$langs->trans('Paid');
 		}
 		elseif ($mode == 3)
 		{
-			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1');
-			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3');
-			elseif ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6');
+			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans('Unpaid'), 'statut1');
+			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans('BillStatusStarted'), 'statut3');
+			elseif ($statut ==  1) return img_picto($langs->trans('Paid'), 'statut6');
 		}
 		elseif ($mode == 4)
 		{
-			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
-			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
-			elseif ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
+			if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans('Unpaid'), 'statut1').' '.$langs->trans('Unpaid');
+			elseif ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans('BillStatusStarted'), 'statut3').' '.$langs->trans('BillStatusStarted');
+			elseif ($statut ==  1) return img_picto($langs->trans('Paid'), 'statut6').' '.$langs->trans('Paid');
 		}
 		elseif ($mode == 5)
 		{
-			if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
-			elseif ($statut ==  0 && $alreadypaid > 0) return $langs->trans("BillStatusStarted").' '.img_picto($langs->trans("BillStatusStarted"), 'statut3');
-			elseif ($statut ==  1) return $langs->trans("Paid").' '.img_picto($langs->trans("Paid"), 'statut6');
+			if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans('Unpaid').' '.img_picto($langs->trans('Unpaid'), 'statut1');
+			elseif ($statut ==  0 && $alreadypaid > 0) return $langs->trans('BillStatusStarted').' '.img_picto($langs->trans('BillStatusStarted'), 'statut3');
+			elseif ($statut ==  1) return $langs->trans('Paid').' '.img_picto($langs->trans('Paid'), 'statut6');
 		}
 		elseif ($mode == 6)
 		{
-			if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
-			elseif ($statut ==  0 && $alreadypaid > 0) return $langs->trans("BillStatusStarted").' '.img_picto($langs->trans("BillStatusStarted"), 'statut3');
-			elseif ($statut ==  1) return $langs->trans("Paid").' '.img_picto($langs->trans("Paid"), 'statut6');
+			if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans('Unpaid').' '.img_picto($langs->trans('Unpaid'), 'statut1');
+			elseif ($statut ==  0 && $alreadypaid > 0) return $langs->trans('BillStatusStarted').' '.img_picto($langs->trans('BillStatusStarted'), 'statut3');
+			elseif ($statut ==  1) return $langs->trans('Paid').' '.img_picto($langs->trans('Paid'), 'statut6');
 		}
 
-		else return "Error, mode/status not found";
+		return 'Error, mode/status not found';
 	}
 
 
@@ -464,21 +675,23 @@ class Loan extends CommonObject
 	public function getNomUrl($withpicto = 0, $maxlen = 0)
 	{
 		global $langs;
+		$notooltip = false;
+		$label = '';
 
-		$result='';
+		$result = '';
 
-		$tooltip = '<u>' . $langs->trans("ShowLoan") . '</u>';
+		$tooltip = '<u>' . $langs->trans('ShowLoan') . '</u>';
 		if (! empty($this->ref))
 			$tooltip .= '<br><strong>' . $langs->trans('Ref') . ':</strong> ' . $this->ref;
 		if (! empty($this->label))
 			$tooltip .= '<br><strong>' . $langs->trans('Label') . ':</strong> ' . $this->label;
 
-		$linkstart = '<a href="'.DOL_URL_ROOT.'/loan/card.php?id='.$this->id.'" title="'.str_replace('\n', '', dol_escape_htmltag($tooltip, 1)).'" class="classfortooltip">';
+		$linkstart = '<a href="' . DOL_URL_ROOT . '/loan/card.php?id=' . $this->id . '" title="' . str_replace('\n', '', dol_escape_htmltag($tooltip, 1)) . '" class="classfortooltip">';
 		$linkend = '</a>';
 
 		$result .= $linkstart;
-		if ($withpicto) $result.=img_object(($notooltip?'':$label), ($this->picto?$this->picto:'generic'), ($notooltip?(($withpicto != 2) ? 'class="paddingright"' : ''):'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip?0:1);
-		if ($withpicto != 2) $result.= ($maxlen?dol_trunc($this->ref, $maxlen):$this->ref);
+		if ($withpicto) $result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="' . (($withpicto != 2) ? 'paddingright ' : '') . 'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
+		if ($withpicto != 2) $result .= ($maxlen ? dol_trunc($this->ref, $maxlen) : $this->ref);
 		$result .= $linkend;
 
 		return $result;
@@ -493,10 +706,7 @@ class Loan extends CommonObject
 	 */
 	public function initAsSpecimen()
 	{
-	    global $user, $langs, $conf;
-
 	    $now=dol_now();
-
 	    // Initialise parameters
 	    $this->id = 0;
 	    $this->fk_bank = 1;
@@ -510,8 +720,11 @@ class Loan extends CommonObject
 	    $this->dateend = $now + (3600 * 24 * 365);
 	    $this->note_public = 'SPECIMEN';
 	    $this->capital = 20000;
-	    $this->nbterm = 48;
+	    $this->nbPeriods = 48;
 	    $this->rate = 4.3;
+		$this->fk_periodicity = null;
+		$this->future_value = 0;
+		$this->calc_mode = 1;
 	}
 
 	/**
@@ -528,7 +741,7 @@ class Loan extends CommonObject
 		$sql.= ' FROM '.MAIN_DB_PREFIX.$table;
 		$sql.= ' WHERE '.$field.' = '.$this->id;
 
-		dol_syslog(get_class($this)."::getSumPayment", LOG_DEBUG);
+		dol_syslog(get_class($this). '::getSumPayment', LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -581,7 +794,7 @@ class Loan extends CommonObject
 					$this->user_modification = $muser;
 				}
 				$this->date_creation	 = $this->db->jdate($obj->datec);
-				if (empty($obj->fk_user_modif)) $obj->tms = "";
+				if (empty($obj->fk_user_modif)) $obj->tms = '';
 				$this->date_modification = $this->db->jdate($obj->tms);
 
 				$this->db->free($result);
@@ -599,4 +812,190 @@ class Loan extends CommonObject
 			return -1;
 		}
     }
+
+	/**
+	 * @param int $periodN  Period of the installment for which the date is to be computed
+	 * @return int  Computed date of the installment for period $periodN
+	 */
+	public function getDateOfPeriod($periodN) {
+		// TODO: change calculation method if periodicity is not an integer (e.g. weekly payments)
+		return dol_time_plus_duree($this->datestart, $this->periodicity * $periodN, 'm');
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasEcheancier() {
+		static $hasEcheancier = null;
+		if (! $this->id) return false; // no ID => no schedule
+
+		// not null => already computed, use cached value
+		if ($hasEcheancier !== null) return $hasEcheancier;
+
+		// else => sql required
+		$loanScheduleStatic = new LoanSchedule($this->db);
+		$sql = 'SELECT COUNT(rowid) > 0 as has_echeancier FROM ' . MAIN_DB_PREFIX . $loanScheduleStatic->table_element
+			. ' WHERE fk_loan = ' . (int) $this->id;
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			// TODO: handle error
+		}
+		$hasEcheancier = (bool) $this->db->fetch_object($resql)->has_echeancier;
+		return $hasEcheancier;
+	}
+
+	/**
+	 * @param array $fieldDefArray
+	 * @param string $key
+	 * @param mixed $value Current value (preselected / pre-entered)
+	 * @param string $moreparam Additional html attributes
+	 * @param string $keysuffix
+	 * @param string $keyprefix
+	 * @param string $morecss Additional classes (for the class attribute of the main HTML input element)
+	 * @return string|void
+	 */
+	public function showInputField($fieldDefArray, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = 0) {
+		global $conf, $langs, $form;
+		/*
+				date_creation
+				label
+				fk_bank
+				capital
+				insurance_amount
+				nbPeriods
+				rate
+				capital_position
+				date_position
+				accountancy_account_capital
+				accountancy_account_insurance
+				accountancy_account_interest
+				fk_project
+				fk_user_author
+				fk_user_modif
+				fk_periodicity
+				calc_mode
+				future_value
+		 */
+		if ($key === '') {
+
+		}
+		elseif (array_key_exists($key, $this->fields)) {
+			return parent::showInputField($fieldDefArray, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = 0);
+		}
+	}
+
+	/**
+	 * Secure calls to json_encode($myLoan) by encoding only business-relevant values
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize(): array {
+		$arrayForJSON = array();
+		foreach ($this->jsonEncodableFields as $attrName) {
+			$arrayForJSON[$attrName] = $this->{$attrName};
+		}
+		return $arrayForJSON;
+	}
+
+	/**
+	 * Returns an object with 'entity', 'code', 'label', 'value' representing a payment frequency (periodicity).
+	 * @param int|string  $fk_periodicity
+	 * @param $invalidateCache
+	 * @return ?stdClass|int|array   -1 = SQL Error; null = not found; Object representing a periodicity
+	 */
+	public static function getPeriodicity($fk_periodicity = 1)
+	{
+		global $db;
+		$periodicityDict = self::getAllPeriodicities();
+		if (isset($periodicityDict[$fk_periodicity])) {
+			return $periodicityDict[$fk_periodicity];
+		}
+		if (is_null($fk_periodicity)) {
+			return (object) array(
+				'rowid' => null,
+				'entity' => 0,
+				'code' => 'MONTH',
+				'label' => 'Monthly',
+				'value' => 1
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * @param ?int $entity
+	 * @param bool $onlyActive
+	 * @param bool $invalidateCache
+	 * @return array|int  -1 = SQL error, else array of objects with 'entity', 'code', 'label', 'value' representing a payment frequency (periodicity).
+	 */
+	public static function getAllPeriodicities($entity = null, $onlyActive = false, $invalidateCache = false)
+	{
+		global $db;
+		static $periodicityDict = null;
+		if ($entity !== null) $entity = intval($entity);
+		if ($invalidateCache) $periodicityDict = null; // reset to force re-fetching by SQL
+		if (is_null($periodicityDict)) {
+			$periodicityDict = array();
+			$sql = /* @lang SQL */
+				'SELECT rowid, entity, code, label, value'
+				. ' FROM ' . MAIN_DB_PREFIX . 'c_periodicity';
+
+			if ($onlyActive) $sql .= ' WHERE active = 1';
+
+			$resql = $db->query($sql);
+			if (!$resql) return -1;
+			while ($obj = $db->fetch_object($resql)) {
+				$periodicityDict[intval($obj->rowid)] = (object) array(
+					'rowid' => intval($obj->rowid),
+					'entity' => intval($obj->entity),
+					'code' => $obj->rowid,
+					'label' => $obj->label,
+					'value' => intval($obj->value),
+				);
+			}
+		}
+		if ($entity === null) return $periodicityDict;
+		$filteredDict = array();
+		foreach ($periodicityDict as $rowid => $obj) {
+			if ($obj->entity === $entity) {
+				$filteredDict[$rowid] = $obj;
+			}
+		}
+		return $filteredDict;
+	}
+
+	/**
+	 * Returns a <select> element with options to choose a calculation mode for the loan (in advance or in arrear).
+	 * @param $selected
+	 * @return string
+	 */
+	public static function getCalcModeSelector($selected)
+	{
+		global $langs;
+		return Form::selectarray(
+			'calc_mode',
+			self::CALC_MODES,
+			$selected,
+			1,
+			0,
+			0,
+			'',
+			1,
+			0,
+			0,
+			'',
+			'',
+			0,
+			'',
+			0,
+			0,
+		) . img_help(
+			1,
+			$langs->trans('CalcInArrear') . ': '
+			. $langs->trans('CalcInArrearHelp')
+			. ' — '
+			. $langs->trans('CalcInAdvance') . ': '
+			. $langs->trans('CalcInAdvanceHelp')
+		);
+	}
 }

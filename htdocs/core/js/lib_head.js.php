@@ -1073,7 +1073,7 @@ function price2numjs(amount) {
 	var res = Math.round10(amount, - rounding);
 	// Other solution is
 	// var res = dolroundjs(amount, rounding)
-	console.log("res="+res)
+	//console.log("res="+res)
 	return res;
 }
 

@@ -23,12 +23,13 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/loan/class/loan.class.php';
 
 
 /**
  *		Class to manage Schedule of loans
  */
-class LoanSchedule extends CommonObject
+class LoanSchedule extends CommonObject implements \JsonSerializable
 {
 	/**
 	 * @var string ID to identify managed object
@@ -60,6 +61,8 @@ class LoanSchedule extends CommonObject
     public $amount_capital;    // Total amount of payment
 	public $amount_insurance;
 	public $amount_interest;
+
+	public $payment_periodicity; // same as parent loan's Period duration
 
     /**
      * @var int Payment Type ID
@@ -93,6 +96,21 @@ class LoanSchedule extends CommonObject
 	 * @see $amount, $amounts
 	 */
 	public $total;
+
+	/**
+	 * @var string[] Names of fields to include when encoding the object as JSON
+	 */
+	protected $jsonEncodableFields = array(
+		'id',
+		'element',
+		'fk_loan',
+		'datep',
+		'amount_capital',
+		'amount_insurance',
+		'amount_interest',
+//		'fk_user_creat',
+//		'fk_user_modif',
+	);
 
 	/**
 	 *	Constructor
@@ -140,26 +158,21 @@ class LoanSchedule extends CommonObject
         $totalamount = price2num($totalamount);
 
         // Check parameters
-        if ($totalamount == 0) {
-        	$this->errors[]='step1';
-        	return -1; // Negative amounts are accepted for reject prelevement but not null
-        }
-
 
 		$this->db->begin();
 
-		if ($totalamount != 0)
+		if (true /* $totalamount == 0 */)
 		{
 			$sql = "INSERT INTO ".MAIN_DB_PREFIX.$this->table_element." (fk_loan, datec, datep, amount_capital, amount_insurance, amount_interest,";
 			$sql.= " fk_typepayment, fk_user_creat, fk_bank)";
 			$sql.= " VALUES (".$this->fk_loan.", '".$this->db->idate($now)."',";
 			$sql.= " '".$this->db->idate($this->datep)."',";
-			$sql.= " ".$this->amount_capital.",";
-			$sql.= " ".$this->amount_insurance.",";
-			$sql.= " ".$this->amount_interest.",";
-			$sql.= " ".$this->fk_typepayment.", ";
-			$sql.= " ".$user->id.",";
-			$sql.= " ".$this->fk_bank . ")";
+			$sql.= " ".(double) $this->amount_capital.",";
+			$sql.= " ".(double) $this->amount_insurance.",";
+			$sql.= " ".(double) $this->amount_interest.",";
+			$sql.= " ".(int) $this->fk_typepayment.", ";
+			$sql.= " ".(int) $user->id.",";
+			$sql.= " ".(int) $this->fk_bank . ")";
 
 			dol_syslog(get_class($this)."::create", LOG_DEBUG);
 			$resql=$this->db->query($sql);
@@ -169,14 +182,14 @@ class LoanSchedule extends CommonObject
 			}
 			else
 			{
-                $this->error=$this->db->lasterror();
+				$this->error = __FILE__ . ':' . __LINE__ . ":\n" . $this->db->lasterror() . "\n" . $this->db->lastqueryerror();
+                $this->errors[] = $this->error;
 				$error++;
 			}
 		}
 
-		if ($totalamount != 0 && ! $error)
+		if (! $error)
 		{
-		    $this->amount_capital=$totalamount;
 		    $this->db->commit();
 			return $this->id;
 		}
@@ -226,29 +239,29 @@ class LoanSchedule extends CommonObject
             if ($this->db->num_rows($resql)) {
                 $obj = $this->db->fetch_object($resql);
 
-                $this->id = $obj->rowid;
+                $this->id = (int) $obj->rowid;
                 $this->ref = $obj->rowid;
 
-                $this->fk_loan = $obj->fk_loan;
-                $this->datec = $this->db->jdate($obj->datec);
-                $this->tms = $this->db->jdate($obj->tms);
-                $this->datep = $this->db->jdate($obj->datep);
-                $this->amount_capital = $obj->amount_capital;
-                $this->amount_insurance = $obj->amount_insurance;
-                $this->amount_interest = $obj->amount_interest;
-                $this->fk_typepayment = $obj->fk_typepayment;
+                $this->fk_loan = (int) $obj->fk_loan;
+                $this->datec = (int) $this->db->jdate($obj->datec);
+                $this->tms = (int) $this->db->jdate($obj->tms);
+                $this->datep = (int) $this->db->jdate($obj->datep);
+                $this->amount_capital = (double) $obj->amount_capital;
+                $this->amount_insurance = (double) $obj->amount_insurance;
+                $this->amount_interest = (double) $obj->amount_interest;
+                $this->fk_typepayment = (int) $obj->fk_typepayment;
                 $this->num_payment = $obj->num_payment;
                 $this->note_private = $obj->note_private;
                 $this->note_public = $obj->note_public;
                 $this->fk_bank = $obj->fk_bank;
-                $this->fk_user_creat = $obj->fk_user_creat;
-                $this->fk_user_modif = $obj->fk_user_modif;
+                $this->fk_user_creat = (int) $obj->fk_user_creat;
+                $this->fk_user_modif = (int) $obj->fk_user_modif;
 
                 $this->type_code = $obj->type_code;
                 $this->type_libelle = $obj->type_libelle;
 
-                $this->bank_account = $obj->fk_account;
-                $this->bank_line = $obj->fk_bank;
+                $this->bank_account = (int) $obj->fk_account;
+                $this->bank_line = (int) $obj->fk_bank;
             }
             $this->db->free($resql);
 
@@ -402,17 +415,17 @@ class LoanSchedule extends CommonObject
 	/**
 	 * Calculate Monthly Payments
 	 *
-	 * @param   double  $capital        Capital
-	 * @param   double  $rate           rate
-	 * @param   int     $nbterm         nb term
-	 * @return  double                  mensuality
+	 * @param   double  $capital            Capital
+	 * @param   double  $rate               rate
+	 * @param   int     $nbPeriods          nb Period
+	 * @param   int     $nbMonthsPerPeriod  periodicity
+	 * @return  double  mensuality
 	 */
-	public function calcMonthlyPayments($capital, $rate, $nbterm)
+	public function calcMonthlyPayments($capital, $rate, $nbPeriods)
 	{
 		$result='';
-
-		if (!empty($capital) && !empty($rate) && !empty($nbterm)) {
-			$result = ($capital*($rate/12))/(1-pow((1+($rate/12)), ($nbterm*-1)));
+		if (!empty($capital) && !empty($rate) && !empty($nbPeriods)) {
+			$result = (($capital * ($rate / 12)) / (1 - pow((1 + ($rate / 12)), ($nbPeriods * -1))));
 		}
 
 		return $result;
@@ -456,23 +469,23 @@ class LoanSchedule extends CommonObject
 			while($obj = $this->db->fetch_object($resql))
 			{
 				$line = new LoanSchedule($this->db);
-				$line->id = $obj->rowid;
+				$line->id =  (int) $obj->rowid;
 				$line->ref = $obj->rowid;
 
-				$line->fk_loan = $obj->fk_loan;
-				$line->datec = $this->db->jdate($obj->datec);
-				$line->tms = $this->db->jdate($obj->tms);
-				$line->datep = $this->db->jdate($obj->datep);
-				$line->amount_capital = $obj->amount_capital;
-				$line->amount_insurance = $obj->amount_insurance;
-				$line->amount_interest = $obj->amount_interest;
-				$line->fk_typepayment = $obj->fk_typepayment;
+				$line->fk_loan = (int) $obj->fk_loan;
+				$line->datec = (int) $this->db->jdate($obj->datec);
+				$line->tms = (int) $this->db->jdate($obj->tms);
+				$line->datep = (int) $this->db->jdate($obj->datep);
+				$line->amount_capital = (double) $obj->amount_capital;
+				$line->amount_insurance = (double) $obj->amount_insurance;
+				$line->amount_interest = (double) $obj->amount_interest;
+				$line->fk_typepayment = (int) $obj->fk_typepayment;
 				$line->num_payment = $obj->num_payment;
 				$line->note_private = $obj->note_private;
 				$line->note_public = $obj->note_public;
-				$line->fk_bank = $obj->fk_bank;
-				$line->fk_user_creat = $obj->fk_user_creat;
-				$line->fk_user_modif = $obj->fk_user_modif;
+				$line->fk_bank = (int) $obj->fk_bank;
+				$line->fk_user_creat = (int) $obj->fk_user_creat;
+				$line->fk_user_modif = (int) $obj->fk_user_modif;
 
 				$this->lines[] = $line;
 			}
@@ -579,5 +592,24 @@ class LoanSchedule extends CommonObject
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Secure calls to json_encode($myLoan) by encoding only business-relevant values
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize(): array {
+		$this->id = (double) $this->id;
+		$this->amount_capital = (double) $this->amount_capital;
+		$this->amount_insurance = (double) $this->amount_insurance;
+		$this->amount_interest = (double) $this->amount_interest;
+		$this->datep = (int) $this->datep;
+		$this->fk_loan = (int) $this->fk_loan;
+		$arrayForJSON = array();
+		foreach ($this->jsonEncodableFields as $attrName) {
+			$arrayForJSON[$attrName] = $this->{$attrName};
+		}
+		return $arrayForJSON;
 	}
 }
