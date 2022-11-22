@@ -346,6 +346,10 @@ if (empty($reshook)) {
 		$filter['t.numero_compte<='] = $search_accountancy_code_end;
 		$param .= '&search_accountancy_code_end='.urlencode($search_accountancy_code_end);
 	}
+	if (!empty($search_accountancy_aux_code)) {
+		$filter['t.subledger_account'] = $search_accountancy_aux_code;
+		$param .= '&search_accountancy_aux_code='.urlencode($search_accountancy_aux_code);
+	}
 	if (!empty($search_accountancy_aux_code_start)) {
 		$filter['t.subledger_account>='] = $search_accountancy_aux_code_start;
 		$param .= '&search_accountancy_aux_code_start='.urlencode($search_accountancy_aux_code_start);
@@ -860,8 +864,8 @@ if ($optioncss != '') {
 	print '<input type="hidden" name="optioncss" value="'.urlencode($optioncss).'">';
 }
 print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
-print '<input type="hidden" name="sortfield" value="'.urlencode($sortfield).'">';
-print '<input type="hidden" name="sortorder" value="'.urlencode($sortorder).'">';
+print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
+print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 print '<input type="hidden" name="contextpage" value="'.$contextpage.'">';
 
 if (count($filter)) {

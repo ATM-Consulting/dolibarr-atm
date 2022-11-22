@@ -1065,7 +1065,7 @@ while ($i < $imaxinloop) {
 			// Description
 			if (!empty($arrayfields['t.description']['checked'])) {
 				print '<td>';
-				print dol_escape_htmltag($object->description);
+				print dolGetFirstLineOfText($object->description, 5);
 				print '</td>';
 				if (!$i) {
 					$totalarray['nbfield']++;

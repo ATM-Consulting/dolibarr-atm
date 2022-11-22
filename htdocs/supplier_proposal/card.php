@@ -448,10 +448,10 @@ if (empty($reshook)) {
 						if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 							$outputlangs = $langs;
 							$newlang = '';
-							if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+							if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
 								$newlang = GETPOST('lang_id', 'aZ09');
 							}
-							if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+							if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang)) {
 								$newlang = $object->thirdparty->default_lang;
 							}
 							if (!empty($newlang)) {
@@ -686,6 +686,7 @@ if (empty($reshook)) {
 					$ref_supplier = $productsupplier->ref_supplier;
 
 					// Get vat rate
+					$tva_npr = 0;
 					if (!GETPOSTISSET('tva_tx')) {	// If vat rate not provided from the form (the form has the priority)
 						$tva_tx = get_default_tva($object->thirdparty, $mysoc, $productsupplier->id, GETPOST('idprodfournprice', 'alpha'));
 						$tva_npr = get_default_npr($object->thirdparty, $mysoc, $productsupplier->id, GETPOST('idprodfournprice', 'alpha'));
@@ -841,10 +842,10 @@ if (empty($reshook)) {
 				if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 					$outputlangs = $langs;
 					$newlang = '';
-					if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
 						$newlang = GETPOST('lang_id', 'aZ09');
 					}
-					if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+					if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang)) {
 						$newlang = $object->thirdparty->default_lang;
 					}
 					if (!empty($newlang)) {
@@ -1282,7 +1283,7 @@ if ($action == 'create') {
 	// Shipping Method
 	if (!empty($conf->expedition->enabled)) {
 		print '<tr><td>'.$langs->trans('SendingMethod').'</td><td colspan="2">';
-		print $form->selectShippingMethod(GETPOST('shipping_method_id') > 0 ? GETPOST('shipping_method_id', 'int') : $shipping_method_id, 'shipping_method_id', '', 1);
+		print $form->selectShippingMethod(GETPOST('shipping_method_id') > 0 ? GETPOST('shipping_method_id', 'int') : "", 'shipping_method_id', '', 1);
 		print '</td></tr>';
 	}
 
@@ -1290,7 +1291,7 @@ if ($action == 'create') {
 	print '<tr><td>'.$langs->trans("DeliveryDate").'</td>';
 	print '<td colspan="2">';
 	$datedelivery = dol_mktime(0, 0, 0, GETPOST('liv_month'), GETPOST('liv_day'), GETPOST('liv_year'));
-	if ($conf->global->DATE_LIVRAISON_WEEK_DELAY != "") {
+	if (!empty($conf->global->DATE_LIVRAISON_WEEK_DELAY)) {
 		$tmpdte = time() + ((7 * $conf->global->DATE_LIVRAISON_WEEK_DELAY) * 24 * 60 * 60);
 		$syear = date("Y", $tmpdte);
 		$smonth = date("m", $tmpdte);
@@ -1307,7 +1308,7 @@ if ($action == 'create') {
 	print '<td>'.$langs->trans("DefaultModel").'</td>';
 	print '<td colspan="2">';
 	$list = ModelePDFSupplierProposal::liste_modeles($db);
-	$preselected = ($conf->global->SUPPLIER_PROPOSAL_ADDON_PDF_ODT_DEFAULT ? $conf->global->SUPPLIER_PROPOSAL_ADDON_PDF_ODT_DEFAULT : $conf->global->SUPPLIER_PROPOSAL_ADDON_PDF);
+	$preselected = (!empty($conf->global->SUPPLIER_PROPOSAL_ADDON_PDF_ODT_DEFAULT) ? $conf->global->SUPPLIER_PROPOSAL_ADDON_PDF_ODT_DEFAULT : $conf->global->SUPPLIER_PROPOSAL_ADDON_PDF);
 	print $form->selectarray('model', $list, $preselected, 0, 0, 0, '', 0, 0, 0, '', '', 1);
 	print "</td></tr>";
 
@@ -1599,7 +1600,7 @@ if ($action == 'create') {
 	print '<table class="border tableforfield" width="100%">';
 
 	// Relative and absolute discounts
-	if (!empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) {
+	if (!empty($conf->global->FACTURE_SUPPLIER_DEPOSITS_ARE_JUST_PAYMENTS)) {
 		$filterabsolutediscount = "fk_invoice_supplier_source IS NULL"; // If we want deposit to be substracted to payments only and not to total of final invoice
 		$filtercreditnote = "fk_invoice_supplier_source IS NOT NULL"; // If we want deposit to be substracted to payments only and not to total of final invoice
 	} else {

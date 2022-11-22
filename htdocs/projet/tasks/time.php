@@ -1828,7 +1828,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 			if (!empty($arrayfields['t.note']['checked'])) {
 				print '<td class="small">';
 				if ($action == 'editline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-					print '<textarea name="timespent_note_line" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note).'</textarea>';
+					print '<textarea name="timespent_note_line" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note, 0, 1).'</textarea>';
 				} else {
 					print dol_nl2br($task_time->note);
 				}
@@ -1837,7 +1837,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 					$totalarray['nbfield']++;
 				}
 			} elseif ($action == 'editline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-				print '<input type="hidden" name="timespent_note_line" value="'.dol_escape_htmltag($task_time->note).'">';
+				print '<input type="hidden" name="timespent_note_line" value="'.dol_escape_htmltag($task_time->note, 0, 1).'">';
 			}
 
 			// Time spent
@@ -2054,13 +2054,13 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				if (!empty($arrayfields['t.note']['checked'])) {
 					print '<td class="tdoverflowmax300">';
 					if ($action == 'splitline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-						print '<textarea name="timespent_note_line" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note).'</textarea>';
+						print '<textarea name="timespent_note_line" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note, 0, 1).'</textarea>';
 					} else {
 						print dol_nl2br($task_time->note);
 					}
 					print '</td>';
 				} elseif ($action == 'splitline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-					print '<input type="hidden" name="timespent_note_line" rows="'.ROWS_1.'" value="'.dol_escape_htmltag($task_time->note).'">';
+					print '<input type="hidden" name="timespent_note_line" rows="'.ROWS_1.'" value="'.dol_escape_htmltag($task_time->note, 0, 1).'">';
 				}
 
 				// Time spent
@@ -2192,13 +2192,13 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				if (!empty($arrayfields['t.note']['checked'])) {
 					print '<td class="small tdoverflowmax300"">';
 					if ($action == 'splitline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-						print '<textarea name="timespent_note_line_2" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note).'</textarea>';
+						print '<textarea name="timespent_note_line_2" width="95%" rows="'.ROWS_1.'">'.dol_escape_htmltag($task_time->note, 0, 1).'</textarea>';
 					} else {
 						print dol_nl2br($task_time->note);
 					}
 					print '</td>';
 				} elseif ($action == 'splitline' && GETPOST('lineid', 'int') == $task_time->rowid) {
-					print '<input type="hidden" name="timespent_note_line_2" value="'.dol_escape_htmltag($task_time->note).'">';
+					print '<input type="hidden" name="timespent_note_line_2" value="'.dol_escape_htmltag($task_time->note, 0, 1).'">';
 				}
 
 				// Time spent

@@ -659,10 +659,10 @@ if (empty($reshook)) {
 				if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 					$outputlangs = $langs;
 					$newlang = '';
-					if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+					if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
 						$newlang = GETPOST('lang_id', 'aZ09');
 					}
-					if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+					if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang)) {
 						$newlang = $object->thirdparty->default_lang;
 					}
 					if (!empty($newlang)) {
@@ -1244,7 +1244,7 @@ if (empty($reshook)) {
 							$object->lines[] = $line; // insert new line in current object
 
 							// Defined the new fk_parent_line
-							if ($result > 0) {
+							if ($result > 0 && $line->product_type == 9) {
 								$fk_parent_line = $result;
 							}
 						}
@@ -1765,7 +1765,7 @@ if (empty($reshook)) {
 										}
 
 										// Defined the new fk_parent_line
-										if ($result > 0) {
+										if ($result > 0 && $lines[$i]->product_type == 9) {
 											$fk_parent_line = $result;
 										}
 									}
@@ -2237,8 +2237,9 @@ if (empty($reshook)) {
 				$desc = $product_desc;
 				$type = GETPOST('type');
 				$fk_unit = GETPOST('units', 'alpha');
-				$pu_ht_devise = price2num($price_ht_devise, 'MU');
 			}
+
+			$pu_ht_devise = price2num($price_ht_devise, 'MU');
 
 			// Margin
 			$fournprice = price2num(GETPOST('fournprice'.$predef) ? GETPOST('fournprice'.$predef) : '');
@@ -2286,10 +2287,10 @@ if (empty($reshook)) {
 					if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 						$outputlangs = $langs;
 						$newlang = '';
-						if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
+						if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) {
 							$newlang = GETPOST('lang_id', 'aZ09');
 						}
-						if ($conf->global->MAIN_MULTILANGS && empty($newlang)) {
+						if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang)) {
 							$newlang = $object->thirdparty->default_lang;
 						}
 						if (!empty($newlang)) {
@@ -3111,7 +3112,7 @@ if ($action == 'create') {
 	} else {
 		print '<tr><td class="fieldrequired">'.$langs->trans('Customer').'</td>';
 		print '<td colspan="2">';
-		print img_picto('', 'company').$form->select_company($soc->id, 'socid', '((s.client = 1 OR s.client = 3) AND s.status=1)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 widthcentpercentminusxx maxwidth500');
+		print img_picto('', 'company').$form->select_company($soc->id, 'socid', '((s.client = 1 OR s.client = 3) AND s.status = 1)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 widthcentpercentminusxx maxwidth500');
 		// Option to reload page to retrieve customer informations.
 		if (empty($conf->global->RELOAD_PAGE_ON_CUSTOMER_CHANGE_DISABLED)) {
 			print '<script type="text/javascript">
@@ -3918,7 +3919,9 @@ if ($action == 'create') {
 		$multicurrency_totaldeposits = $object->getSumDepositsUsed(1);
 		$multicurrency_resteapayer = price2num($object->multicurrency_total_ttc - $multicurrency_totalpaid - $multicurrency_totalcreditnotes - $multicurrency_totaldeposits, 'MT');
 		// Code to fix case of corrupted data
-		if ($resteapayer == 0 && $multicurrency_resteapayer != 0) {
+		// TODO We should not need this. Also data comes from a not reliable value of $object->multicurrency_total_ttc that may be wrong if it was
+		// calculated by summing lines that were in a currency for some of them and into another for others (lines from discount/down payment into another currency for example)
+		if ($resteapayer == 0 && $multicurrency_resteapayer != 0 && $object->multicurrency_code != $conf->currency) {
 			$resteapayer = price2num($multicurrency_resteapayer / $object->multicurrency_tx, 'MT');
 		}
 	}

@@ -450,12 +450,16 @@ if ($limit > 0 && $limit != $conf->liste_limit) {
 	$param .= '&limit='.urlencode($limit);
 }
 foreach ($search as $key => $val) {
-	if (is_array($search[$key]) && count($search[$key])) {
+	if (is_array($search[$key])) {
 		foreach ($search[$key] as $skey) {
 			if ($skey != '') {
 				$param .= '&search_'.$key.'[]='.urlencode($skey);
 			}
 		}
+	} elseif (preg_match('/(_dtstart|_dtend)$/', $key) && !empty($val)) {
+		$param .= '&search_'.$key.'month='.((int) GETPOST('search_'.$key.'month', 'int'));
+		$param .= '&search_'.$key.'day='.((int) GETPOST('search_'.$key.'day', 'int'));
+		$param .= '&search_'.$key.'year='.((int) GETPOST('search_'.$key.'year', 'int'));
 	} elseif ($search[$key] != '') {
 		$param .= '&search_'.$key.'='.urlencode($search[$key]);
 	}

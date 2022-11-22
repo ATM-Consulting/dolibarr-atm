@@ -1755,6 +1755,7 @@ function weight_convert($weight, &$from_unit, $to_unit)
 	 *  weigh_convert(320, $f, 0) retournera 0.32
 	 *
 	 */
+	$weight = is_numeric($weight) ? $weight : 0;
 	while ($from_unit <> $to_unit) {
 		if ($from_unit > $to_unit) {
 			$weight = $weight * 10;
@@ -2655,7 +2656,7 @@ function getModuleDirForApiClass($moduleobject)
 		$moduledirforclass = 'fichinter';
 	} elseif ($moduleobject == 'mos') {
 		$moduledirforclass = 'mrp';
-	} elseif (in_array($moduleobject, array('products', 'expensereports', 'users', 'tickets', 'boms'))) {
+	} elseif (in_array($moduleobject, array('products', 'expensereports', 'users', 'tickets', 'boms', 'receptions'))) {
 		$moduledirforclass = preg_replace('/s$/', '', $moduleobject);
 	}
 

@@ -315,8 +315,28 @@ if (empty($reshook)) {
 
 		if (!$error) {
 			$result = $object->set_date($user, $datep);
+			if ($result > 0 && !empty($object->duree_validite) && !empty($object->fin_validite)) {
+				$datev = $datep + ($object->duree_validite * 24 * 3600);
+				$result = $object->set_echeance($user, $datev, 1);
+			}
 			if ($result < 0) {
 				dol_print_error($db, $object->error);
+			} elseif (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+				$outputlangs = $langs;
+				$newlang = '';
+				if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) $newlang = GETPOST('lang_id', 'aZ09');
+				if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang))	$newlang = $object->thirdparty->default_lang;
+				if (!empty($newlang)) {
+					$outputlangs = new Translate("", $conf);
+					$outputlangs->setDefaultLang($newlang);
+				}
+				$model = $object->model_pdf;
+				$ret = $object->fetch($id); // Reload to get new records
+				if ($ret > 0) {
+					$object->fetch_thirdparty();
+				}
+
+				$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
 			}
 		}
 	} elseif ($action == 'setecheance' && $usercancreate) {
@@ -325,8 +345,8 @@ if (empty($reshook)) {
 			if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
 				$outputlangs = $langs;
 				$newlang = '';
-				if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) $newlang = GETPOST('lang_id', 'aZ09');
-				if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
+				if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang) && GETPOST('lang_id', 'aZ09')) $newlang = GETPOST('lang_id', 'aZ09');
+				if (!empty($conf->global->MAIN_MULTILANGS) && empty($newlang))	$newlang = $object->thirdparty->default_lang;
 				if (!empty($newlang)) {
 					$outputlangs = new Translate("", $conf);
 					$outputlangs->setDefaultLang($newlang);
@@ -1661,7 +1681,7 @@ if ($action == 'create') {
 		//$warehouse_id       = $soc->warehouse_id;
 	} else {
 		print '<td class="valuefieldcreate">';
-		print img_picto('', 'company').$form->select_company('', 'socid', '(s.client = 1 OR s.client = 2 OR s.client = 3) AND status=1', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 maxwidth500 widthcentpercentminusxx');
+		print img_picto('', 'company').$form->select_company('', 'socid', '((s.client = 1 OR s.client = 2 OR s.client = 3) AND status=1)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 maxwidth500 widthcentpercentminusxx');
 		// reload page to retrieve customer informations
 		if (empty($conf->global->RELOAD_PAGE_ON_CUSTOMER_CHANGE_DISABLED)) {
 			print '<script type="text/javascript">
@@ -1711,13 +1731,13 @@ if ($action == 'create') {
 	// Terms of payment
 	print '<tr class="field_cond_reglement_id"><td class="nowrap">'.$langs->trans('PaymentConditionsShort').'</td><td>';
 	print img_picto('', 'paiment');
-	$form->select_conditions_paiements((GETPOSTISSET('cond_reglement_id') && GETPOST('cond_reglement_id') != 0) ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id, 'cond_reglement_id', 1, 1, 0, '', (GETPOSTISSET('cond_reglement_id_deposit_percent') ? GETPOST('cond_reglement_id_deposit_percent', 'alpha') : $soc->deposit_percent));
+	$form->select_conditions_paiements((GETPOSTISSET('cond_reglement_id') && GETPOST('cond_reglement_id', 'int') != 0) ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id, 'cond_reglement_id', 1, 1, 0, '', (GETPOSTISSET('cond_reglement_id_deposit_percent') ? GETPOST('cond_reglement_id_deposit_percent', 'alpha') : $soc->deposit_percent));
 	print '</td></tr>';
 
 	// Mode of payment
 	print '<tr class="field_mode_reglement_id"><td class="titlefieldcreate">'.$langs->trans('PaymentMode').'</td><td class="valuefieldcreate">';
 	print img_picto('', 'bank', 'class="pictofixedwidth"');
-	$form->select_types_paiements((GETPOSTISSET('mode_reglement_id') && GETPOST('mode_reglement_id') != 0) ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id, 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
+	$form->select_types_paiements((GETPOSTISSET('mode_reglement_id') && GETPOST('mode_reglement_id', 'int') != 0) ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id, 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
 	print '</td></tr>';
 
 	// Bank Account
@@ -2281,13 +2301,16 @@ if ($action == 'create') {
 	// Date of proposal
 	print '<tr>';
 	print '<td>';
-	print '<table class="nobordernopadding" width="100%"><tr><td>';
-	print $langs->trans('DatePropal');
-	print '</td>';
-	if ($action != 'editdate' && $usercancreate && $caneditfield) {
-		print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->trans('SetDate'), 1).'</a></td>';
-	}
-	print '</tr></table>';
+	// print '<table class="nobordernopadding" width="100%"><tr><td>';
+	// print $langs->trans('DatePropal');
+	// print '</td>';
+	// if ($action != 'editdate' && $usercancreate && $caneditfield) {
+	// 	print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->trans('SetDate'), 1).'</a></td>';
+	// }
+
+	// print '</tr></table>';
+	$editenable = $usercancreate && $caneditfield && $object->statut == Propal::STATUS_DRAFT;
+	print $form->editfieldkey("DatePropal", 'date', '', $object, $editenable);
 	print '</td><td class="valuefield">';
 	if ($action == 'editdate' && $usercancreate && $caneditfield) {
 		print '<form name="editdate" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
