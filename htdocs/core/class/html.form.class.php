@@ -6896,6 +6896,9 @@ class Form
                             }
                         });
                     });
+			$(document).ready(function(){ /* On déclenche systématiquement l action dès qu on arrive sur le mode edit, sinon quand on modifie une tâche où l info en jours est déjà présente, ça vide le champ */
+				$("#'.$prefix.'days").blur();
+			});
                 </script>
             ';
 		}
