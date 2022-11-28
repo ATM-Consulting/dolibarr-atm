@@ -459,6 +459,7 @@ class FactureFournisseur extends CommonInvoice
         */
 
         if (! $remise) $remise = 0 ;
+		$this->entity = $conf->entity;
 
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."facture_fourn (";
 		$sql.= "ref";
@@ -487,7 +488,7 @@ class FactureFournisseur extends CommonInvoice
         $sql.= " VALUES (";
 		$sql.= "'(PROV)'";
         $sql.= ", '".$this->db->escape($this->ref_supplier)."'";
-        $sql.= ", ".$conf->entity;
+        $sql.= ", ".$this->entity;
         $sql.= ", '".$this->db->escape($this->type)."'";
         $sql.= ", '".$this->db->escape($this->label?$this->label:$this->libelle)."'";
         $sql.= ", ".$this->socid;
