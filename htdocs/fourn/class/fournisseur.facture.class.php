@@ -326,6 +326,7 @@ class FactureFournisseur extends CommonInvoice
 
 		$error=0;
         $now=dol_now();
+		$this->status = $this->fk_statut = self::STATUS_DRAFT;
 
         // Clean parameters
         if (isset($this->ref_supplier)) $this->ref_supplier=trim($this->ref_supplier);
