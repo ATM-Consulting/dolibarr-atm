@@ -842,11 +842,11 @@ if (count($tasksarray) > 0) {
 				print $fullhour;
 				if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
 				{
-					$workingdelay=convertSecondToTime($timeonothertasks, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+					$workingdelay=convertSecondToTime($timeonothertasks, 'fulldaydecimal', $working_hours_per_day_in_seconds, $working_days_per_weeks);
 					if ($workingdelay != $fullhour)
 					{
 						if (!empty($fullhour)) print '<br>';
-						print '('.$workingdelay.')';
+						print $workingdelay;
 					}
 				}
 				print '"></span>';
