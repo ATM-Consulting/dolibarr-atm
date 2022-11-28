@@ -2007,7 +2007,17 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 				if (!empty($arrayfields['t.planned_workload']['checked'])) {
 					print '<td class="leftborder plannedworkload right">';
 					if ($lines[$i]->planned_workload) {
-						print convertSecondToTime($lines[$i]->planned_workload, 'allhourmin');
+						$fullhour = convertSecondToTime($lines[$i]->planned_workload, $timespentoutputformat);
+						print $fullhour;
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($lines[$i]->planned_workload, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							if ($workingdelay != $fullhour)
+							{
+								if (!empty($fullhour)) print '<br>';
+								print '('.$workingdelay.')';
+							}
+						}
 					} else {
 						print '--:--';
 					}
@@ -2027,7 +2037,17 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 					// $lines[$i]->duration is a denormalised field = summ of time spent by everybody for task. What we need is time consummed by user
 					if ($lines[$i]->duration) {
 						print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.'">';
-						print convertSecondToTime($lines[$i]->duration, 'allhourmin');
+						$fullhour = convertSecondToTime($lines[$i]->duration, $timespentoutputformat);
+						print $fullhour;
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($lines[$i]->duration, $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							if ($workingdelay != $fullhour)
+							{
+								if (!empty($fullhour)) print '<br>';
+								print '('.$workingdelay.')';
+							}
+						}
 						print '</a>';
 					} else {
 						print '--:--';
@@ -2038,7 +2058,17 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 					print '<td class="right">';
 					$tmptimespent = $taskstatic->getSummaryOfTimeSpent($fuser->id);
 					if ($tmptimespent['total_duration']) {
-						print convertSecondToTime($tmptimespent['total_duration'], 'allhourmin');
+						$fullhour = convertSecondToTime($tmptimespent['total_duration'], $timespentoutputformat);
+						print $fullhour;
+						if (!empty($conf->global->PROJECT_ENABLE_WORKING_TIME))
+						{
+							$workingdelay=convertSecondToTime($tmptimespent['total_duration'], $working_timespentoutputformat, $working_hours_per_day_in_seconds, $working_days_per_weeks);
+							if ($workingdelay != $fullhour)
+							{
+								if (!empty($fullhour)) print '<br>';
+								print '('.$workingdelay.')';
+							}
+						}
 					} else {
 						print '--:--';
 					}
