@@ -309,7 +309,7 @@ function convertSecondToTime($iSecond, $format = 'all', $lengthOfDay = 86400, $l
 				$sTime = price($total_days, 0, '', 1 , -1, $frounding).' '.$dayTranslate;
 			}
 		}
-		//SPECIFIQUE CLIENT SYAGE
+		//FIN SPECIFIQUE CLIENT SYAGE
 	} elseif ($format == 'hour') {	// only hour part
 		$sTime = dol_print_date($iSecond, '%H', true);
 	} elseif ($format == 'fullhour') {
@@ -328,6 +328,17 @@ function convertSecondToTime($iSecond, $format = 'all', $lengthOfDay = 86400, $l
 	} elseif ($format == 'year') {	// only year part
 		$sTime = dol_print_date($iSecond, '%Y', true);
 	}
+	//SPECIFIQUE CLIENT SYAGE
+	elseif ($format == 'fulldaydecimal') {
+        $nb_weeks =  floor($iSecond / ($lengthOfWeek * $lengthOfDay)); //$iSecond % ($lengthOfWeek * $lengthOfDay);
+        $iSecond = $iSecond - ($nb_weeks * ($lengthOfWeek * $lengthOfDay));
+
+        $nb_days = floor($iSecond / $lengthOfDay);
+        $iSecond = $iSecond - ($nb_days * $lengthOfDay);
+
+        $sTime = $nb_weeks * $lengthOfWeek + $nb_days + ($iSecond / $lengthOfDay);
+    }
+	//FIN SPECIFIQUE CLIENT SYAGE
 	return trim($sTime);
 }
 

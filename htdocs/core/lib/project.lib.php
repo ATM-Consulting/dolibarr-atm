@@ -1679,7 +1679,8 @@ function projectLinesPerDay(&$inc, $parent, $fuser, $lines, &$level, &$projectsr
 
 				$alreadyspent = '';
 				if ($dayWorkLoad > 0) {
-					$alreadyspent = convertSecondToTime($dayWorkLoad, 'allhourmin');
+					if (empty($conf->global->PROJECT_USE_DECIMAL_DAY)) $alreadyspent=convertSecondToTime($dayWorkLoad, 'allhourmin');
+					else $alreadyspent=convertSecondToTime($dayWorkLoad, 'fulldaydecimal', $working_hours_per_day_in_seconds, $working_days_per_weeks);
 				}
 
 				$idw = 0;
@@ -2141,7 +2142,7 @@ function projectLinesPerWeek(&$inc, $firstdaytoshow, $fuser, $parent, $lines, &$
 						$disabledtaskday = 1;
 					}
 
-					$tableCell = '<td class="center hide'.$idw.($cssonholiday ? ' '.$cssonholiday : '').($cssweekend ? ' '.$cssweekend : '').'">';
+					$tableCell = '<td nowrap class="center hide'.$idw.($cssonholiday ? ' '.$cssonholiday : '').($cssweekend ? ' '.$cssweekend : '').'">';
 					//$tableCell .= 'idw='.$idw.' '.$conf->global->MAIN_START_WEEK.' '.$numstartworkingday.'-'.$numendworkingday;
 					$placeholder = '';
 					if ($alreadyspent) {
