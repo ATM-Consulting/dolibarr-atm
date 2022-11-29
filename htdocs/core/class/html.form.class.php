@@ -2520,12 +2520,18 @@ class Form
 		} elseif ($finished == 1) {
 			$sql .= " AND p.finished = ".((int) $finished);
 			if ($status >= 0) {
-				$sql .= " AND p.tosell = ".((int) $status);
-				//$sql .= " OR p.stock > 0";
+				if (!empty($conf->global->SEARCH_PRODUCT_OUTOFSELL_AND_WITHSTOCK)) {
+					$sql .= " AND (p.tosell = " . ((int)$status) . " OR p.stock > 0)";
+				} else {
+					$sql .= " AND p.tosell = " . ((int)$status);
+				}
 			}
 		} elseif ($status >= 0) {
-			$sql .= " AND p.tosell = ".((int) $status);
-			//$sql .= " OR p.stock > 0";
+			if (!empty($conf->global->SEARCH_PRODUCT_OUTOFSELL_AND_WITHSTOCK)) {
+				$sql .= " AND (p.tosell = " . ((int)$status) . " OR p.stock > 0)";
+			} else {
+				$sql .= " AND p.tosell = " . ((int)$status);
+			}
 		}
 		// Filter by product type
 		if (strval($filtertype) != '') {
