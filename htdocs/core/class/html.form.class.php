@@ -1380,8 +1380,8 @@ class Form
 				if ($i > 0) {
 					$sql .= " AND ";
 				}
-				$sql .= "(s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
-				$sql .= " OR (s.name_alias LIKE '".$this->db->escape($prefix.$crit)."%')";
+				$sql .= "((s.nom LIKE '".$this->db->escape($prefix.$crit)."%')";
+				$sql .= " OR (s.name_alias LIKE '".$this->db->escape($prefix.$crit)."%'))";
 				$i++;
 			}
 			if (count($scrit) > 1) {
