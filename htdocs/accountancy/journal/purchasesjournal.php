@@ -761,9 +761,11 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 }
 
 if (empty($action) || $action == 'view') {
-	llxHeader('', $langs->trans("PurchasesJournal"));
+	$title = $langs->trans("GenerationOfAccountingEntries").' - '.$accountingjournalstatic->getNomUrl(0, 2, 1, '', 1);
 
-	$nom = $langs->trans("PurchasesJournal").' | '.$accountingjournalstatic->getNomUrl(0, 1, 1, '', 1);
+	llxHeader('', dol_string_nohtmltag($title));
+
+	$nom = $title;
 	$nomlink = '';
 	$periodlink = '';
 	$exportlink = '';
@@ -962,6 +964,13 @@ if (empty($action) || $action == 'view') {
 			print "</td>";
 			// Subledger account
 			print "<td>";
+			if (!empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER_USE_AUXILIARY_ON_DEPOSIT)) {
+				if ($k == getDolGlobalString('ACCOUNTING_ACCOUNT_SUPPLIER_DEPOSIT')) {
+					print length_accounta($tabcompany[$key]['code_compta']);
+				}
+			} elseif (($accountoshow == "") || $accountoshow == 'NotDefined') {
+				print '<span class="error">' . $langs->trans("ThirdpartyAccountNotDefined") . '</span>';
+			}
 			print '</td>';
 			$companystatic->id = $tabcompany[$key]['id'];
 			$companystatic->name = $tabcompany[$key]['name'];
