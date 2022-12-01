@@ -331,6 +331,7 @@ AccountingJournalType4=Banque
 AccountingJournalType5=Note de frais
 AccountingJournalType8=Inventaire
 AccountingJournalType9=A-nouveaux
+GenerationOfAccountingEntries=Génération des écritures comptables
 ErrorAccountingJournalIsAlreadyUse=Le journal est déjà utilisé
 AccountingAccountForSalesTaxAreDefinedInto=Remarque: Le compte comptable pour la TVA est défini dans le menu <b> %s </b> - <b> %s </b>
 NumberOfAccountancyEntries=Nombre d'entrées
