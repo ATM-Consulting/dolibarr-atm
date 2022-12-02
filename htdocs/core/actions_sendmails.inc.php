@@ -214,6 +214,12 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 							$societe->fetch($parts[1]);
 							$tmparray[] = dol_string_nospecial($societe->getFullName($langs), ' ', array(",")).' <'.$societe->email.'>';
 							break;
+						case 'contact':
+							require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+							$contact = new Contact($db);
+							$contact->fetch($parts[1]);
+							$tmparray[] = dol_string_nospecial($contact->getFullName($langs), ' ', array(",")).' <'.$contact->email.'>';
+							break;
 					}
 				} elseif ($val) {	// $val is the Id of a contact
 					$tmparray[] = $thirdparty->contact_get_property((int) $val, 'email');
@@ -271,6 +277,12 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 							$societe = new Societe($db);
 							$societe->fetch($parts[1]);
 							$tmparray[] = dol_string_nospecial($societe->getFullName($langs), ' ', array(",")).' <'.$societe->email.'>';
+							break;
+						case 'contact':
+							require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+							$contact = new Contact($db);
+							$contact->fetch($parts[1]);
+							$tmparray[] = dol_string_nospecial($contact->getFullName($langs), ' ', array(",")).' <'.$contact->email.'>';
 							break;
 					}
 				} elseif ($val) {				// $val is the Id of a contact
@@ -489,3 +501,4 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 		$action = 'presend';
 	}
 }
+
