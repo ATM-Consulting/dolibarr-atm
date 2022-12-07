@@ -1062,7 +1062,7 @@ class Societe extends CommonObject
 			$sql .= ",fk_forme_juridique = ".(! empty($this->forme_juridique_code)?"'".$this->db->escape($this->forme_juridique_code)."'":"null");
 
 			$sql .= ",mode_reglement = ".(! empty($this->mode_reglement_id)?"'".$this->db->escape($this->mode_reglement_id)."'":"3");
-			$sql .= ",cond_reglement = ".(! empty($this->cond_reglement_id)?"'".$this->db->escape($this->cond_reglement_id)."'":"55");
+			$sql .= ",cond_reglement = ".(! empty($this->cond_reglement_id)?"'".$this->db->escape($this->cond_reglement_id)."'":"1");
 			$sql .= ",mode_reglement_supplier = ".(! empty($this->mode_reglement_supplier_id)?"'".$this->db->escape($this->mode_reglement_supplier_id)."'":"2");
 			$sql .= ",cond_reglement_supplier = ".(! empty($this->cond_reglement_supplier_id)?"'".$this->db->escape($this->cond_reglement_supplier_id)."'":"56");
 			$sql .= ",fk_shipping_method = ".(! empty($this->shipping_method_id)?"'".$this->db->escape($this->shipping_method_id)."'":"null");
