@@ -183,15 +183,6 @@ if ($action == 'update' && !empty($user->rights->stock->mouvement->creer)) {
 							setEventMessages($db->lasterror(), null, 'errors');
 							break;
 						}
-						if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
-							$sqlpmp = 'UPDATE '.MAIN_DB_PREFIX.'product_perentity SET pmp = '.((float) $line->pmp_real).' WHERE fk_product = '.((int) $line->fk_product).' AND entity='.$conf->entity;
-							$resqlpmp = $db->query($sqlpmp);
-							if (! $resqlpmp) {
-								$error++;
-								setEventMessages($db->lasterror(), null, 'errors');
-								break;
-							}
-						}
 					}
 
 					// Update line with id of stock movement (and the start quantity if it has changed this last recording)
@@ -629,15 +620,18 @@ if ($object->id > 0) {
 		print '</td>';
 	}
 	print '<td class="right">'.$langs->trans("ExpectedQty").'</td>';
-	print '<td class="center">';
-	print $form->textwithpicto($langs->trans("RealQty"), $langs->trans("InventoryRealQtyHelp"));
-	print '</td>';
+
 
 	if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 		print '<td class="right">'.$langs->trans('PMPExpected').'</td>';
 		print '<td class="right">'.$langs->trans('ExpectedValuation').'</td>';
+		print '<td class="right">' . $form->textwithpicto($langs->trans('RealQty'), $langs->trans('InventoryRealQtyHelp')) . '</td>';
 		print '<td class="right">'.$langs->trans('PMPReal').'</td>';
 		print '<td class="right">'.$langs->trans('RealValuation').'</td>';
+	}else{
+		print '<td class="center">';
+		print $form->textwithpicto($langs->trans('RealQty'), $langs->trans('InventoryRealQtyHelp'));
+		print '</td>';
 	}
 
 	if ($object->status == $object::STATUS_VALIDATED) {
@@ -665,18 +659,23 @@ if ($object->id > 0) {
 			print '</td>';
 		}
 		print '<td class="right"></td>';
-		print '<td class="center">';
-		print '<input type="text" name="qtytoadd" class="maxwidth75" value="">';
-		print '</td>';
+
 
 		if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 			print '<td class="right">';
 			print '</td>';
 			print '<td class="right">';
 			print '</td>';
+			print '<td class="center">';
+			print '<input type="text" name="qtytoadd" class="maxwidth75" value="">';
+			print '</td>';
 			print '<td class="right">';
 			print '</td>';
 			print '<td class="right">';
+			print '</td>';
+		}else{
+			print '<td class="center">';
+			print '<input type="text" name="qtytoadd" class="maxwidth75" value="">';
 			print '</td>';
 		}
 
@@ -760,47 +759,56 @@ if ($object->id > 0) {
 			print '</td>';
 
 
-			if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
-				//PMP Expected
-				if (! empty($obj->pmp_expected)) $pmp_expected = $obj->pmp_expected;
-				else $pmp_expected = $product_static->pmp;
-				$pmp_valuation = $pmp_expected * $valuetoshow;
-				print '<td class="right">';
-				print price($pmp_expected);
-				print '<input type="hidden" name="expectedpmp_'.$obj->rowid.'" value="'.$pmp_expected.'"/>';
-				print '</td>';
-				print '<td class="right">';
-				print price($pmp_valuation);
-				print '</td>';
-				//PMP Real
-				print '<td class="right">';
 
-
-				if (! empty($obj->pmp_real)) $pmp_real = $obj->pmp_real;
-				else $pmp_real = $product_static->pmp;
-				$pmp_valuation_real = $pmp_real * $qty_view;
-				print '<input type="text" class="maxwidth75 right realpmp'.$obj->fk_product.'" name="realpmp_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input_pmp" value="'.price2num($pmp_real).'">';
-				print '</td>';
-				print '<td class="right">';
-				print '<input type="text" class="maxwidth75 right realvaluation'.$obj->fk_product.'" name="realvaluation_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input_real_valuation" value="'.$pmp_valuation_real.'">';
-				print '</td>';
-
-				$totalExpectedValuation += $pmp_valuation;
-				$totalRealValuation += $pmp_valuation_real;
-			}
 
 			// Real quantity
-			print '<td class="center">';
+
 			if ($object->status == $object::STATUS_VALIDATED) {
 				$qty_view = GETPOST("id_".$obj->rowid) && price2num(GETPOST("id_".$obj->rowid), 'MS') >= 0 ? GETPOST("id_".$obj->rowid) : $obj->qty_view;
 				$totalfound += price2num($qty_view, 'MS');
-				print '<input type="text" class="maxwidth75 right realqty" name="id_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input" value="'.$qty_view.'">';
-				print '</td>';
 
 
+
+
+				if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
+					//PMP Expected
+					if (! empty($obj->pmp_expected)) $pmp_expected = $obj->pmp_expected;
+					else $pmp_expected = $product_static->pmp;
+					$pmp_valuation = $pmp_expected * $valuetoshow;
+					print '<td class="right">';
+					print price($pmp_expected);
+					print '<input type="hidden" name="expectedpmp_'.$obj->rowid.'" value="'.$pmp_expected.'"/>';
+					print '</td>';
+					print '<td class="right">';
+					print price($pmp_valuation);
+					print '</td>';
+					print '<td class="center">';
+					print '<input type="text" class="maxwidth75 right realqty" name="id_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input" value="'.$qty_view.'">';
+					print '</td>';
+					//PMP Real
+					print '<td class="right">';
+
+
+					if (! empty($obj->pmp_real)) $pmp_real = $obj->pmp_real;
+					else $pmp_real = $product_static->pmp;
+					$pmp_valuation_real = $pmp_real * $qty_view;
+					print '<input type="text" class="maxwidth75 right realpmp'.$obj->fk_product.'" name="realpmp_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input_pmp" value="'.price2num($pmp_real).'">';
+					print '</td>';
+					print '<td class="right">';
+					print '<input type="text" class="maxwidth75 right realvaluation'.$obj->fk_product.'" name="realvaluation_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input_real_valuation" value="'.$pmp_valuation_real.'">';
+					print '</td>';
+
+					$totalExpectedValuation += $pmp_valuation;
+					$totalRealValuation += $pmp_valuation_real;
+				}else{
+					print '<td class="center">';
+					print '<input type="text" class="maxwidth75 right realqty" name="id_'.$obj->rowid.'" id="id_'.$obj->rowid.'_input" value="'.$qty_view.'">';
+					print '</td>';
+				}
 
 				print '<td class="right">';
 				print '<a class="reposition" href="'.DOL_URL_ROOT.'/product/inventory/inventory.php?id='.$object->id.'&lineid='.$obj->rowid.'&action=deleteline&token='.newToken().'">'.img_delete().'</a>';
+
 				print '</td>';
 
 
@@ -808,6 +816,11 @@ if ($object->id > 0) {
 
 
 			} else {
+				print '<td class="center">';
+
+				print $obj->qty_view;
+				$totalfound += $obj->qty_view;
+				print '</td>';
 				if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 					//PMP Expected
 					if (! empty($obj->pmp_expected)) $pmp_expected = $obj->pmp_expected;
@@ -835,10 +848,6 @@ if ($object->id > 0) {
 					$totalExpectedValuation += $pmp_valuation;
 					$totalRealValuation += $pmp_valuation_real;
 				}
-
-				print $obj->qty_view;
-				$totalfound += $obj->qty_view;
-				print '</td>';
 			}
 			print '</tr>';
 
