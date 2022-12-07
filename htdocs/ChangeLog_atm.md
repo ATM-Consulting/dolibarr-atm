@@ -6,7 +6,7 @@ ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 ## [1.4.0] - 6-12-2022
 - NEW : Backport function prefix()
 
-## [1.3.0] - 18-10-2022
+## [1.3.0] - 18-10-2022 
 - NEW : Backport gestion des extrafields
 
 ## [1.2.0] - 18-10-2022
