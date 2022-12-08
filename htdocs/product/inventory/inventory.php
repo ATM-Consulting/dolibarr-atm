@@ -804,11 +804,6 @@ if ($object->id > 0) {
 				print '<a class="reposition" href="'.DOL_URL_ROOT.'/product/inventory/inventory.php?id='.$object->id.'&lineid='.$obj->rowid.'&action=deleteline&token='.newToken().'">'.img_delete().'</a>';
 
 				print '</td>';
-
-
-
-
-
 			} else {
 
 				if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
