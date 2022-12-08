@@ -759,9 +759,6 @@ if ($object->id > 0) {
 			print '<input type="hidden" name="stock_qty_'.$obj->rowid.'" value="'.$valuetoshow.'">';
 			print '</td>';
 
-
-
-
 			// Real quantity
 
 			if ($object->status == $object::STATUS_VALIDATED) {
