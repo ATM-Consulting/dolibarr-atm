@@ -802,7 +802,6 @@ if ($object->id > 0) {
 
 				print '<td class="right">';
 				print '<a class="reposition" href="'.DOL_URL_ROOT.'/product/inventory/inventory.php?id='.$object->id.'&lineid='.$obj->rowid.'&action=deleteline&token='.newToken().'">'.img_delete().'</a>';
-
 				print '</td>';
 			} else {
 
