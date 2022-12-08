@@ -764,10 +764,6 @@ if ($object->id > 0) {
 			if ($object->status == $object::STATUS_VALIDATED) {
 				$qty_view = GETPOST("id_".$obj->rowid) && price2num(GETPOST("id_".$obj->rowid), 'MS') >= 0 ? GETPOST("id_".$obj->rowid) : $obj->qty_view;
 				$totalfound += price2num($qty_view, 'MS');
-
-
-
-
 				if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 					//PMP Expected
 					if (! empty($obj->pmp_expected)) $pmp_expected = $obj->pmp_expected;
