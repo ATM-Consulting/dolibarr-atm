@@ -642,9 +642,6 @@ if ($object->id > 0) {
 		print '</tr>';
 	}
 
-
-
-
 	// Line to add a new line in inventory
 	if ($object->status == $object::STATUS_VALIDATED) {
 		print '<tr>';
