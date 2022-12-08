@@ -175,16 +175,6 @@ if ($action == 'update' && !empty($user->rights->stock->mouvement->creer)) {
 						break;
 					}
 
-					if (!empty($line->pmp_real) && !empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
-						$sqlpmp = 'UPDATE '.MAIN_DB_PREFIX.'product SET pmp = '.((float) $line->pmp_real).' WHERE rowid = '.((int) $line->fk_product);
-						$resqlpmp = $db->query($sqlpmp);
-						if (! $resqlpmp) {
-							$error++;
-							setEventMessages($db->lasterror(), null, 'errors');
-							break;
-						}
-					}
-
 					// Update line with id of stock movement (and the start quantity if it has changed this last recording)
 					if ($qty_stock != $realqtynow) {
 						$sqlupdate = "UPDATE ".MAIN_DB_PREFIX."inventorydet";
@@ -199,6 +189,17 @@ if ($action == 'update' && !empty($user->rights->stock->mouvement->creer)) {
 					}
 				}
 			}
+
+			if (!empty($line->pmp_real) && !empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
+				$sqlpmp = 'UPDATE '.MAIN_DB_PREFIX.'product SET pmp = '.((float) $line->pmp_real).' WHERE rowid = '.((int) $line->fk_product);
+				$resqlpmp = $db->query($sqlpmp);
+				if (! $resqlpmp) {
+					$error++;
+					setEventMessages($db->lasterror(), null, 'errors');
+					break;
+				}
+			}
+
 			$i++;
 		}
 
@@ -816,11 +817,7 @@ if ($object->id > 0) {
 
 
 			} else {
-				print '<td class="center">';
 
-				print $obj->qty_view;
-				$totalfound += $obj->qty_view;
-				print '</td>';
 				if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 					//PMP Expected
 					if (! empty($obj->pmp_expected)) $pmp_expected = $obj->pmp_expected;
@@ -834,6 +831,12 @@ if ($object->id > 0) {
 					print '</td>';
 
 					//PMP Real
+					print '<td class="center">';
+
+					print $obj->qty_view;
+					$totalfound += $obj->qty_view;
+					print '</td>';
+
 					print '<td class="right">';
 					if (! empty($obj->pmp_real)) $pmp_real = $obj->pmp_real;
 					else $pmp_real = $product_static->pmp;
@@ -847,6 +850,12 @@ if ($object->id > 0) {
 
 					$totalExpectedValuation += $pmp_valuation;
 					$totalRealValuation += $pmp_valuation_real;
+				}else{
+					print '<td class="center">';
+
+					print $obj->qty_view;
+					$totalfound += $obj->qty_view;
+					print '</td>';
 				}
 			}
 			print '</tr>';
@@ -859,9 +868,9 @@ if ($object->id > 0) {
 
 	if (!empty($conf->global->INVENTORY_MANAGE_REAL_PMP)) {
 		print '<tr class="liste_total">';
-		print '<td colspan="5">' . $langs->trans('Total') . '</td>';
+		print '<td colspan="4">' . $langs->trans('Total') . '</td>';
 		print '<td class="right" colspan="2">' . price($totalExpectedValuation) . '</td>';
-		print '<td class="right" id="totalRealValuation" colspan="2">' . price($totalRealValuation) . '</td>';
+		print '<td class="right" id="totalRealValuation" colspan="3">' . price($totalRealValuation) . '</td>';
 		print '<td></td>';
 		print '</tr>';
 	}
