@@ -3,6 +3,8 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 
+## [1.3.0] - 18-10-2022
+- NEW : Backport gestion des extrafields
 
 ## [1.2.0] - 18-10-2022
 - NEW : Ajout massaction de suppression sur les card
