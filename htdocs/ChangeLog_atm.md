@@ -3,6 +3,9 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 
+## [1.6.0] - 12-12-2022
+- FIX : on supprime toute la gestion du pmp
+
 ## [1.5.0] - 12-12-2022
 - FIX : affichage du stock à date
  
