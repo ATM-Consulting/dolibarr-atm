@@ -745,7 +745,7 @@ if ($object->id > 0) {
 			print '<td class="right expectedqty" id="id_'.$obj->rowid.'">';
 			$valuetoshow = $obj->qty_stock;
 			// For inventory not yet close, we overwrite with the real value in stock now
-			if ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_VALIDATED) {
+			if (is_null($obj->qty_stock) && ($object->status == $object::STATUS_DRAFT || $object->status == $object::STATUS_VALIDATED)) {
 				if (!empty($conf->productbatch->enabled) && $product_static->hasbatch()) {
 					$valuetoshow = $product_static->stock_warehouse[$obj->fk_warehouse]->detail_batch[$obj->batch]->qty;
 				} else {
