@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2015-2017  Alexandre Spangaro  <aspangaro@open-dsi.fr>
+ * Copyright (C) 2022       Gauthier VERDOL     <gauthier.verdol@atm-consulting.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +25,7 @@
 // Load Dolibarr environment
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/expensereport/class/expensereport.class.php';
-require_once DOL_DOCUMENT_ROOT.'/expensereport/class/paymentexpensereport.class.php';
+require_once DOL_DOCUMENT_ROOT.'/expensereport/class/paymentuser.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/expensereport/modules_expensereport.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/expensereport.lib.php';
 if (isModEnabled("banque")) {
@@ -45,7 +46,7 @@ if ($user->socid) {
 // TODO Add rule to restrict access payment
 //$result = restrictedArea($user, 'facture', $id,'');
 
-$object = new PaymentExpenseReport($db);
+$object = new PaymentUser($db);
 
 if ($id > 0) {
 	$result = $object->fetch($id);
@@ -160,10 +161,10 @@ print dol_get_fiche_end();
  */
 
 $sql = 'SELECT er.rowid as eid, er.paid, er.total_ttc, per.amount';
-$sql .= ' FROM '.MAIN_DB_PREFIX.'payment_expensereport as per,'.MAIN_DB_PREFIX.'expensereport as er';
+$sql .= ' FROM '.MAIN_DB_PREFIX.'payment_expense_report as per,'.MAIN_DB_PREFIX.'expensereport as er';
 $sql .= ' WHERE per.fk_expensereport = er.rowid';
 $sql .= ' AND er.entity IN ('.getEntity('expensereport').')';
-$sql .= ' AND per.rowid = '.((int) $id);
+$sql .= ' AND per.fk_paiementuser = '.((int) $id);
 
 dol_syslog("expensereport/payment/card.php", LOG_DEBUG);
 $resql = $db->query($sql);
@@ -189,10 +190,12 @@ if ($resql) {
 		while ($i < $num) {
 			$objp = $db->fetch_object($resql);
 
-			print '<tr class="oddeven">';
 
 			$expensereport = new ExpenseReport($db);
 			$expensereport->fetch($objp->eid);
+			$alreadypayed = $expensereport->getSumPayments();
+
+			print '<tr class="oddeven">';
 
 			// Expense report
 			print '<td>';
@@ -206,7 +209,7 @@ if ($resql) {
 			print '<td class="right">'.price($objp->amount).'</td>';
 
 			// Remain to pay
-			print '<td class="right">'.price($objp->total_ttc - $objp->amount).'</td>';
+			print '<td class="right">'.price($objp->total_ttc - $alreadypayed).'</td>';
 
 			// Status
 			print '<td class="center">'.$expensereport->getLibStatut(4, $objp->amount).'</td>';
