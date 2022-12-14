@@ -1627,18 +1627,39 @@ class CommandeFournisseur extends CommonOrder
 		}
 
 		$this->id = 0;
+		$this->ref = '';
 		$this->statut = self::STATUS_DRAFT;
 
 		// Clear fields
 		$this->user_author_id     = $user->id;
 		$this->user_valid         = '';
-		$this->date_creation      = '';
+		$this->date_commande	  = dol_now();
+		$this->date               = dol_now();
+		$this->date_creation      = dol_now();
 		$this->date_validation    = '';
-		$this->ref_supplier       = '';
 		$this->user_approve_id    = '';
 		$this->user_approve_id2   = '';
 		$this->date_approve       = '';
 		$this->date_approve2      = '';
+		if (empty($conf->global->MAIN_KEEP_REF_SUPPLIER_ON_CLONING)) {
+			$this->ref_supplier = '';
+		}
+
+		if (!$error) {
+			// copy internal contacts
+			if ($this->copy_linked_contact($objFrom, 'internal') < 0) {
+				$error++;
+			}
+		}
+
+		if (!$error) {
+			// copy external contacts if same company
+			if ($this->socid == $objFrom->socid) {
+				if ($this->copy_linked_contact($objFrom, 'external') < 0) {
+					$error++;
+				}
+			}
+		}
 
 		// Create clone
 		$this->context['createfromclone'] = 'createfromclone';
