@@ -175,6 +175,10 @@ if ($id > 0) {
 					'author' => $userstatic->getLoginUrl(1)
 				);
 
+				if (empty($objf->userid)) {
+					unset($values[author]);
+				}
+
 				$parameters = array('socid' => $id, 'values' => &$values, 'fac' => $fac, 'userstatic' => $userstatic);
 				$reshook = $hookmanager->executeHooks('facdao', $parameters, $object); // Note that $parameters['values'] and $object may have been modified by some hooks
 				if ($reshook < 0) {
