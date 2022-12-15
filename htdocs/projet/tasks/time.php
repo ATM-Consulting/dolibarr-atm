@@ -484,17 +484,22 @@ if ($action == 'confirm_generateinvoice') {
 
 				foreach ($arrayoftasks as $userid => $value) {
 					$fuser->fetch($userid);
-					//$pu_ht = $value['timespent'] * $fuser->thm;
+					$pu_ht = $fuser->thm;
 					$username = $fuser->getFullName($langs);
 
 					// Define qty per hour
 					$qtyhour = $value['timespent'] / 3600;
 					$qtyhourtext = convertSecondToTime($value['timespent'], 'all', $conf->global->MAIN_DURATION_OF_WORKDAY);
 
+					/*
 					// If no unit price known
 					if (empty($pu_ht)) {
 						$pu_ht = price2num($value['totalvaluetodivideby3600'] / 3600, 'MU');
 					}
+					*/
+
+					//Unit price
+					$pu_ht = price2num(($value['totalvaluetodivideby3600'] / $value['timespent']), 'MU');
 
 					// Add lines
 					$lineid = $tmpinvoice->addline($langs->trans("TimeSpentForInvoice", $username).' : '.$qtyhourtext, $pu_ht, round($qtyhour / $prodDurationHours, 2), $txtva, $localtax1, $localtax2, ($idprod > 0 ? $idprod : 0));
@@ -1259,7 +1264,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 				print $langs->trans('InvoiceToUse');
 				print '</td>';
 				print '<td>';
-				$form->selectInvoice('invoice', '', 'invoiceid', 24, 0, $langs->trans('NewInvoice'), 1, 0, 0, 'maxwidth500', '', 'all');
+				$form->selectInvoice($projectstatic->thirdparty->id, '', 'invoiceid', 24, 0, $langs->trans('NewInvoice'), 1, 0, 0, 'maxwidth500', '', 'all');
 				print '</td>';
 				print '</tr>';
 				/*print '<tr>';
