@@ -1,0 +1,1 @@
+- Ajout bouton "Parcourir le serveur" pour l'ajout d'image dans les modèles de mail
