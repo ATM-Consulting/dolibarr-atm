@@ -42,9 +42,16 @@ class PaymentTerm // extends CommonObject
 	 */
 	public $errors = array();
 
-	//public  $element='c_payment_term';			//!< Id that identify managed objects
+	public  $element='c_payment_term';			//!< Id that identify managed objects
+
 	//public  $table_element='c_payment_term';	//!< Name of table without prefix where object is stored
 	public $context = array();
+
+	/**
+	 * 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
+	 * @var int
+	 */
+	public $ismultientitymanaged = 1;
 
 	/**
 	 * @var int ID
