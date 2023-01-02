@@ -6216,6 +6216,12 @@ class FactureLigne extends CommonInvoiceLine
 					$res = $this->db->query($sql);
 					if ($res) {
 						while ($obj = $this->db->fetch_object($res)) {
+							// On credit note, field situation percent may be negative but it's positive.
+							// TODO : On credit note, save negative sign on field situation percent
+							if ($returnPercent > 0){
+								$returnPercent = -$returnPercent;
+							}
+
 							$returnPercent = $returnPercent + floatval($obj->situation_percent);
 						}
 					} else {
