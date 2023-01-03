@@ -219,7 +219,7 @@ if ($result) {
 		$line->fetch($obj->fdid);
 
 		// Situation invoices handling
-		$prev_progress = $line->get_prev_progress($obj->rowid);
+		$prev_progress = $line->get_prev_progress($obj->rowid, 0);
 
 		if ($obj->type == Facture::TYPE_SITUATION) {
 			// Avoid divide by 0
