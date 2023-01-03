@@ -228,7 +228,7 @@ if ($result) {
 			} else {
 				$situation_ratio = ($obj->situation_percent - $prev_progress) / $obj->situation_percent;
 
-				dol_syslog(get_class($this)."::situation_ratio ". $situation_ratio ." situation_percent ".$obj->situation_percent. " prev_progress ".$prev_progress, LOG_ERR);
+				dol_syslog("situation_ratio ". $situation_ratio ." situation_percent ".$obj->situation_percent. " prev_progress ".$prev_progress, LOG_ERR);
 			}
 		} else {
 			$situation_ratio = 1;
