@@ -164,9 +164,11 @@ if (empty($reshook))
 			}
 
 			$result = $companybankaccount->update($user);
-			if (! $result)
+			if ($result <= 0)
 			{
+				// Show error message and get back to edit mode
 				setEventMessages($companybankaccount->error, $companybankaccount->errors, 'errors');
+				$action = 'edit';
 			}
 			else
 			{
@@ -481,7 +483,7 @@ if (empty($reshook))
 		$_POST['lang_id'] = GETPOST('lang_idrib'.GETPOST('companybankid', 'int'), 'alpha');
 		$_POST['model'] =  GETPOST('modelrib'.GETPOST('companybankid', 'int'), 'alpha');
 	}
-	
+
 	$id = $socid;
 	$upload_dir = $conf->societe->multidir_output[$object->entity];
 	$permissioncreate=$user->rights->societe->creer;
