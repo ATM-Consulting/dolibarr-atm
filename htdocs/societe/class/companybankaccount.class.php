@@ -46,7 +46,7 @@ class CompanyBankAccount extends Account
      * @var integer
      */
     public $datec;
-    
+
 	/**
      * Date modification record (tms)
      *
@@ -147,6 +147,7 @@ class CompanyBankAccount extends Account
 		if (dol_strlen($this->domiciliation) > 255) $this->domiciliation = dol_trunc($this->domiciliation, 254, 'right', 'UTF-8', 1);
 		if (dol_strlen($this->owner_address) > 255) $this->owner_address = dol_trunc($this->owner_address, 254, 'right', 'UTF-8', 1);
 
+		$this->db->begin();
 		$sql = "UPDATE ".MAIN_DB_PREFIX."societe_rib SET";
 		$sql.= " bank = '" .$this->db->escape($this->bank)."'";
 		$sql.= ",code_banque='".$this->db->escape($this->code_banque)."'";
@@ -174,30 +175,32 @@ class CompanyBankAccount extends Account
 		$result = $this->db->query($sql);
 		if ($result)
 		{
-
-
-		if (! $notrigger)
-		{
-			// Call trigger
-			$result=$this->call_trigger('COMPANY_RIB_MODIFY', $user);
-			if ($result < 0) $error++;
-			// End call triggers
-			if(! $error )
+			if (! $notrigger)
 			{
-				return 1;
+				// Call trigger
+				$result=$this->call_trigger('COMPANY_RIB_MODIFY', $user);
+				if ($result < 0) $error++;
+				// End call triggers
+				if(! $error )
+				{
+					$this->db->commit();
+					return 1;
+				}
+				else
+				{
+					$this->db->rollback();
+					return -1;
+				}
 			}
 			else
 			{
-				return -1;
+				$this->db->commit();
+				return 1;
 			}
 		}
 		else
 		{
-			return 1;
-		}
-		}
-		else
-		{
+			$this->db->rollback();
 			dol_print_error($this->db);
 			return -1;
 		}
