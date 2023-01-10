@@ -4078,7 +4078,7 @@ class Facture extends CommonInvoice
 	 *
 	 * @param	int		$idline				id of line to check
 	 * @param	float	$situation_percent	progress percentage need to be test
-	 * @return false if KO, true if OK
+	 * @return 	bool						false if KO, true if OK
 	 */
 	public function checkProgressLine($idline, $situation_percent)
 	{
@@ -4097,7 +4097,7 @@ class Facture extends CommonInvoice
 		if ($obj === null) {
 			return true;
 		} else {
-			return $situation_percent < $obj->situation_percent;
+			return ($situation_percent < $obj->situation_percent);
 		}
 	}
 
@@ -4224,7 +4224,7 @@ class Facture extends CommonInvoice
 	 *	@param     	User	$user		User that set discount
 	 *	@param     	double	$remise		Discount
 	 *  @param     	int		$notrigger	1=Does not execute triggers, 0= execute triggers
-	 *	@return		int 		<0 if ko, >0 if ok
+	 *	@return		int 				<0 if KO, >0 if OK
 	 */
 	public function set_remise($user, $remise, $notrigger = 0)
 	{
@@ -4239,7 +4239,7 @@ class Facture extends CommonInvoice
 	 *	@param     	User	$user		User that set discount
 	 *	@param     	double	$remise		Discount
 	 *  @param     	int		$notrigger	1=Does not execute triggers, 0= execute triggers
-	 *	@return		int 		<0 if ko, >0 if ok
+	 *	@return		int 				<0 if KO, >0 if OK
 	 */
 	public function setDiscount($user, $remise, $notrigger = 0)
 	{
@@ -4291,6 +4291,8 @@ class Facture extends CommonInvoice
 				return -1 * $error;
 			}
 		}
+
+		return 0;
 	}
 
 
@@ -4356,6 +4358,8 @@ class Facture extends CommonInvoice
 				return -1 * $error;
 			}
 		}
+
+		return 0;
 	}
 
 	/**
@@ -4647,8 +4651,8 @@ class Facture extends CommonInvoice
 	 *	Invoices matching the following rules are returned:
 	 *	(validated + payment on process) or classified (payed completely or payed partiely) + not already replaced + not already a credit note
 	 *
-	 *	@param		int		$socid		Id thirdparty
-	 *	@return    	array				Array of invoices ($id => array('ref'=>,'paymentornot'=>,'status'=>,'paye'=>)
+	 *	@param		int			$socid		Id thirdparty
+	 *	@return    	array|int				Array of invoices ($id => array('ref'=>,'paymentornot'=>,'status'=>,'paye'=>)
 	 */
 	public function list_qualified_avoir_invoices($socid = 0)
 	{
@@ -4722,8 +4726,8 @@ class Facture extends CommonInvoice
 	/**
 	 *	Load indicators for dashboard (this->nbtodo and this->nbtodolate)
 	 *
-	 *	@param  User		$user    	Object user
-	 *	@return WorkboardResponse|int 	<0 if KO, WorkboardResponse if OK
+	 *	@param  User					$user    	Object user
+	 *	@return WorkboardResponse|int 				<0 if KO, WorkboardResponse if OK
 	 */
 	public function load_board($user)
 	{
@@ -5742,6 +5746,8 @@ class Facture extends CommonInvoice
 		} else {
 			dol_print_error($this->db);
 		}
+
+		return array();
 	}
 }
 

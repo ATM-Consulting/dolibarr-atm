@@ -392,20 +392,3 @@ ALTER TABLE llx_opensurvey_user_studs ADD COLUMN date_creation datetime NULL;
 ALTER TABLE llx_opensurvey_comments ADD COLUMN date_creation datetime NULL;
 
 ALTER TABLE llx_c_tva ADD COLUMN use_default tinyint DEFAULT 0;
-
--- expense report payments
-ALTER TABLE llx_payment_expensereport RENAME TO llx_paymentuser;
-
-create table llx_payment_expense_report
-(
-    rowid integer AUTO_INCREMENT PRIMARY KEY,
-    fk_paiementuser INTEGER DEFAULT NULL,
-    fk_expensereport  INTEGER DEFAULT NULL,
-    amount double(24,8) DEFAULT 0
-)ENGINE=innodb;
-
-INSERT INTO llx_payment_expense_report (rowid, fk_paiementuser, fk_expensereport, amount) SELECT pu.rowid, pu.rowid, pu.fk_expensereport, pu.amount FROM llx_paymentuser pu WHERE pu.fk_expensereport IS NOT NULL;
-
--- VPGSQL8.2 CREATE SEQUENCE llx_paymentuser_rowid_seq OWNED BY llx_paymentuser.rowid;
--- VPGSQL8.2 ALTER TABLE llx_paymentuser ALTER COLUMN rowid SET DEFAULT nextval('llx_paymentuser_rowid_seq');
--- VPGSQL8.2 SELECT setval('llx_paymentuser_rowid_seq', MAX(rowid)) FROM llx_paymentuser;

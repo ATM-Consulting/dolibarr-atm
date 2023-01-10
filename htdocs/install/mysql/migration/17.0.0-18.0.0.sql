@@ -53,4 +53,22 @@ ALTER TABLE llx_facture ADD COLUMN prorata_discount	real DEFAULT NULL;
 
 ALTER TABLE llx_payment_salary MODIFY COLUMN datep datetime;
 
+INSERT INTO llx_c_tva(rowid,fk_pays,code,taux,localtax1,localtax1_type,localtax2,localtax2_type,recuperableonly,note,active) values (1179, 117, 'I-28'  , 28,   0, '0',   0, '0', 0, 'IGST',      1);
+INSERT INTO llx_c_tva(rowid,fk_pays,code,taux,localtax1,localtax1_type,localtax2,localtax2_type,recuperableonly,note,active) values (1176, 117, 'C+S-18',  0,   9, '1',   9, '1', 0, 'CGST+SGST - Same state sales', 1);
 
+-- expense report payments
+ALTER TABLE llx_payment_expensereport RENAME TO llx_paymentuser;
+
+create table llx_payment_expense_report
+(
+    rowid integer AUTO_INCREMENT PRIMARY KEY,
+    fk_paiementuser INTEGER DEFAULT NULL,
+    fk_expensereport  INTEGER DEFAULT NULL,
+    amount double(24,8) DEFAULT 0
+)ENGINE=innodb;
+
+INSERT INTO llx_payment_expense_report (rowid, fk_paiementuser, fk_expensereport, amount) SELECT pu.rowid, pu.rowid, pu.fk_expensereport, pu.amount FROM llx_paymentuser pu WHERE pu.fk_expensereport IS NOT NULL;
+
+-- VPGSQL8.2 CREATE SEQUENCE llx_paymentuser_rowid_seq OWNED BY llx_paymentuser.rowid;
+-- VPGSQL8.2 ALTER TABLE llx_paymentuser ALTER COLUMN rowid SET DEFAULT nextval('llx_paymentuser_rowid_seq');
+-- VPGSQL8.2 SELECT setval('llx_paymentuser_rowid_seq', MAX(rowid)) FROM llx_paymentuser;
