@@ -284,7 +284,7 @@ if ($nolinesbefore) {
 				// $senderissupplier=2 is the same as 1 but disables test on minimum qty, disable autofill qty with minimum and autofill unit price
 				if ($senderissupplier != 2) {
 					$ajaxoptions = array(
-						'update' => array('qty'=>'qty', 'remise_percent' => 'discount', 'idprod' => 'idprod'), // html id tags that will be edited with each ajax json response key
+						'update' => array('fourn_ref'=>'fourn_ref', 'qty'=>'qty', 'remise_percent' => 'discount', 'idprod' => 'idprod'), // html id tags that will be edited with each ajax json response key
 						'option_disabled' => 'idthatdoesnotexists', // html id to disable once select is done
 						'warning' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'warning' (for example shown we select a disabled option into combo)
 					);
