@@ -5,6 +5,7 @@
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2015 	   Claudio Aschieri     <c.aschieri@19.coop>
+ * Copyright (C) 2019 	   Juanjo Menent	    <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,9 +70,9 @@ $pagenext = $page + 1;
 
 $search_all=GETPOST('search_all', 'alphanohtml');
 $search_categ=GETPOST("search_categ",'alpha');
-$search_ref=GETPOST("search_ref");
-$search_label=GETPOST("search_label");
-$search_societe=GETPOST("search_societe");
+$search_ref=GETPOST("search_ref",'alpha');
+$search_label=GETPOST("search_label",'alpha');
+$search_societe=GETPOST("search_societe",'alpha');
 $search_year=GETPOST("search_year");
 $search_status=GETPOST("search_status",'int');
 $search_opp_status=GETPOST("search_opp_status",'alpha');
@@ -533,7 +534,7 @@ if (! empty($arrayfields['p.public']['checked']))
 if (! empty($arrayfields['p.fk_opp_status']['checked']))
 {
 	print '<td class="liste_titre nowrap center">';
-	print $formproject->selectOpportunityStatus('search_opp_status', $search_opp_status, 1, 1, 1, 0, 'maxwidth100');
+	print $formproject->selectOpportunityStatus('search_opp_status', $search_opp_status, 1, 0, 1, 0, 'maxwidth100');
 	print '</td>';
 }
 if (! empty($arrayfields['p.opp_amount']['checked']))
@@ -742,7 +743,7 @@ while ($i < min($num,$limit))
 		if (! empty($arrayfields['p.fk_opp_status']['checked']))
 		{
 			print '<td class="center">';
-			if ($obj->opp_status_code) print $langs->trans("OppStatusShort".$obj->opp_status_code);
+			if ($obj->opp_status_code) print $langs->trans("OppStatus".$obj->opp_status_code);
 			print '</td>';
 			if (! $i) $totalarray['nbfield']++;
 		}

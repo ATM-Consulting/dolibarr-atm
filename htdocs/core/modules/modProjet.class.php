@@ -247,8 +247,8 @@ class modProjet extends DolibarrModules
 		$keyforselect='projet'; $keyforelement='project'; $keyforaliasextra='extra';
 		include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
 		// Add fields for tasks
-        $this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('pt.rowid'=>'RefTask','pt.label'=>'LabelTask','pt.dateo'=>"TaskDateStart",'pt.datee'=>"TaskDateEnd",'pt.duration_effective'=>"DurationEffective",'pt.planned_workload'=>"PlannedWorkload",'pt.progress'=>"Progress",'pt.description'=>"TaskDescription"));
-		$this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('pt.rowid'=>'projecttask','pt.label'=>'projecttask','pt.dateo'=>"projecttask",'pt.datee'=>"projecttask",'pt.duration_effective'=>"projecttask",'pt.planned_workload'=>"projecttask",'pt.progress'=>"projecttask",'pt.description'=>"projecttask"));
+		$this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('pt.rowid'=>'TaskId', 'pt.ref'=>'RefTask', 'pt.label'=>'LabelTask','pt.dateo'=>"TaskDateStart",'pt.datee'=>"TaskDateEnd",'pt.duration_effective'=>"DurationEffective",'pt.planned_workload'=>"PlannedWorkload",'pt.progress'=>"Progress",'pt.description'=>"TaskDescription"));
+		$this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('pt.rowid'=>'projecttask', 'pt.ref'=>'projecttask', 'pt.label'=>'projecttask','pt.dateo'=>"projecttask",'pt.datee'=>"projecttask",'pt.duration_effective'=>"projecttask",'pt.planned_workload'=>"projecttask",'pt.progress'=>"projecttask",'pt.description'=>"projecttask"));
         // Add extra fields for task
 		$keyforselect='projet_task'; $keyforelement='projecttask'; $keyforaliasextra='extra2';
 		include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
@@ -278,7 +278,7 @@ class modProjet extends DolibarrModules
     		$this->import_tables_array[$r]=array('t'=>MAIN_DB_PREFIX.'projet_task','extra'=>MAIN_DB_PREFIX.'projet_task_extrafields');	// List of tables to insert into (insert done in same order)
     		$this->import_fields_array[$r]=array('t.fk_projet'=>'ProjectRef*','t.ref'=>'RefTask*','t.label'=>'LabelTask*','t.dateo'=>"DateStart",'t.datee'=>"DateEnd",'t.planned_workload'=>"PlannedWorkload",'t.progress'=>"Progress",'t.note_private'=>"NotePrivate",'t.note_public'=>"NotePublic",'t.datec'=>"DateCreation");
     		// Add extra fields
-    		$sql="SELECT name, label, fieldrequired FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'projet_task' AND entity = ".$conf->entity;
+    		$sql="SELECT name, label, fieldrequired FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'projet_task' AND entity IN (0,".$conf->entity.")";
     		$resql=$this->db->query($sql);
     		if ($resql)    // This can fail when class is used on old database (during migration for example)
     		{

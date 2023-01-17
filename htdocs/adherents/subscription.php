@@ -120,7 +120,7 @@ if ($action == 'confirm_create_thirdparty' && $confirm == 'yes' && $user->rights
 	{
 		// Creation user
 		$company = new Societe($db);
-		$result=$company->create_from_member($object, GETPOST('companyname', 'alpha'), GETPOST('companyalias', 'alpha'));
+		$result=$company->create_from_member($object, GETPOST('companyname', 'alpha'), GETPOST('companyalias', 'alpha'), GETPOST('customercode', 'alpha'));
 
 		if ($result < 0)
 		{
@@ -558,7 +558,7 @@ if ($user->rights->adherent->cotisation->creer && $action == 'subscription' && !
         if (! $error)
         {
             // Send confirmation Email
-            if ($object->email && $_POST["sendmail"])
+            if ($object->email && $_POST["sendmail"])   // $object is 'Adherent'
             {
                 $subjecttosend=$object->makeSubstitution($conf->global->ADHERENT_MAIL_COTIS_SUBJECT);
                 $texttosend=$object->makeSubstitution($adht->getMailOnSubscription());
@@ -1011,6 +1011,15 @@ if ($rowid > 0)
 				array('label' => $langs->trans("NameToCreate"), 'type' => 'text', 'name' => 'companyname', 'value' => $companyname, 'morecss' => 'minwidth300', 'moreattr' => 'maxlength="128"'),
 				array('label' => $langs->trans("AliasNames"), 'type' => 'text', 'name' => 'companyalias', 'value' => $companyalias, 'morecss' => 'minwidth300', 'moreattr' => 'maxlength="128"')
 			);
+			// If customer code was forced to "required", we ask it at creation to avoid error later
+			if (! empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED))
+			{
+				$tmpcompany = new Societe($db);
+				$tmpcompany->name=$companyname;
+				$customercode = $tmpcompany->get_codeclient($tmpcompany,0);
+				$formquestion[]=array('label' => $langs->trans("CustomerCode"), 'type' => 'text', 'name' => 'customercode', 'value' => $customercode, 'morecss' => 'minwidth300', 'moreattr' => 'maxlength="128"');
+			}
+			// @TODO Add other extrafields mandatory for thirdparty creation
 
 			print $form->formconfirm($_SERVER["PHP_SELF"]."?rowid=".$object->id,$langs->trans("CreateDolibarrThirdParty"),$langs->trans("ConfirmCreateThirdParty"),"confirm_create_thirdparty",$formquestion,1);
 		}

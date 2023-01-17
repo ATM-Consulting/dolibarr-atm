@@ -468,7 +468,7 @@ ALTER TABLE llx_extrafields ADD COLUMN tms timestamp;
 
 -- We fix value of 'list' from 0 to 1 for all extrafields created before this migration
 UPDATE llx_extrafields SET list = 1 WHERE list = 0 AND fk_user_author IS NULL and fk_user_modif IS NULL and datec IS NULL;		
-UPDATE llx_extrafields SET list = 3 WHERE type = 'separate' AND list != 3;		
+UPDATE llx_extrafields SET list = 3 WHERE type = 'separate' AND list <> 3;		
 
 ALTER TABLE llx_extrafields MODIFY COLUMN list integer DEFAULT 1;
 --VPGSQL8.2 ALTER TABLE llx_extrafields ALTER COLUMN list SET DEFAULT 1;
@@ -716,3 +716,8 @@ ALTER TABLE llx_facture_rec_extrafields ADD INDEX idx_facture_rec_extrafields (f
 
 UPDATE llx_cronjob set entity = 1 where entity = 0 and label in ('RecurringInvoices', 'SendEmailsReminders');
 UPDATE llx_cronjob set entity = 0 where entity = 1 and label in ('PurgeDeleteTemporaryFilesShort', 'MakeLocalDatabaseDumpShort');
+
+-- VMYSQL4.3 ALTER TABLE llx_c_shipment_mode MODIFY COLUMN tracking varchar(255) NULL;
+-- VPGSQL8.2 ALTER TABLE llx_c_shipment_mode ALTER COLUMN tracking DROP NOT NULL;
+
+ALTER TABLE llx_paiementfourn ADD COLUMN fk_user_modif integer AFTER fk_user_author;

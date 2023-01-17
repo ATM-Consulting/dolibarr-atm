@@ -12,7 +12,7 @@
  * Copyright (C) 2014		Henry Florian			<florian.henry@open-concept.pro>
  * Copyright (C) 2014-2016	Philippe Grand			<philippe.grand@atoo-net.com>
  * Copyright (C) 2014		Ion agorria			    <ion@agorria.com>
- * Copyright (C) 2016-2017	Ferran Marcet			<fmarcet@2byte.es>
+ * Copyright (C) 2016-2018	Ferran Marcet			<fmarcet@2byte.es>
  * Copyright (C) 2017		Gustavo Novaro
  *
  * This program is free software; you can redistribute it and/or modify
@@ -897,7 +897,7 @@ class Product extends CommonObject
 			$sql.= ", accountancy_code_sell= '" . $this->db->escape($this->accountancy_code_sell)."'";
 			$sql.= ", accountancy_code_sell_intra= '" . $this->db->escape($this->accountancy_code_sell_intra)."'";
 			$sql.= ", accountancy_code_sell_export= '" . $this->db->escape($this->accountancy_code_sell_export)."'";
-			$sql.= ", desiredstock = " . ((isset($this->desiredstock) && $this->desiredstock != '') ? $this->desiredstock : "null");
+			$sql.= ", desiredstock = " . ((isset($this->desiredstock) && is_numeric($this->desiredstock)) ? $this->desiredstock : "null");
 			$sql.= ", cost_price = " . ($this->cost_price != '' ? $this->db->escape($this->cost_price) : 'null');
 	        $sql.= ", fk_unit= " . (!$this->fk_unit ? 'NULL' : $this->fk_unit);
 	        $sql.= ", price_autogen = " . (!$this->price_autogen ? 0 : 1);
@@ -1078,7 +1078,7 @@ class Product extends CommonObject
 				$sql.= " WHERE fk_product_stock IN (";
 				$sql.= "SELECT rowid FROM ".MAIN_DB_PREFIX.'product_stock';
 				$sql.= " WHERE fk_product = ".$id.")";
-				dol_syslog(get_class($this).'::delete', LOG_DEBUG);
+
 				$result = $this->db->query($sql);
 				if (! $result)
 				{
@@ -1097,7 +1097,7 @@ class Product extends CommonObject
     				{
     					$sql = "DELETE FROM ".MAIN_DB_PREFIX.$table;
     					$sql.= " WHERE fk_product = ".$id;
-    					dol_syslog(get_class($this).'::delete', LOG_DEBUG);
+
     					$result = $this->db->query($sql);
     					if (! $result)
     					{
@@ -1128,12 +1128,25 @@ class Product extends CommonObject
 				}
 			}
 
+			// Delete from product_association
+			if (!$error){
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."product_association";
+				$sql.= " WHERE fk_product_pere = ".$id." OR fk_product_fils = ".$id;
+
+				$result = $this->db->query($sql);
+				if (! $result)
+				{
+					$error++;
+					$this->errors[] = $this->db->lasterror();
+				}
+			}
+
 			// Delete product
 			if (! $error)
 			{
 				$sqlz = "DELETE FROM ".MAIN_DB_PREFIX."product";
 				$sqlz.= " WHERE rowid = ".$id;
-				dol_syslog(get_class($this).'::delete', LOG_DEBUG);
+
 				$resultz = $this->db->query($sqlz);
 				if ( ! $resultz )
 				{

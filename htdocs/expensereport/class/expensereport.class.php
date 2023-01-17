@@ -1,8 +1,8 @@
 <?php
-/* Copyright (C) 2011 Dimitri Mouillard   <dmouillard@teclib.com>
- * Copyright (C) 2015 Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2015 Alexandre Spangaro  <aspangaro@zendsi.com>
- * Copyright (C) 2016 Ferran Marcet       <fmarcet@2byte.es>
+/* Copyright (C) 2011 		Dimitri Mouillard   	<dmouillard@teclib.com>
+ * Copyright (C) 2015 		Laurent Destailleur 	<eldy@users.sourceforge.net>
+ * Copyright (C) 2015 		Alexandre Spangaro  	<aspangaro@zendsi.com>
+ * Copyright (C) 2016-2018 	Ferran Marcet       	<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -456,7 +456,7 @@ class ExpenseReport extends CommonObject
         $sql.= " d.date_debut, d.date_fin, d.date_create, d.tms as date_modif, d.date_valid, d.date_approve,";	// DATES (datetime)
         $sql.= " d.fk_user_author, d.fk_user_modif, d.fk_user_validator,";
         $sql.= " d.fk_user_valid, d.fk_user_approve,";
-        $sql.= " d.fk_statut as status, d.fk_c_paiement,";
+        $sql.= " d.fk_statut as status, d.fk_c_paiement, d.paid,";
         $sql.= " dp.libelle as libelle_paiement, dp.code as code_paiement";                             // INNER JOIN paiement
         $sql.= " FROM ".MAIN_DB_PREFIX.$this->table_element." as d";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as dp ON d.fk_c_paiement = dp.id AND dp.entity IN (".getEntity('c_paiement').")";
@@ -1678,19 +1678,21 @@ class ExpenseReport extends CommonObject
 
         dol_syslog(get_class($this)."::addline qty=$qty, up=$up, fk_c_type_fees=$fk_c_type_fees, vatrate=$vatrate, date=$date, fk_project=$fk_project, type=$type, comments=$comments", LOG_DEBUG);
 
-		if (empty($qty)) $qty = 0;
-		if (empty($fk_c_type_fees) || $fk_c_type_fees < 0) $fk_c_type_fees = 0;
-		if (empty($fk_c_exp_tax_cat) || $fk_c_exp_tax_cat < 0) $fk_c_exp_tax_cat = 0;
-		if (empty($vatrate) || $vatrate < 0) $vatrate = 0;
-		if (empty($date)) $date = '';
-		if (empty($fk_project)) $fk_project = 0;
-
-		$qty = price2num($qty);
-		$vatrate = price2num($vatrate);
-		$up = price2num($up);
-
 		if ($this->fk_statut == self::STATUS_DRAFT)
-        {
+		{
+			if (empty($qty)) $qty = 0;
+			if (empty($fk_c_type_fees) || $fk_c_type_fees < 0) $fk_c_type_fees = 0;
+			if (empty($fk_c_exp_tax_cat) || $fk_c_exp_tax_cat < 0) $fk_c_exp_tax_cat = 0;
+			if (empty($vatrate) || $vatrate < 0) $vatrate = 0;
+			if (empty($date)) $date = '';
+			if (empty($fk_project)) $fk_project = 0;
+
+			$qty = price2num($qty);
+			if (!preg_match('/\((.*)\)/', $vatrate)) {
+				$vatrate = price2num($vatrate);               // $txtva can have format '5.0(XXX)' or '5'
+			}
+			$up = price2num($up);
+
 			$this->db->begin();
 
 			$this->line = new ExpenseReportLine($this->db);

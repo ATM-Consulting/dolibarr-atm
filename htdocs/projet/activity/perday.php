@@ -36,6 +36,8 @@ require_once DOL_DOCUMENT_ROOT.'/holiday/class/holiday.class.php';
 
 $langs->loadLangs(array('projects','users','companies'));
 
+$hookmanager->initHooks(array('timesheetperdaycard'));
+
 $action=GETPOST('action','aZ09');
 $mode=GETPOST("mode",'alpha');
 $id=GETPOST('id','int');
@@ -408,7 +410,7 @@ print '<div class="colorback float valignmiddle">';
 $titleassigntask = $langs->transnoentities("AssignTaskToMe");
 if ($usertoprocess->id != $user->id) $titleassigntask = $langs->transnoentities("AssignTaskToUser", $usertoprocess->getFullName($langs));
 print '<div class="taskiddiv inline-block">';
-$formproject->selectTasks($socid?$socid:-1, $taskid, 'taskid', 32, 0, 1, 1);
+$formproject->selectTasks($socid?$socid:-1, $taskid, 'taskid', 32, 0, 1, 1, 0, 0, '', $usertoprocess);
 print '</div>';
 print ' ';
 print $formcompany->selectTypeContact($object, '', 'type','internal','rowid', 0, 'maxwidth200');
@@ -498,7 +500,7 @@ $holiday = new Holiday($db);
 $isavailable=array();
 
 $statusofholidaytocheck = '3';
-$isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $daytoparse, $statusofholiday);	// $daytoparse is a date with hours = 0
+$isavailablefordayanduser = $holiday->verifDateHolidayForTimestamp($usertoprocess->id, $daytoparse, $statusofholidaytocheck);	// $daytoparse is a date with hours = 0
 $isavailable[$daytoparse]=$isavailablefordayanduser;			// in projectLinesPerWeek later, we are using $firstdaytoshow and dol_time_plus_duree to loop on each day
 
 if (count($tasksarray) > 0)

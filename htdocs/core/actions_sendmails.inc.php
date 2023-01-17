@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2013 Laurent Destailleur  <eldy@users.sourceforge.net>
- *
+*  Copyright (C) 2013 Juanjo Menent		   <jmenent@2byte.es>
+*
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation; either version 3 of the License, or
@@ -42,7 +43,7 @@ if (GETPOST('addfile','alpha'))
 	$vardir=$conf->user->dir_output."/".$user->id;
 	$upload_dir_tmp = $vardir.'/temp';             // TODO Add $keytoavoidconflict in upload_dir path
 
-	dol_add_file_process($upload_dir_tmp, 0, 0, 'addedfile', '', null, $trackid);
+	dol_add_file_process($upload_dir_tmp, 1, 0, 'addedfile', '', null, $trackid);
 	$action='presend';
 }
 
@@ -192,7 +193,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 				// Recipient was provided from combo list
 				if ($val == 'thirdparty') // Id of third party
 				{
-					$tmparray[] = $thirdparty->name.' <'.$thirdparty->email.'>';
+					$tmparray[] = str_replace(","," ",$thirdparty->name).' <'.$thirdparty->email.'>';
 				}
 				elseif ($val)	// Id du contact
 				{
@@ -459,7 +460,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 					$mesg='<div class="error">';
 					if ($mailfile->error)
 					{
-						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
+						$mesg.=$langs->transnoentities('ErrorFailedToSendMail',dol_escape_htmltag($from),dol_escape_htmltag($sendto));
 						$mesg.='<br>'.$mailfile->error;
 					}
 					else

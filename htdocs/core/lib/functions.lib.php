@@ -13,6 +13,7 @@
  * Copyright (C) 2014		Cédric GROSS					<c.gross@kreiz-it.fr>
  * Copyright (C) 2014-2015	Marcos García				<marcosgdf@gmail.com>
  * Copyright (C) 2015		Jean-François Ferry			<jfefe@aternatik.fr>
+ * Copyright (C) 2018       Frédéric France             <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1375,6 +1376,7 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
 					$fileimagebis = $file.'_preview-0.png';         // If PDF has more than one page
 					$relativepathimage = $relativepath.'_preview.png';
 
+
 					// Si fichier PDF existe
 					if (file_exists($file))
 					{
@@ -1386,7 +1388,8 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
 						{
 							if (empty($conf->global->MAIN_DISABLE_PDF_THUMBS))		// If you experienc trouble with pdf thumb generation and imagick, you can disable here.
 							{
-								$ret = dol_convert_file($file, 'png', $fileimage);
+							    include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+							    $ret = dol_convert_file($file, 'png', $fileimage);
 								if ($ret < 0) $error++;
 							}
 						}
@@ -2806,7 +2809,7 @@ function img_picto($titlealt, $picto, $moreatt = '', $pictoisfullpath = false, $
 			if ($picto == 'off') { $fakey = 'fa-square-o'; $fasize='1.3em'; }
 			if ($picto == 'on')  { $fakey = 'fa-check-square-o'; $fasize='1.3em'; }
 			$enabledisablehtml='';
-			$enabledisablehtml.='<span class="fa '.$fakey.' valignmiddle'.($morecss?' '.$morecss:'').'" style="'.($fasize?('font-size: '.$fasize.';'):'').($facolor?(' color: '.$facolor.';'):'').'" alt="'.dol_escape_htmltag($titlealt).'" title="'.dol_escape_htmltag($titlealt).'"'.($moreatt?' '.$moreatt:'').'">';
+			$enabledisablehtml.='<span class="fa '.$fakey.' valignmiddle'.($morecss?' '.$morecss:'').'" style="'.($fasize?('font-size: '.$fasize.';'):'').($facolor?(' color: '.$facolor.';'):'').'" alt="'.dol_escape_htmltag($titlealt).'" title="'.dol_escape_htmltag($titlealt).'"'.($moreatt?' '.$moreatt:'').'>';
 			if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) $enabledisablehtml.=$titlealt;
 			$enabledisablehtml.='</span>';
 			return $enabledisablehtml;
@@ -4089,6 +4092,7 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
  * 									'MU'=Round to Max unit price (MAIN_MAX_DECIMALS_UNIT)
  *									'MT'=Round to Max for totals with Tax (MAIN_MAX_DECIMALS_TOT)
  *									'MS'=Round to Max for stock quantity (MAIN_MAX_DECIMALS_STOCK)
+ *									Numeric = Nb of digits for rounding
  * 	@param	int		$alreadysqlnb	Put 1 if you know that content is already universal format number
  *	@return	string					Amount with universal numeric format (Example: '99.99999') or unchanged text if conversion fails. If amount is null or '', it returns ''.
  *
@@ -4139,7 +4143,7 @@ function price2num($amount,$rounding='',$alreadysqlnb=0)
 		if ($rounding == 'MU')     $nbofdectoround=$conf->global->MAIN_MAX_DECIMALS_UNIT;
 		elseif ($rounding == 'MT') $nbofdectoround=$conf->global->MAIN_MAX_DECIMALS_TOT;
 		elseif ($rounding == 'MS') $nbofdectoround=empty($conf->global->MAIN_MAX_DECIMALS_STOCK)?5:$conf->global->MAIN_MAX_DECIMALS_STOCK;
-		elseif (is_numeric($rounding))  $nbofdectoround=$rounding; 	// For admin info page
+		elseif (is_numeric($rounding))  $nbofdectoround=$rounding;
 		//print "RR".$amount.' - '.$nbofdectoround.'<br>';
 		if (dol_strlen($nbofdectoround)) $amount = round($amount,$nbofdectoround);	// $nbofdectoround can be 0.
 		else return 'ErrorBadParameterProvidedToFunction';
@@ -4745,7 +4749,7 @@ function get_default_tva(Societe $thirdparty_seller, Societe $thirdparty_buyer, 
 	}
 
 	// Si (vendeur en France et acheteur hors Communaute europeenne et acheteur particulier) alors TVA par defaut=TVA du produit vendu. Fin de regle
-	if (! empty($conf->global->MAIN_USE_VAT_OF_PRODUCT_FOR_INDIVIDUAL_CUSTOMER_OUT_OF_EEC) && empty($buyer_in_cee) && !$thirdparty_buyer->isACompany()) 
+	if (! empty($conf->global->MAIN_USE_VAT_OF_PRODUCT_FOR_INDIVIDUAL_CUSTOMER_OUT_OF_EEC) && empty($buyer_in_cee) && !$thirdparty_buyer->isACompany())
 	{
 		return get_product_vat_for_country($idprod,$thirdparty_seller,$idprodfournprice);
 	}
@@ -5731,6 +5735,8 @@ function make_substitutions($text, $substitutionarray, $outputlangs=null)
 	// Make substitition for array $substitutionarray
 	foreach ($substitutionarray as $key => $value)
 	{
+		if (! isset($value)) continue;	// If value is null, it same than not having substitution key at all into array, we do not replace.
+
 		if ($key == '__SIGNATURE__' && (! empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))) $value='';		// Protection
 		if ($key == '__USER_SIGNATURE__' && (! empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))) $value='';	// Protection
 
@@ -6480,11 +6486,12 @@ function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode=
 	// No need to make a return $head. Var is modified as a reference
 	if (! empty($hookmanager))
 	{
-		$parameters=array('object' => $object, 'mode' => $mode, 'head'=>$head);
-		$reshook=$hookmanager->executeHooks('completeTabsHead',$parameters);
+		$parameters=array('object' => $object, 'mode' => $mode, 'head' => $head);
+		$reshook=$hookmanager->executeHooks('completeTabsHead', $parameters);
 		if ($reshook > 0)
 		{
 			$head = $hookmanager->resArray;
+            $h = count($head);
 		}
 	}
 }

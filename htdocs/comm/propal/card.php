@@ -904,6 +904,7 @@ if (empty($reshook))
 				// Add custom code and origin country into description
 				if (empty($conf->global->MAIN_PRODUCT_DISABLE_CUSTOMCOUNTRYCODE) && (! empty($prod->customcode) || ! empty($prod->country_code)))
 				{
+					$tmptxt = '(';
 					// Define output language
 					if (! empty($conf->global->MAIN_MULTILANGS) && ! empty($conf->global->PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE)) {
 						$outputlangs = $langs;
@@ -2044,7 +2045,7 @@ if ($action == 'create')
 	print '</tr></table>';
 	print '</td><td>';
 	if ($action == 'editmode') {
-		$form->form_modes_reglement($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->mode_reglement_id, 'mode_reglement_id');
+		$form->form_modes_reglement($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->mode_reglement_id, 'mode_reglement_id', 'CRDT');
 	} else {
 		$form->form_modes_reglement($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->mode_reglement_id, 'none');
 	}
