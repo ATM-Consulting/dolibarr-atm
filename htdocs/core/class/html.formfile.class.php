@@ -410,6 +410,14 @@ class FormFile
 		$titletoshow=$langs->trans("Documents");
 		if (! empty($title)) $titletoshow=$title;
 
+		// for normalized external modules, $modulepart can be 'modulename:submodulename'
+		$submodulepart = $modulepart;
+		$tmp=explode(':', $modulepart);
+		if (! empty($tmp[1])){
+			$modulepart=$tmp[0];
+			$submodulepart=$tmp[1];
+		}
+
 		// Show table
 		if ($genallowed)
 		{
@@ -665,8 +673,6 @@ class FormFile
 			}
 			else
 			{
-			    $submodulepart = $modulepart;
-
 				// For normalized standard modules
 				$file=dol_buildpath('/core/modules/'.$modulepart.'/modules_'.$modulepart.'.php', 0);
 				if (file_exists($file))
@@ -676,12 +682,7 @@ class FormFile
 				// For normalized external modules. modulepart = 'nameofmodule' or 'nameofmodule:nameofsubmodule'
 				else
 				{
-				    $tmp=explode(':', $modulepart);
-					if (! empty($tmp[1])){
-						$modulepart=$tmp[0];
-						$submodulepart=$tmp[1];
-					}
-			        $file=dol_buildpath('/'.$modulepart.'/core/modules/'.$modulepart.'/modules_'.$submodulepart.'.php', 0);
+					$file=dol_buildpath('/'.$modulepart.'/core/modules/'.$modulepart.'/modules_'.$submodulepart.'.php', 0);
 					$res=include_once $file;
 				}
 				$class='ModelePDF'.ucfirst($submodulepart);
