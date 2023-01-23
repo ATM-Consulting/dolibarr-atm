@@ -35,7 +35,7 @@ dol_include_once('/cliama/class/typeentrepot.class.php');
 dol_include_once('/categories/class/categorie.class.php');
 
 // Load translation files required by the page
-$langs->loadLangs(array('products', 'stocks', 'orders', 'productbatch', 'cliama@cliama'));
+$langs->loadLangs(array('products', 'stocks', 'orders', 'productbatch', 'deliveries', 'cliama@cliama'));
 //init Hook
 $hookmanager->initHooks(array('massstockmove'));
 
@@ -275,6 +275,8 @@ if ($action == 'createmovements')
 
 	foreach ($listofdata as $key => $val)	// Loop on each movement to do
 		{
+		$iterationError = 0;
+
 		$id = $val['id'];
 		$id_product = $val['id_product'];
 		$id_sw = $val['id_sw'];
@@ -299,22 +301,38 @@ if ($action == 'createmovements')
 			//print 'price src='.$pricesrc.', price dest='.$pricedest;exit;
 
 			if (empty($conf->productbatch->enabled) || ! $product->hasbatch())        // If product does not need lot/serial
-				{
+			{
+				if (empty($product->stock_warehouse[$id_sw]->real) || $product->stock_warehouse[$id_sw]->real < abs($qty)){
+					$msgErr = $product->ref;
+					$warehouse = new Entrepot($db);
+					if ($warehouse->fetch($id_sw)>0){
+						$msgErr.= ' : '.$warehouse->label;
+						$msgErr.= ' '.$langs->trans('Qty').' '.$product->stock_warehouse[$id_sw]->real.' < '.abs($qty);
+						$msgErr.= ' '.$langs->trans('Batch').' '.$batch;
+					}
+
+					setEventMessages($langs->trans('ErrorStockIsNotEnough').' '.$msgErr, array(), 'errors');
+					$error++;
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
+				}
+
 				// Remove stock
 				$result1 = $product->correct_stock(
-				$user,
-				$id_sw,
-				$qty,
-				1,
-				GETPOST("label"),
-				$pricesrc,
-				GETPOST("codemove")
+					$user,
+					$id_sw,
+					$qty,
+					1,
+					GETPOST("label"),
+					$pricesrc,
+					GETPOST("codemove")
 				);
-				if ($result1 < 0)
-				{
+
+				if ($result1 < 0){
 					$error++;
 					setEventMessages($product->errors, $product->errorss, 'errors');
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
 				}
+
 
 				// Add stock
 				$result2 = $product->correct_stock(
@@ -330,22 +348,40 @@ if ($action == 'createmovements')
 				{
 					$error++;
 					setEventMessages($product->errors, $product->errorss, 'errors');
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
 				}
-			} else {
+			}
+			else {
 				$arraybatchinfo = $product->loadBatchInfo($batch);
 				if (count($arraybatchinfo) > 0)
 				{
-                            $firstrecord = array_shift($arraybatchinfo);
-                            $dlc = $firstrecord['eatby'];
-                            $dluo = $firstrecord['sellby'];
-						//var_dump($batch); var_dump($arraybatchinfo); var_dump($firstrecord); var_dump($dlc); var_dump($dluo); exit;
+					$firstrecord = array_shift($arraybatchinfo);
+					$dlc = $firstrecord['eatby'];
+					$dluo = $firstrecord['sellby'];
+					//var_dump($batch); var_dump($arraybatchinfo); var_dump($firstrecord); var_dump($dlc); var_dump($dluo); exit;
 				} else {
 					$dlc = '';
 					$dluo = '';
 				}
 
-                        // Remove stock
-						$result1 = $product->correct_stock_batch(
+
+				if (empty($product->stock_warehouse[$id_sw]->detail_batch[$batch]->qty) || $product->stock_warehouse[$id_sw]->detail_batch[$batch]->qty < abs($qty)){
+					$error++;
+
+					$msgErr = $product->ref;
+					$warehouse = new Entrepot($db);
+					if ($warehouse->fetch($id_sw)>0){
+						$msgErr.= ' : '.$warehouse->label;
+						$msgErr.= ' '.$langs->trans('Batch').' '.$batch;
+						$msgErr.= ' '.$langs->trans('Qty').' '.$product->stock_warehouse[$id_sw]->detail_batch[$batch]->qty.' < '.abs($qty);
+					}
+
+					setEventMessages($langs->trans('ErrorStockIsNotEnough').' '.$msgErr, array(), 'errors');
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
+				}
+
+						// Remove stock
+				$result1 = $product->correct_stock_batch(
 						$user,
 						$id_sw,
 						$qty,
@@ -357,14 +393,15 @@ if ($action == 'createmovements')
 						$batch,
 						GETPOST("codemove")
 				);
-				if ($result1 < 0)
-				{
-                            $error++;
-                            setEventMessages($product->errors, $product->errorss, 'errors');
+
+				if ($result1 < 0){
+					$error++;
+					setEventMessages($product->errors, $product->errorss, 'errors');
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
 				}
 
-                        // Add stock
-						$result2 = $product->correct_stock_batch(
+				// Add stock
+				$result2 = $product->correct_stock_batch(
 						$user,
 						$id_tw,
 						$qty,
@@ -376,10 +413,11 @@ if ($action == 'createmovements')
 						$batch,
 						GETPOST("codemove")
 				);
-				if ($result2 < 0)
-				{
-                            $error++;
-                            setEventMessages($product->errors, $product->errorss, 'errors');
+
+				if ($result2 < 0){
+					$error++;
+					setEventMessages($product->errors, $product->errorss, 'errors');
+					break; // A la fin du traitement il y a un rollback général si erreurs alors autant arrêter le traitement si tel est le cas.
 				}
 			}
 		}else {
