@@ -1111,7 +1111,7 @@ function dol_sanitizeFileName2($str, $newstr = '_', $unaccent = 1)
     // Char '/' and '\' are file delimiters.
     // -- car can be used into filename to inject special paramaters like --use-compress-program to make command with file as parameter making remote execution of command
     //$filesystem_forbidden_chars = array('<', '>', '/', '\\', '?', '*', '|', '"', ':', '°', '$', ';');
-    $filesystem_forbidden_chars = array('<', '>', '\\', '?', '*', '|', '"', ':', '°', '$', ';');
+    $filesystem_forbidden_chars = array('<', '>', '\\', '?', '*', '|', '"', ':', '°', '$', ';', '-');
     $tmp = dol_string_nospecial($unaccent ? dol_string_unaccent($str) : $str, $newstr, $filesystem_forbidden_chars);
     $tmp = preg_replace('/\-\-+/', '_', $tmp);
     $tmp = preg_replace('/\s+\-([^\s])/', ' _$1', $tmp);
