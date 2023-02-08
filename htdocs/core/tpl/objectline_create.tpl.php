@@ -155,10 +155,10 @@ if ($nolinesbefore) {
 		<td class="linecoledit" colspan="<?php echo $colspan; ?>">&nbsp;</td>
 		<?php
 		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
-		if(!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES)  && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)) {
-
-			print '<td></td>';
-
+		if (!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES) && in_array($object->element,$Telement)) {
+			if ($object->status == $object::STATUS_DRAFT && $usercandelete) {
+				print '<td></td>';
+			}
 		}?>
 	</tr>
 	<?php
