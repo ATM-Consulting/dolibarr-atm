@@ -404,3 +404,7 @@ PMPExpected=Expected PMP
 ExpectedValuation=Expected Valuation
 PMPReal=Real PMP
 RealValuation=Real Valuation
+NotManagedInStock=not managed in stock
+stock_disabled=Stock disabled
+stock_enabled=Stock enabled
+NoWarehouseInBase= No warehouse in database
