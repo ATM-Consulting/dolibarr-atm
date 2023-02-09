@@ -307,30 +307,29 @@ if (empty($reshook)) {
 			} else {
 
 				$p = new Product($db);
-				$p->fetch($objectsrc->lines[$i]->fk_product);
-
-				if (GETPOST('entrepot_id','int') ==-1){
-					$qty .= '_'.$j;
-				}
-
-			    if ($p->not_managed_in_stock == Product::DISABLED_STOCK){
-
-					$w = new Entrepot($db);
-					$Tw = $w->list_array();
-					if (count($Tw) > 0 ){
-					$w_Id = array_keys($Tw);
-						$stockLine[$i][$j]['qty'] = GETPOST($qty, 'int');
-
-						// lorsque que l'on a le stock désactivé sur un produit/service
-						// on force l'entrepot pour passer le test  d'ajout de ligne dans expedition.class.php
-						//
-						$stockLine[$i][$j]['warehouse_id'] = $w_Id[0];
-						$stockLine[$i][$j]['ix_l'] = GETPOST($idl, 'int');
-					}else{
-						setEventMessage($langs->trans('NoWarehouseInBase'));
+				$res = $p->fetch($objectsrc->lines[$i]->fk_product);
+				if($res > 0) {
+					if(GETPOST('entrepot_id', 'int') == -1) {
+						$qty .= '_'.$j;
 					}
 
+					if($p->not_managed_in_stock == Product::DISABLED_STOCK) {
+						$w = new Entrepot($db);
+						$Tw = $w->list_array();
+						if(count($Tw) > 0) {
+							$w_Id = array_keys($Tw);
+							$stockLine[$i][$j]['qty'] = GETPOST($qty, 'int');
 
+							// lorsque que l'on a le stock désactivé sur un produit/service
+							// on force l'entrepot pour passer le test  d'ajout de ligne dans expedition.class.php
+							//
+							$stockLine[$i][$j]['warehouse_id'] = $w_Id[0];
+							$stockLine[$i][$j]['ix_l'] = GETPOST($idl, 'int');
+						}
+						else {
+							setEventMessage($langs->trans('NoWarehouseInBase'));
+						}
+					}
 				}
 
 				//var_dump(GETPOST($qty,'alpha')); var_dump($_POST); var_dump($batch);exit;
