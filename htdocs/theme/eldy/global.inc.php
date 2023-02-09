@@ -7115,7 +7115,7 @@ if (!empty($conf->global->THEME_CUSTOM_CSS)) {
 div.fiche>form>div.div-table-responsive, div.fiche>form>div.div-table-responsive-no-min {
 	overflow-x: unset !important;
 }
-tr.liste_titre th {
+#tablelines  tr.liste_titre th {
 	position: sticky;
 	top: 50px;
 	background: #e9eaed;
