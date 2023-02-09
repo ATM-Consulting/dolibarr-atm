@@ -7112,7 +7112,7 @@ if (!empty($conf->global->THEME_CUSTOM_CSS)) {
 /* ============================================================================== */
 /* Specific Eurochef - sticky table header                                        */
 /* ============================================================================== */
-div.fiche>form>div.div-table-responsive, div.fiche>form>div.div-table-responsive-no-min {
+.div-table-responsive-no-min {
 	overflow-x: unset;
 }
 #tablelines  tr.liste_titre th {
