@@ -1920,7 +1920,7 @@ class Societe extends CommonObject
 				$this->client = $obj->client;
 				$this->fournisseur = $obj->fournisseur;
 
-				$this->note = $obj->note_private; // TODO Deprecated for backward comtability
+				$this->note = $obj->note_private; // TODO Deprecated for backward compatibility
 				$this->note_private = $obj->note_private;
 				$this->note_public = $obj->note_public;
 				$this->model_pdf = $obj->model_pdf;
@@ -1941,11 +1941,11 @@ class Societe extends CommonObject
 				}
 
 				if (!empty($obj->spe_accountancy_code_sell)) {
-					$this->accountancy_code_buy = $obj->spe_accountancy_code_sell;
+					$this->accountancy_code_sell = $obj->spe_accountancy_code_sell;
 				} elseif (!empty($obj->soc_accountancy_code_sell)) {
-					$this->accountancy_code_buy = $obj->soc_accountancy_code_sell;
+					$this->accountancy_code_sell = $obj->soc_accountancy_code_sell;
 				} else {
-					$this->accountancy_code_buy = '';
+					$this->accountancy_code_sell = '';
 				}
 
 				$this->outstanding_limit		= $obj->outstanding_limit;
