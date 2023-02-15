@@ -3,6 +3,9 @@ Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.co
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
 
+## [1.7.0] - 15-02-2023
+- FIX : suppression de la condition d'affichage bouton classé facturé
+
 ## [1.6.0] - 12-12-2022
 - FIX : on supprime toute la gestion du pmp
 
