@@ -1623,6 +1623,7 @@ class AccountancyExport
 
 		/*  ——————————— SPÉ ISETA ——————————— */
 		ob_start();
+		$langs->tab_translate['SeparatorThousand']='None'; // Retrait du séparateur des milliers (agit sur la fonction price())
 		/*  ——————————— FIN SPÉ ISETA ——————— */
 
 		/*
