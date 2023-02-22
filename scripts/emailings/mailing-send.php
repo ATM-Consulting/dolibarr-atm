@@ -71,6 +71,13 @@ if (empty($conf->global->MAILING_LIMIT_SENDBYCLI)) {
 	$conf->global->MAILING_LIMIT_SENDBYCLI = 0;
 }
 
+$langs->loadLangs(array("main", "mails"));
+
+if (!isModEnabled('mailing')) {
+	print 'Module Emailing not enabled';
+	exit(-1);
+}
+
 
 /*
  * Main
