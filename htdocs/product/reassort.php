@@ -152,6 +152,7 @@ if ($search_categ > 0) {
 	$sql .= ", ".MAIN_DB_PREFIX."categorie_product as cp";
 }
 $sql .= " WHERE p.entity IN (".getEntity('product').")";
+$sql .= " AND EXISTS (SELECT e.rowid FROM ".MAIN_DB_PREFIX."entrepot as e WHERE e.rowid = s.fk_entrepot AND e.entity IN (".getEntity('stock')."))";
 if ($search_categ > 0) {
 	$sql .= " AND p.rowid = cp.fk_product"; // Join for the needed table to filter by categ
 }
