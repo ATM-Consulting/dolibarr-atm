@@ -246,14 +246,9 @@ if (empty($reshook)) {
 			$subtotalqty = 0;
 
 			$j = 0;
-			if(GETPOST('entrepot_id', 'int') == -1) {
-				$batch = 'batchl'.$i.'_0';
-				$stockLocation = 'ent1'.$i.'_0';
-			}
-			else {
-				$batch = 'batchl'.$i;
-				$stockLocation = 'ent1'.$i;
-			}
+
+			$batch = 'batchl'.$i.'_0';
+			$stockLocation = 'ent1'.$i.'_0';
 			$qty = "qtyl".$i;
 
 			if (!empty($conf->productbatch->enabled) && $objectsrc->lines[$i]->product_tobatch) {      // If product need a batch number
