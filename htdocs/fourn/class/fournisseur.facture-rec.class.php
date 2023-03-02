@@ -476,13 +476,13 @@ class FactureFournisseurRec extends CommonInvoice
         $error = 0;
 
         $sql = 'UPDATE '.MAIN_DB_PREFIX.'facture_fourn_rec SET';
-        $sql .= ' titre = "'.(! empty($this->titre) ? $this->titre.'",' : '"",');
-        $sql .= ' ref_supplier = "'.(! empty($this->ref_supplier) ? $this->ref_supplier.'",' : '" ",');
+        $sql .= ' titre = '.(! empty($this->titre) ? "'".$this->titre."'" : "''").',';
+        $sql .= ' ref_supplier = '.(! empty($this->ref_supplier) ? "'".$this->ref_supplier."'" : "''").',';
         $sql .= ' entity = '.(! empty($this->entity) ? $this->entity : 1).',';
         if($this->fk_soc > 0) $sql .= ' fk_soc = '.(int) $this->fk_soc.',';
         $sql .= ' tms = "'.date('Y-m-d H:i:s', dol_now()).'",';
         $sql .= ' suspended = '.(! empty($this->suspended) ? $this->suspended : 0).',';
-        $sql .= ' libelle = "'.(! empty($this->libelle) ? $this->libelle : 'NULL').'",';
+        $sql .= ' libelle = '.(! empty($this->libelle) ? "'".$this->libelle."'" : 'NULL').',';
         $sql .= ' amount = '.(! empty($this->amount) ? $this->amount : 0.00).',';
         $sql .= ' remise = '.(! empty($this->remise) ? $this->remise : 'NULL').',';
         $sql .= ' vat_src_code = '.(! empty($this->vat_src_code) ? $this->vat_src_code : 'NULL').',';
@@ -499,9 +499,9 @@ class FactureFournisseurRec extends CommonInvoice
         $sql .= ' date_lim_reglement = '.(! empty($this->date_lim_reglement) ? '"'.date('Y-m-d H:i:s', $this->date_lim_reglement).'"' : 'NULL').',';
         $sql .= ' note_private = "'.(! empty($this->note_private) ? $this->note_private : '').'",';
         $sql .= ' note_public = "'.(! empty($this->note_public) ? $this->note_public : '').'",';
-        $sql .= ' modelpdf = "'.(! empty($this->model_pdf) ? $this->model_pdf : 'NULL').'",';
+        $sql .= ' modelpdf = '.(! empty($this->model_pdf) ? "'".$this->model_pdf."'" : 'NULL').',';
         $sql .= ' fk_multicurrency = '.(! empty($this->fk_multicurrency) ? $this->fk_multicurrency : 'NULL').',';
-        $sql .= ' multicurrency_code = "'.(! empty($this->multicurrency_code) ? $this->multicurrency_code : 'NULL').'",';
+        $sql .= ' multicurrency_code = '.(! empty($this->multicurrency_code) ? "'".$this->multicurrency_code."'" : 'NULL').',';
         $sql .= ' multicurrency_tx = '.(! empty($this->multicurrency_tx) ? $this->multicurrency_tx : 1).',';
         $sql .= ' multicurrency_total_ht = '.(! empty($this->multicurrency_total_ht) ? $this->multicurrency_total_ht : 0.00).',';
         $sql .= ' multicurrency_total_tva = '.(! empty($this->multicurrency_total_tva) ? $this->multicurrency_total_tva : 0.00).',';
