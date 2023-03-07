@@ -29,7 +29,7 @@
 // $triggersendname must be set (can be '')
 // $actiontypecode can be set
 // $object and $uobject may be defined
-
+include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 /*
  * Add file in email form
  */
@@ -238,9 +238,11 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 				}
 			}
 		}
+		//return array with valid and invalid email
+		$Temail = getValidAndInvalidEmail($tmparray);
+
 
 		$sendto = implode(',', $tmparray);
-
 		// Define $sendtocc
 		$receivercc = $_POST['receivercc'];
 		if (!is_array($receivercc)) {
@@ -302,6 +304,12 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 				}
 			}
 		}
+
+		//return array with valid and invalid email
+		$Temailcc = getValidAndInvalidEmail($tmparray);
+		$Temail['valid'] = array_merge($Temail['valid'],$Temailcc['valid']);
+		$Temail['invalid'] = array_merge($Temail['invalid'],$Temailcc['invalid']);
+
 		$sendtocc = implode(',', $tmparray);
 
 		if (dol_strlen($sendto)) {
@@ -472,8 +480,18 @@ if (($action == 'send' || $action == 'relance') && !$_POST['addfile'] && !$_POST
 					$langs->load("other");
 					$mesg = '<div class="error">';
 					if ($mailfile->error) {
-						$mesg .= $langs->transnoentities('ErrorFailedToSendMail', dol_escape_htmltag($from), dol_escape_htmltag($sendto));
-						$mesg .= '<br>'.$mailfile->error;
+						if (!empty($Temail['valid'])) {
+							foreach ($Temail['valid'] as $emailOk) {
+								setEventMessages($langs->trans('MailSuccessfulySent', $mailfile->getValidAddress($from, 2), $mailfile->getValidAddress($emailOk, 2)), null, 'mesgs');
+							}
+						}
+						if (!empty($Temail['invalid'])) {
+							foreach ($Temail['invalid'] as $emailKo) {
+								$mesg .= $langs->transnoentities('ErrorFailedToSendMail', dol_escape_htmltag($from), dol_escape_htmltag($emailKo));
+								$mesg .= '<br>' . $mailfile->error;
+							}
+						}
+
 					} else {
 						$mesg .= $langs->transnoentities('ErrorFailedToSendMail', dol_escape_htmltag($from), dol_escape_htmltag($sendto));
 						if (!empty($conf->global->MAIN_DISABLE_ALL_MAILS)) {
