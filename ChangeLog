@@ -1,8 +1,6 @@
 --------------------------------------------------------------
 English Dolibarr ChangeLog
 --------------------------------------------------------------
-***** ChangeLog pour le spéciique *****
-NEW : DA022877 Ajout d'une colonne date_limite_reglement dans l'export du journal brouillon des achat - **03/03/2023**
 
 ***** ChangeLog for 13.0.3 compared to 13.0.2 *****
 
