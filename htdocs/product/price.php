@@ -163,11 +163,15 @@ if (empty($reshook))
 			setEventMessages($object->error, $object->errors, 'errors');
 		}
 
-		if ($error)
-		{
+		if (!$error) {
 			//$localtaxarray=array('0'=>$localtax1_type,'1'=>$localtax1,'2'=>$localtax2_type,'3'=>$localtax2);
 			$localtaxarray = array(); // We do not store localtaxes into product, we will use instead the "vat code" to retrieve them.
-			$object->updatePrice(0, $object->price_base_type, $user, $tva_tx, '', 0, $npr, 0, 0, $localtaxarray, $vatratecode);
+			$ret = $object->updatePrice(0, $object->price_base_type, $user, $tva_tx, '', 0, $npr, 0, 0, $localtaxarray, $vatratecode);
+
+			if ($ret < 0) {
+				$error++;
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
 		}
 
 		if (!$error)
@@ -349,6 +353,7 @@ if (empty($reshook))
 
 				$newprice = price2num($newprice, 'MU');
 				$newprice_min = price2num($val['price_min'], 'MU');
+				$newvattx = price2num($val['vat_tx']);
 
 				if (!empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE) && $newprice_min < $maxpricesupplier) {
 					setEventMessages($langs->trans("MinimumPriceLimit", price($maxpricesupplier, 0, '', 1, - 1, - 1, 'auto')), null, 'errors');
@@ -356,10 +361,11 @@ if (empty($reshook))
 					break;
 				}
 
-				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'])
+				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'] || $object->multiprices_tva_tx[$key] != $newvattx) {
 	   				$res = $object->updatePrice($newprice, $val['price_base_type'], $user, $val['vat_tx'], $newprice_min, $key, $val['npr'], $psq, 0, $val['localtaxes_array'], $val['default_vat_code']);
-				else $res = 0;
-
+				} else {
+					$res = 0;
+				}
 
 				if ($res < 0) {
 					$error++;
@@ -398,14 +404,22 @@ if (empty($reshook))
 	{
 		// Activating product price by quantity add a new price line with price_by_qty set to 1
 		$level = GETPOST('level', 'int');
-		$object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 1);
+		$ret = $object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 1);
+
+		if ($ret < 0) {
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
 	}
 	// Unset Price by quantity
 	if ($action == 'disable_price_by_qty')
 	{
 		// Disabling product price by quantity add a new price line with price_by_qty set to 0
 		$level = GETPOST('level', 'int');
-		$object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 0);
+		$ret = $object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 0);
+
+		if ($ret < 0) {
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
 	}
 
 	if ($action == 'edit_price_by_qty')
@@ -1177,14 +1191,13 @@ if ($action == 'edit_vat' && ($user->rights->produit->creer || $user->rights->se
 
 	print '<br></form><br>';
 }
+
 if ($action == 'edit_price' && $object->getRights()->creer)
 {
-
 	print load_fiche_titre($langs->trans("NewPrice"), '');
 
 	if (empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
 	{
-
 		print '<!-- Edit price -->'."\n";
 		print '<form action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="POST">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -1197,7 +1210,6 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 		print '<table class="border centpercent">';
 
 		// VAT
-
 		print '<tr><td class="titlefield">'.$langs->trans("DefaultTaxRate").'</td><td>';
 		print $form->load_tva("tva_tx", $object->default_vat_code ? $object->tva_tx.' ('.$object->default_vat_code.')' : $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr, $object->type, false, 1);
 		print '</td></tr>';
@@ -1250,7 +1262,6 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 		// Price
 		$product = new Product($db);
 		$product->fetch($id, $ref, '', 1); //Ignore the math expression when getting the price
-
 		print '<tr id="price_numeric"><td>';
 		$text = $langs->trans('SellingPrice');
 		print $form->textwithpicto($text, $langs->trans("PrecisionUnitIsLimitedToXDecimals", $conf->global->MAIN_MAX_DECIMALS_UNIT), 1, 1);
@@ -1295,7 +1306,6 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 
 		print '<br></form>';
 	} else {
-
 		print '<!-- Edit price per level -->'."\n";
 		?>
 		<script>
@@ -1373,7 +1383,6 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 				print '<input type="hidden" name="localtax2_type['.$i.']" value="'.$object->localtax2_type.'">';
 				print '</td>';
 			} else {
-
 				// This option is kept for backward compatibility but has no sense
 				print '<td style="text-align: center">';
 				print $form->load_tva("tva_tx[".$i.']', $object->multiprices_tva_tx[$i], $mysoc, '', $object->id, false, $object->type, false, 1);
@@ -1421,6 +1430,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 	}
 }
 
+
 // List of price changes - log historic (ordered by descending date)
 
 if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_default_price') && !in_array($action, array('edit_price', 'edit_vat')))
@@ -1452,14 +1462,17 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_defaul
     		// On l'ajoute donc pour remettre a niveau (pb vieilles versions)
     		// We emulate the change of the price from interface with the same value than the one into table llx_product
             if (!empty($conf->global->PRODUIT_MULTIPRICES)) {
-
-            	$object->updatePrice(($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_ttc[1] : $object->multiprices[1]), $object->multiprices_base_type[1], $user, (empty($object->multiprices_tva_tx[1]) ? 0 : $object->multiprices_tva_tx[1]), ($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_min_ttc[1] : $object->multiprices_min[1]), 1);
+				$ret = $object->updatePrice(($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_ttc[1] : $object->multiprices[1]), $object->multiprices_base_type[1], $user, (empty($object->multiprices_tva_tx[1]) ? 0 : $object->multiprices_tva_tx[1]), ($object->multiprices_base_type[1] == 'TTC' ? $object->multiprices_min_ttc[1] : $object->multiprices_min[1]), 1);
             } else {
-            	$object->updatePrice(($object->price_base_type == 'TTC' ? $object->price_ttc : $object->price), $object->price_base_type, $user, $object->tva_tx, ($object->price_base_type == 'TTC' ? $object->price_min_ttc : $object->price_min));
+				$ret = $object->updatePrice(($object->price_base_type == 'TTC' ? $object->price_ttc : $object->price), $object->price_base_type, $user, $object->tva_tx, ($object->price_base_type == 'TTC' ? $object->price_min_ttc : $object->price_min));
             }
 
-			$result = $db->query($sql);
-			$num = $db->num_rows($result);
+			if ($ret < 0) {
+				dol_print_error($db, $object->error, $object->errors);
+			} else {
+				$result = $db->query($sql);
+				$num = $db->num_rows($result);
+			}
 		}
 
 		if ($num > 0) {
@@ -1605,8 +1618,7 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_defaul
 					} elseif ($i > 0) $candelete = 1;
 
 					print '<td class="right">';
-					if ($candelete)
-					{
+    				if ($candelete || ($db->jdate($objp->dp) >= dol_now())) {		// Test on date is to be able to delete a corrupted record with a date in future
 						print '<a href="'.$_SERVER["PHP_SELF"].'?action=delete&amp;token='.newToken().'&amp;id='.$object->id.'&amp;lineid='.$objp->rowid.'">';
 						print img_delete();
 						print '</a>';

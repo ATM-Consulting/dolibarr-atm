@@ -876,7 +876,14 @@ if ($action == 'create')
 
 			// Reception lines
 			$numAsked = 0;
+
+			/**
+			 * @var array $suffix2numAsked map HTTP query parameter suffixes (like '1_0') to line indices so that
+			 *                             extrafields from HTTP query can be assigned to the correct dispatch line
+			*/
+			$suffix2numAsked = array();
 			$dispatchLines = array();
+
 			foreach ($_POST as $key => $value) {
 				// If create form is coming from the button "Create Reception" of previous page
 
@@ -884,14 +891,16 @@ if ($action == 'create')
 				$reg = array();
 				if (preg_match('/^product_([0-9]+)_([0-9]+)$/i', $key, $reg)) {
 					$numAsked++;
+					$paramSuffix = $reg[1] . '_' . $reg[2];
+					$suffix2numAsked[$paramSuffix] = $numAsked;
 
 					// $numline=$reg[2] + 1; // line of product
 					$numline = $numAsked;
-					$prod = "product_".$reg[1].'_'.$reg[2];
-					$qty = "qty_".$reg[1].'_'.$reg[2];
-					$ent = "entrepot_".$reg[1].'_'.$reg[2];
-					$pu = "pu_".$reg[1].'_'.$reg[2]; // This is unit price including discount
-					$fk_commandefourndet = "fk_commandefourndet_".$reg[1].'_'.$reg[2];
+					$prod = "product_" . $paramSuffix;
+					$qty = "qty_" . $paramSuffix;
+					$ent = "entrepot_" . $paramSuffix;
+					$pu = "pu_" . $paramSuffix; // This is unit price including discount
+					$fk_commandefourndet = "fk_commandefourndet_" . $paramSuffix;
 					$dispatchLines[$numAsked] = array('prod' => GETPOST($prod, 'int'), 'qty' =>GETPOST($qty), 'ent' =>GETPOST($ent, 'int'), 'pu' =>GETPOST($pu), 'comment' =>GETPOST('comment'), 'fk_commandefourndet' => GETPOST($fk_commandefourndet, 'int'));
 				}
 
@@ -899,41 +908,51 @@ if ($action == 'create')
 				if (preg_match('/^product_batch_([0-9]+)_([0-9]+)$/i', $key, $reg))
 				{
 					$numAsked++;
+					$paramSuffix = $reg[1] . '_' . $reg[2];
+					$suffix2numAsked[$paramSuffix] = $numAsked;
 
 					// eat-by date dispatch
 					// $numline=$reg[2] + 1; // line of product
 					$numline = $numAsked;
-					$prod = 'product_batch_'.$reg[1].'_'.$reg[2];
-					$qty = 'qty_'.$reg[1].'_'.$reg[2];
-					$ent = 'entrepot_'.$reg[1].'_'.$reg[2];
-					$pu = 'pu_'.$reg[1].'_'.$reg[2];
-					$lot = 'lot_number_'.$reg[1].'_'.$reg[2];
-					$dDLUO = dol_mktime(12, 0, 0, $_POST['dluo_'.$reg[1].'_'.$reg[2].'month'], $_POST['dluo_'.$reg[1].'_'.$reg[2].'day'], $_POST['dluo_'.$reg[1].'_'.$reg[2].'year']);
-					$dDLC = dol_mktime(12, 0, 0, $_POST['dlc_'.$reg[1].'_'.$reg[2].'month'], $_POST['dlc_'.$reg[1].'_'.$reg[2].'day'], $_POST['dlc_'.$reg[1].'_'.$reg[2].'year']);
-					$fk_commandefourndet = 'fk_commandefourndet_'.$reg[1].'_'.$reg[2];
+					$prod = 'product_batch_' . $paramSuffix;
+					$qty = 'qty_' . $paramSuffix;
+					$ent = 'entrepot_' . $paramSuffix;
+					$pu = 'pu_' . $paramSuffix;
+					$lot = 'lot_number_' . $paramSuffix;
+					$dDLUO = dol_mktime(12, 0, 0, $_POST['dluo_'.$paramSuffix.'month'], $_POST['dluo_'.$paramSuffix.'day'], $_POST['dluo_'.$paramSuffix.'year']);
+					$dDLC = dol_mktime(12, 0, 0, $_POST['dlc_'.$paramSuffix.'month'], $_POST['dlc_'.$paramSuffix.'day'], $_POST['dlc_'.$paramSuffix.'year']);
+					$fk_commandefourndet = 'fk_commandefourndet_'.$paramSuffix;
 					$dispatchLines[$numAsked] = array('prod' => GETPOST($prod, 'int'), 'qty' =>GETPOST($qty), 'ent' =>GETPOST($ent, 'int'), 'pu' =>GETPOST($pu), 'comment' =>GETPOST('comment'), 'fk_commandefourndet' => GETPOST($fk_commandefourndet, 'int'), 'DLC'=> $dDLC, 'DLUO'=> $dDLUO, 'lot'=> GETPOST($lot, 'alpha'));
 				}
 
 				// If create form is coming from same page post was sent but an error occured
 				if (preg_match('/^productid([0-9]+)$/i', $key, $reg)) {
 					$numAsked++;
+					$paramSuffix = $reg[1];
+					$suffix2numAsked[$paramSuffix] = $numAsked;
 
 					// eat-by date dispatch
 					// $numline=$reg[2] + 1; // line of product
 					$numline = $numAsked;
-					$prod = 'productid'.$reg[1];
-					$comment = 'comment'.$reg[1];
-					$qty = 'qtyl'.$reg[1];
-					$ent = 'entl'.$reg[1];
-					$pu = 'pul'.$reg[1];
-					$lot = 'batch'.$reg[1];
-					$dDLUO = dol_mktime(12, 0, 0, GETPOST('dluo'.$reg[1].'month', 'int'), GETPOST('dluo'.$reg[1].'day', 'int'), GETPOST('dluo'.$reg[1].'year', 'int'));
-					$dDLC = dol_mktime(12, 0, 0, GETPOST('dlc'.$reg[1].'month', 'int'), GETPOST('dlc'.$reg[1].'day', 'int'), GETPOST('dlc'.$reg[1].'year', 'int'));
-					$fk_commandefourndet = 'fk_commandefournisseurdet'.$reg[1];
+					$prod = 'productid'.$paramSuffix;
+					$comment = 'comment'.$paramSuffix;
+					$qty = 'qtyl'.$paramSuffix;
+					$ent = 'entl'.$paramSuffix;
+					$pu = 'pul'.$paramSuffix;
+					$lot = 'batch'.$paramSuffix;
+					$dDLUO = dol_mktime(12, 0, 0, GETPOST('dluo'.$paramSuffix.'month', 'int'), GETPOST('dluo'.$paramSuffix.'day', 'int'), GETPOST('dluo'.$paramSuffix.'year', 'int'));
+					$dDLC = dol_mktime(12, 0, 0, GETPOST('dlc'.$paramSuffix.'month', 'int'), GETPOST('dlc'.$paramSuffix.'day', 'int'), GETPOST('dlc'.$paramSuffix.'year', 'int'));
+					$fk_commandefourndet = 'fk_commandefournisseurdet'.$paramSuffix;
 					$dispatchLines[$numAsked] = array('prod' => GETPOST($prod, 'int'), 'qty' =>GETPOST($qty), 'ent' =>GETPOST($ent, 'int'), 'pu' =>GETPOST($pu), 'comment' =>GETPOST($comment), 'fk_commandefourndet' => GETPOST($fk_commandefourndet, 'int'), 'DLC'=> $dDLC, 'DLUO'=> $dDLUO, 'lot'=> GETPOST($lot, 'alpha'));
 				}
 			}
 
+			// If extrafield values are passed in the HTTP query, assign them to the correct dispatch line
+			// Note that if an extrafield with the same name exists in the origin supplier order line, the value
+			// from the HTTP query will be ignored
+			foreach ($suffix2numAsked as $suffix => $n) {
+				$dispatchLines[$n]['array_options'] = $extrafields->getOptionalsFromPost('commande_fournisseur_dispatch', '_' . $suffix, '');
+			}
 
 			print '<script type="text/javascript" language="javascript">
             jQuery(document).ready(function() {
@@ -983,11 +1002,11 @@ if ($action == 'create')
 				if (!empty($conf->productbatch->enabled))
 				{
 					print '<td class="left">'.$langs->trans("batch_number").'</td>';
-					if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
-						print '<td class="left">'.$langs->trans("EatByDate").'</td>';
-					}
 					if (empty($conf->global->PRODUCT_DISABLE_SELLBY)) {
 						print '<td class="left">'.$langs->trans("SellByDate").'</td>';
+					}
+					if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
+						print '<td class="left">'.$langs->trans("EatByDate").'</td>';
 					}
 				}
 				print "</tr>\n";
@@ -1077,8 +1096,7 @@ if ($action == 'create')
 				print '</td>';
 
 
-				if ($line->product_type == 1 && empty($conf->global->STOCK_SUPPORTS_SERVICES))
-				{
+				if ($line->product_type == 1 && empty($conf->global->STOCK_SUPPORTS_SERVICES)) {
 					$quantityToBeDelivered = 0;
 				} else {
 					$quantityToBeDelivered = $dispatchLines[$indiceAsked]['qty'];
@@ -1130,12 +1148,12 @@ if ($action == 'create')
 						if (!empty($product->status_batch))
 						{
 							print '<td><input name="batch'.$indiceAsked.'" value="'.$dispatchLines[$indiceAsked]['lot'].'"></td>';
-							if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
+							if (empty($conf->global->PRODUCT_DISABLE_SELLBY)) {
 								print '<td>';
 								print $form->selectDate($dispatchLines[$indiceAsked]['DLC'], 'dlc'.$indiceAsked, '', '', 1, "");
 								print '</td>';
 							}
-							if (empty($conf->global->PRODUCT_DISABLE_SELLBY)) {
+							if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
 								print '<td>';
 								print $form->selectDate($dispatchLines[$indiceAsked]['DLUO'], 'dluo'.$indiceAsked, '', '', 1, "");
 								print '</td>';
@@ -1147,6 +1165,7 @@ if ($action == 'create')
 					print "</tr>\n";
 				}
 
+				$extralabelslines = $extrafields->attributes[$line->table_element];
 				//Display lines extrafields
 				if (is_array($extralabelslines) && count($extralabelslines) > 0)
 				{
@@ -1163,6 +1182,9 @@ if ($action == 'create')
 					$srcLine->fetch_optionals(); // fetch extrafields also available in orderline
 					$line->fetch_optionals();
 
+					if (empty($line->array_options) && !empty($dispatchLines[$indiceAsked]['array_options'])) {
+						$line->array_options = $dispatchLines[$indiceAsked]['array_options'];
+					}
 					$line->array_options = array_merge($line->array_options, $srcLine->array_options);
 
 					print $line->showOptionals($extrafields, 'edit', array('style'=>'class="oddeven"', 'colspan'=>$colspan), $indiceAsked);
@@ -1827,13 +1849,13 @@ if ($action == 'create')
 						if ($conf->productbatch->enabled && !empty($lines[$i]->product->status_batch))
 						{
 							print '<td>  <input name="batch'.$line_id.'" id="batch'.$line_id.'" type="text" value="'.$lines[$i]->batch.'"> </br>';
-							if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
-								print $langs->trans('EatByDate').' : ';
-								print $form->selectDate($lines[$i]->eatby, 'dlc'.$line_id, '', '', 1, "").'</br>';
-							}
 							if (empty($conf->global->PRODUCT_DISABLE_SELLBY)) {
 								print $langs->trans('SellByDate').' : ';
-								print $form->selectDate($lines[$i]->sellby, 'dluo'.$line_id, '', '', 1, "");
+								print $form->selectDate($lines[$i]->sellby, 'dlc'.$line_id, '', '', 1, "").'</br>';
+							}
+							if (empty($conf->global->PRODUCT_DISABLE_EATBY)) {
+								print $langs->trans('EatByDate').' : ';
+								print $form->selectDate($lines[$i]->eatby, 'dluo'.$line_id, '', '', 1, "");
 							}
 							print '</td>';
 						}
@@ -1939,6 +1961,7 @@ if ($action == 'create')
 			print "</tr>";
 
 			// Display lines extrafields
+			$extralabelslines = $extrafields->attributes[$lines[$i]->table_element];
 			if (is_array($extralabelslines) && count($extralabelslines) > 0)
 			{
 				$colspan = empty($conf->productbatch->enabled) ? 8 : 9;

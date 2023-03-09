@@ -212,6 +212,11 @@ $parameters = [
 	'validpaymentmethod' => &$validpaymentmethod
 ];
 $reshook = $hookmanager->executeHooks('doValidatePayment', $parameters, $object, $action);
+if ($reshook < 0) {
+    setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+} elseif ($reshook > 0) {
+	print $hookmanager->resPrint;
+}
 
 // Check security token
 $valid = true;
@@ -790,6 +795,11 @@ if ($urllogo)
 	if (empty($conf->global->MAIN_HIDE_POWERED_BY)) {
 		print '<div class="poweredbypublicpayment opacitymedium right"><a class="poweredbyhref" href="https://www.dolibarr.org?utm_medium=website&utm_source=poweredby" target="dolibarr" rel="noopener">'.$langs->trans("PoweredBy").'<br><img class="poweredbyimg" src="'.DOL_URL_ROOT.'/theme/dolibarr_logo.svg" width="80px"></a></div>';
 	}
+	print '</div>';
+}
+if (!empty($conf->global->MAIN_IMAGE_PUBLIC_PAYMENT)) {
+	print '<div class="backimagepublicpayment">';
+	print '<img id="dolpaymentlogo" src="'.$conf->global->MAIN_IMAGE_PUBLIC_PAYMENT.'">';
 	print '</div>';
 }
 
@@ -1669,6 +1679,12 @@ if ($action != 'dopayment')
 			'object' => $object
 		];
 		$reshook = $hookmanager->executeHooks('doCheckStatus', $parameters, $object, $action);
+		if ($reshook < 0) {
+			setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+		} elseif ($reshook > 0) {
+			print $hookmanager->resPrint;
+		}
+
 		if ($source == 'order' && $object->billed)
 		{
 			print '<br><br><span class="amountpaymentcomplete size15x">'.$langs->trans("OrderBilled").'</span>';
@@ -1694,6 +1710,12 @@ if ($action != 'dopayment')
 				'paymentmethod' => $paymentmethod
 			];
 			$reshook = $hookmanager->executeHooks('doAddButton', $parameters, $object, $action);
+			if ($reshook < 0) {
+				setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+			} elseif ($reshook > 0) {
+				print $hookmanager->resPrint;
+			}
+
 			if ((empty($paymentmethod) || $paymentmethod == 'paybox') && !empty($conf->paybox->enabled))
 			{
 				print '<div class="button buttonpayment" id="div_dopayment_paybox"><span class="fa fa-credit-card"></span> <input class="" type="submit" id="dopayment_paybox" name="dopayment_paybox" value="'.$langs->trans("PayBoxDoPayment").'">';
@@ -2294,8 +2316,12 @@ if (preg_match('/^dopayment/', $action))			// If we choosed/click on the payment
 		'dopayment' => GETPOST('dopayment', 'alpha')
 	];
 	$reshook = $hookmanager->executeHooks('doPayment', $parameters, $object, $action);
+	if ($reshook < 0) {
+		setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+	} elseif ($reshook > 0) {
+		print $hookmanager->resPrint;
+	}
 }
-
 
 htmlPrintOnlinePaymentFooter($mysoc, $langs, 1, $suffix, $object);
 

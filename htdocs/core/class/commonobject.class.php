@@ -497,8 +497,8 @@ abstract class CommonObject
 
 	/**
 	 * @var array    List of child tables. To know object to delete on cascade.
-	 *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
-	 *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
+	 *               If name is like '@ClassName:FilePathClass:ParentFkFieldName', it will
+	 *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object.
 	 */
 	protected $childtablesoncascade = array();
 
@@ -3177,12 +3177,17 @@ abstract class CommonObject
 						}
 						$sqlfix = "UPDATE ".MAIN_DB_PREFIX.$this->table_element_line." SET ".$fieldtva." = ".($obj->total_tva - $diff).", total_ttc = ".($obj->total_ttc - $diff)." WHERE rowid = ".$obj->rowid;
 						dol_syslog('We found a difference of '.$diff.' for line rowid = '.$obj->rowid.". We fix the total_vat and total_ttc of line by running sqlfix = ".$sqlfix);
-								$resqlfix = $this->db->query($sqlfix);
-								if (!$resqlfix) dol_print_error($this->db, 'Failed to update line');
-								$this->total_tva -= $diff;
-								$this->total_ttc -= $diff;
-								$total_tva_by_vats[$obj->vatrate] -= $diff;
-								$total_ttc_by_vats[$obj->vatrate] -= $diff;
+
+						$resqlfix = $this->db->query($sqlfix);
+
+						if (!$resqlfix) {
+							dol_print_error($this->db, 'Failed to update line');
+						}
+
+						$this->total_tva = (float) price2num($this->total_tva - $diff, '', 1);
+						$this->total_ttc = (float) price2num($this->total_ttc - $diff, '', 1);
+						$total_tva_by_vats[$obj->vatrate] = (float) price2num($total_tva_by_vats[$obj->vatrate] - $diff, '', 1);
+						$total_ttc_by_vats[$obj->vatrate] = (float) price2num($total_ttc_by_vats[$obj->vatrate] - $diff, '', 1);
 					}
 				}
 
@@ -3209,6 +3214,13 @@ abstract class CommonObject
 					$this->multicurrency_total_ttc -= $sit->multicurrency_total_ttc;
 				}
 			}
+
+			// Clean total
+			$this->total_ht = (float) price2num($this->total_ht);
+			$this->total_tva = (float) price2num($this->total_tva);
+			$this->total_localtax1 = (float) price2num($this->total_localtax1);
+			$this->total_localtax2 = (float) price2num($this->total_localtax2);
+			$this->total_ttc = (float) price2num($this->total_ttc);
 
 			$this->db->free($resql);
 
@@ -3634,10 +3646,10 @@ abstract class CommonObject
 		if (is_array($this->fields) && array_key_exists('status', $this->fields)) $fieldstatus = 'status';
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$elementTable;
-		$sql .= " SET ".$fieldstatus." = ".$status;
+		$sql .= " SET ".$fieldstatus." = ".((int) $status);
 		// If status = 1 = validated, update also fk_user_valid
-		if ($status == 1 && $elementTable == 'expensereport') $sql .= ", fk_user_valid = ".$user->id;
-		$sql .= " WHERE rowid=".$elementId;
+		if ($status == 1 && $elementTable == 'expensereport') $sql .= ", fk_user_valid = ".((int) $user->id);
+		$sql .= " WHERE rowid=".((int) $elementId);
 
 		dol_syslog(get_class($this)."::setStatut", LOG_DEBUG);
 		if ($this->db->query($sql))
@@ -5307,7 +5319,14 @@ abstract class CommonObject
 			   	$attributeLabel    = $extrafields->attributes[$this->table_element]['label'][$attributeKey];
 			   	$attributeParam    = $extrafields->attributes[$this->table_element]['param'][$attributeKey];
 			   	$attributeRequired = $extrafields->attributes[$this->table_element]['required'][$attributeKey];
+				$attributeUnique   = $extrafields->attributes[$this->table_element]['unique'][$attributeKey];
 				$attrfieldcomputed = $extrafields->attributes[$this->table_element]['computed'][$attributeKey];
+
+				// If we clone, we have to clean unique extrafields to prevent duplicates.
+				// This behaviour can be prevented by external code by changing $this->context['createfromclone'] value in createFrom hook
+				if (! empty($this->context['createfromclone']) && $this->context['createfromclone'] == 'createfromclone' && ! empty($attributeUnique)) {
+					$new_array_options[$key] = null;
+				}
 
 				// Similar code than into insertExtraFields
 				if ($attributeRequired)
@@ -5492,7 +5511,6 @@ abstract class CommonObject
 			}
 
 			$sql .= ")";
-
 			$resql = $this->db->query($sql);
 			if (!$resql)
 			{
@@ -5739,10 +5757,17 @@ abstract class CommonObject
 					$this->array_options["options_".$key] = price2num($this->array_options["options_".$key]);
 					break;
 				case 'date':
-					$this->array_options["options_".$key] = $this->db->idate($this->array_options["options_".$key]);
-					break;
 				case 'datetime':
-					$this->array_options["options_".$key] = $this->db->idate($this->array_options["options_".$key]);
+					if (empty($this->array_options["options_".$key])) {
+						$this->array_options["options_".$key] = null;
+					} else {
+						$this->array_options["options_".$key] = $this->db->idate($this->array_options["options_".$key]);
+					}
+					break;
+				case 'boolean':
+					if (empty($this->array_options["options_".$key])) {
+						$this->array_options["options_".$key] = null;
+					}
 					break;
 				/*
 				case 'link':
@@ -5790,7 +5815,11 @@ abstract class CommonObject
 			}
 
 			if ($linealreadyfound) {
-				$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element."_extrafields SET ".$key." = '".$this->db->escape($this->array_options["options_".$key])."'";
+				if ($this->array_options["options_".$key] === null) {
+					$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element."_extrafields SET ".$key." = null";
+				} else {
+					$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element."_extrafields SET ".$key." = '".$this->db->escape($this->array_options["options_".$key])."'";
+				}
 				$sql .= " WHERE fk_object = ".$this->id;
 			} else {
 				$result = $this->insertExtraFields('', $user);
@@ -5911,7 +5940,12 @@ abstract class CommonObject
 			$type = 'varchar';
 		} elseif (is_array($this->fields[$key]['arrayofkeyval'])) {
 			$param['options'] = $this->fields[$key]['arrayofkeyval'];
-			$type = 'select';
+			$type = $this->fields[$key]['type'];
+			if (!in_array($type, array('select', 'checkbox', 'radio'))) {
+				$type = 'select';
+			} else {
+				$type = $this->fields[$key]['type'];
+			}
 		} else {
 			$param['options'] = array();
 			$type = $this->fields[$key]['type'];

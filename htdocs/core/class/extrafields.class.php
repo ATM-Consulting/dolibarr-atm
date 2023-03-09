@@ -1824,7 +1824,7 @@ class ExtraFields
 						}
 					}
 				}
-				$value = '<div class="select2-container-multi-dolibarr" style="width: 90%;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
+				if (!empty($toprint)) $value = '<div class="select2-container-multi-dolibarr" style="width: 90%;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
 			} else {
 				dol_syslog(get_class($this).'::showOutputField error '.$this->db->lasterror(), LOG_WARNING);
 			}
@@ -2004,7 +2004,8 @@ class ExtraFields
 			foreach ($extralabels as $key => $value)
 			{
 				if (!empty($onlykey) && $onlykey != '@GETPOSTISSET' && $key != $onlykey) continue;
-				if (!empty($onlykey) && $onlykey == '@GETPOSTISSET' && !GETPOSTISSET('options_'.$key)) continue;
+                //when unticking boolean field, it's not set in POST
+				if (!empty($onlykey) && $onlykey == '@GETPOSTISSET' && ! GETPOSTISSET('options_'.$key) && $this->attributes[$object->table_element]['type'][$key] != 'boolean') continue;
 
 				$key_type = $this->attributes[$object->table_element]['type'][$key];
 				if ($key_type == 'separate') continue;

@@ -1,4 +1,6 @@
 <?php
+set_time_limit(0);
+ini_set('memory_limit', '2048M'); // Ticket ATM DA022421
 /* Copyright (C) 2013-2014	Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2020	Alexandre Spangaro	<aspangaro@open-dsi.fr>
  * Copyright (C) 2014-2015	Ari Elbaz (elarifr)	<github@accedinfo.com>

@@ -2314,7 +2314,7 @@ if ($action == 'create')
 
 							// Quantity
 							print '<td class="right">';
-							print '<input type="number" min="0" class="right maxwidth50" name="qty" value="'.dol_escape_htmltag($line->qty).'" />';
+							print '<input type="text" min="0" class="right maxwidth50" name="qty" value="'.dol_escape_htmltag($line->qty).'" />';
 							print '</td>';
 
 							//print '<td class="right">'.$langs->trans('AmountHT').'</td>';
@@ -2648,7 +2648,7 @@ if ($action != 'create' && $action != 'edit')
 	}
 
 	// If bank module is not used
-	if (($user->rights->expensereport->to_paid || empty($conf->banque->enabled)) && $object->status == ExpenseReport::STATUS_APPROVED)
+	if (($user->rights->expensereport->to_paid && empty($conf->banque->enabled)) && $object->status == ExpenseReport::STATUS_APPROVED)
 	{
 		//if ((round($remaintopay) == 0 || empty($conf->banque->enabled)) && $object->paid == 0)
 		if ($object->paid == 0)

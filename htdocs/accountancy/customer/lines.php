@@ -1,6 +1,6 @@
 <?php
 set_time_limit(0);
-ini_set('memory_limit', '1024M');
+ini_set('memory_limit', '2048M'); // Ticket ATM DA022421
 /* Copyright (C) 2013-2016 Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2020 Alexandre Spangaro	<aspangaro@open-dsi.fr>
  * Copyright (C) 2014-2015 Ari Elbaz (elarifr)	<github@accedinfo.com>
@@ -123,9 +123,9 @@ if (is_array($changeaccount) && count($changeaccount) > 0) {
 	{
 		$db->begin();
 
-		$sql1 = "UPDATE ".MAIN_DB_PREFIX."facturedet as l";
-		$sql1 .= " SET l.fk_code_ventilation=".(GETPOST('account_parent', 'int') > 0 ? GETPOST('account_parent', 'int') : '0');
-		$sql1 .= ' WHERE l.rowid IN ('.implode(',', $changeaccount).')';
+		$sql1 = "UPDATE ".MAIN_DB_PREFIX."facturedet";
+		$sql1 .= " SET fk_code_ventilation=".(GETPOST('account_parent', 'int') > 0 ? GETPOST('account_parent', 'int') : '0');
+		$sql1 .= ' WHERE rowid IN ('.implode(',', $changeaccount).')';
 
 		dol_syslog('accountancy/customer/lines.php::changeaccount sql= '.$sql1);
 		$resql1 = $db->query($sql1);

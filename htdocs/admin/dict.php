@@ -842,7 +842,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
 			if ($db->errno() == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
 				setEventMessages($langs->transnoentities("ErrorRecordAlreadyExists"), null, 'errors');
 			} else {
-				dol_print_error($db);
+				setEventMessages($db->error(), null, 'errors');
 			}
 		}
 	}
@@ -1078,6 +1078,7 @@ if ($id)
 	elseif ($search_code != '' && $id == 32)    $sql .= natural_search("a.code", $search_code);
 	elseif ($search_code != '' && $id == 3)     $sql .= natural_search("r.code_region", $search_code);
 	elseif ($search_code != '' && $id == 7)     $sql .= natural_search("a.code", $search_code);
+    elseif ($search_code != '' && $id == 10)    $sql .= natural_search("t.code", $search_code);
 	elseif ($search_code != '' && $id != 9)     $sql .= natural_search("code", $search_code);
 
 	if ($sortfield)
@@ -1237,6 +1238,10 @@ if ($id)
 		print $tdsoffields;
 
 
+		// Line to enter new values
+		print '<!-- line to add new entry -->';
+		print '<tr class="oddeven nodrag nodrop nohover">';
+
 		$obj = new stdClass();
 		// If data was already input, we define them in obj to populate input fields.
 		if (GETPOST('actionadd'))
@@ -1255,9 +1260,6 @@ if ($id)
 
 		if ($id == 3) unset($fieldlist[2]); // Remove field ??? if dictionary Regions
 
-		// Line to enter new values
-		print '<!-- line to add new entry -->';
-		print '<tr class="oddeven nodrag nodrop nohover">';
 
 		if (empty($reshook))
 		{
@@ -2018,10 +2020,10 @@ function fieldList($fieldlist, $obj = '', $tabname = '', $context = '')
 			if (in_array($fieldlist[$field], array('label', 'libelle')))		// For label
 			{
 				// Special case for labels
-				if ($tabname == MAIN_DB_PREFIX.'c_civility') {
+				if ($tabname == MAIN_DB_PREFIX.'c_civility' && !empty($obj->code)) {
 					$transkey = "Civility".strtoupper($obj->code);
 				}
-				if ($tabname == MAIN_DB_PREFIX.'c_payment_term') {
+				if ($tabname == MAIN_DB_PREFIX.'c_payment_term' && !empty($obj->code)) {
 					$langs->load("bills");
 					$transkey = "PaymentConditionShort".strtoupper($obj->code);
 				}
