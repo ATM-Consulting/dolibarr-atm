@@ -179,7 +179,7 @@ if ($result) {
 		$line->fetch($obj->fdid);
 
 		$tabfac[$obj->rowid]["date"] = $db->jdate($obj->df);
-		$tabfac[$obj->rowid]["datereg"] = $db->jdate($obj->dlr);
+		$tabfac[$obj->rowid]["datereg"] = $db->jdate($obj->dlf);
 		$tabfac[$obj->rowid]["ref"] = $obj->ref_supplier.' ('.$obj->ref.')';
 		$tabfac[$obj->rowid]["refsologest"] = $obj->ref;
 		$tabfac[$obj->rowid]["refsuppliersologest"] = $obj->ref_supplier;
@@ -597,6 +597,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 		$invoicestatic->close_code = $val["close_code"];
 
 		$date = dol_print_date($val["date"], 'day');
+		$date_limit_regl = dol_print_date($val["datereg"], 'day'); //Spécifique VetCompany : DA022877
 
 		// Is it a replaced invoice ? 0=not a replaced invoice, 1=replaced invoice not yet dispatched, 2=replaced invoice dispatched
 		$replacedinvoice = 0;
@@ -612,12 +613,12 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 		{
 			continue;
 		}
-
 		// Third party
 		foreach ($tabttc[$key] as $k => $mt) {
 			//if ($mt) {
 				print '"'.$key.'"'.$sep;
 				print '"'.$date.'"'.$sep;
+				print '"'.$date_limit_regl.'"'.$sep; //Spécifique VetCompany : DA022877
 				print '"'.$val["refsologest"].'"'.$sep;
 				print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
 				print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
@@ -639,6 +640,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 			//if ($mt) {
 				print '"'.$key.'"'.$sep;
 				print '"'.$date.'"'.$sep;
+				print '"'.$date_limit_regl.'"'.$sep; //Spécifique VetCompany : DA022877
 				print '"'.$val["refsologest"].'"'.$sep;
 				print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
 				print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
@@ -664,6 +666,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 				if ($mt) {
 					print '"'.$key.'"'.$sep;
 					print '"'.$date.'"'.$sep;
+					print '"'.$date_limit_regl.'"'.$sep; //Spécifique VetCompany : DA022877
 					print '"'.$val["refsologest"].'"'.$sep;
 					print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
 					print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
@@ -685,6 +688,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 					if ($mt) {
 						print '"'.$key.'"'.$sep;
 						print '"'.$date.'"'.$sep;
+						print '"'.$date_limit_regl.'"'.$sep; //Spécifique VetCompany : DA022877
 						print '"'.$val["refsologest"].'"'.$sep;
 						print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
 						print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
