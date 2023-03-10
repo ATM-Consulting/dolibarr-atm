@@ -179,7 +179,7 @@ if ($result) {
 		$line->fetch($obj->fdid);
 
 		$tabfac[$obj->rowid]["date"] = $db->jdate($obj->df);
-		$tabfac[$obj->rowid]["datereg"] = $db->jdate($obj->dlf);
+		$tabfac[$obj->rowid]["datereg"] = $db->jdate($obj->dlr);
 		$tabfac[$obj->rowid]["ref"] = $obj->ref_supplier.' ('.$obj->ref.')';
 		$tabfac[$obj->rowid]["refsologest"] = $obj->ref;
 		$tabfac[$obj->rowid]["refsuppliersologest"] = $obj->ref_supplier;
