@@ -219,7 +219,7 @@ if ($result) {
 		$line->fetch($obj->fdid);
 
 		// Situation invoices handling
-		$prev_progress = $line->get_prev_progress($obj->rowid);
+		$prev_progress = $line->get_prev_progress($obj->rowid, 0);
 
 		if ($obj->type == Facture::TYPE_SITUATION) {
 			// Avoid divide by 0
@@ -227,6 +227,8 @@ if ($result) {
 				$situation_ratio = 0;
 			} else {
 				$situation_ratio = ($obj->situation_percent - $prev_progress) / $obj->situation_percent;
+
+				dol_syslog("situation_ratio ". $situation_ratio ." situation_percent ".$obj->situation_percent. " prev_progress ".$prev_progress, LOG_ERR);
 			}
 		} else {
 			$situation_ratio = 1;
@@ -800,9 +802,11 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 
 
 if (empty($action) || $action == 'view') {
-	llxHeader('', $langs->trans("SellsJournal"));
+	$title = $langs->trans("GenerationOfAccountingEntries").' - '.$accountingjournalstatic->getNomUrl(0, 2, 1, '', 1);
 
-	$nom = $langs->trans("SellsJournal").' | '.$accountingjournalstatic->getNomUrl(0, 1, 1, '', 1);
+	llxHeader('', dol_string_nohtmltag($title));
+
+	$nom = $title;
 	$nomlink = '';
 	$periodlink = '';
 	$exportlink = '';

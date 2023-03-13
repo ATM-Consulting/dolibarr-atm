@@ -307,6 +307,7 @@ if (empty($reshook)) {
 				}
 
 				$objecttmp->date = $datefacture;
+				$objecttmp->date_echeance = $objecttmp->calculate_date_lim_reglement($objecttmp->cond_reglement_id);
 				$objecttmp->origin    = 'order_supplier';
 				$objecttmp->origin_id = $id_order;
 

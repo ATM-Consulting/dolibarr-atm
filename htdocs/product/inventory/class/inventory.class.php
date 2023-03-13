@@ -52,7 +52,7 @@ class Inventory extends CommonObject
 	/**
 	 * @var int  Does object support extrafields ? 0=No, 1=Yes
 	 */
-	public $isextrafieldmanaged = 0;
+	public $isextrafieldmanaged = 1;
 
 	/**
 	 * @var string String with name of icon for inventory
@@ -771,6 +771,7 @@ class InventoryLine extends CommonObjectLine
 	public $qty_stock;
 	public $qty_view;
 	public $qty_regulated;
+
 
 
 	/**

@@ -762,6 +762,11 @@ class ImportCsv extends ModeleImports
 						if ($val == 'user->id') {
 							$listfields[] = preg_replace('/^'.preg_quote($alias, '/').'\./', '', $key);
 							$listvalues[] = $user->id;
+							/** ************************** SPECIFIQUE EUROCHEF  */
+						} elseif ($val == 'datec') {
+							$listfields[] = preg_replace('/^' . preg_quote($alias, '/') . '\./', '', $key);
+							$listvalues[] = "'" . $this->db->idate(dol_now()) . "'";
+							/** FIN ************************** SPECIFIQUE EUROCHEF  */
 						} elseif (preg_match('/^lastrowid-/', $val)) {
 							$tmp = explode('-', $val);
 							$lastinsertid = (isset($last_insert_id_array[$tmp[1]])) ? $last_insert_id_array[$tmp[1]] : 0;

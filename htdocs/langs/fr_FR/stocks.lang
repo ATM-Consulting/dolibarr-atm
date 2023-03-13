@@ -265,3 +265,5 @@ ProductBarcodeDoesNotExist=Le produit avec ce code-barres n'existe pas
 WarehouseId=ID entrepôt
 WarehouseRef=Réf entrepôt
 StockEntryDate=Dernière date <br>d'entrée en stock
+InventoryExtraFields=Attributs supplémentaires (inventaire)
+InventorySetup=Paramètres inventaire

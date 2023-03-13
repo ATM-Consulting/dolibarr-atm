@@ -657,7 +657,9 @@ class modProduct extends DolibarrModules
 			}
 		}
 		// End add extra fields
-		$this->import_fieldshidden_array[$r] = array('extra.fk_object'=>'lastrowid-'.MAIN_DB_PREFIX.'product'); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
+		/** ************************** SPECIFIQUE EUROCHEF  */
+		$this->import_fieldshidden_array[$r] = array('extra.fk_object'=>'lastrowid-'.MAIN_DB_PREFIX.'product', 'p.datec' => 'datec'); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
+		/** FIN ************************** SPECIFIQUE EUROCHEF  */
 		$this->import_regex_array[$r] = array(
 			'p.ref'=>'[^ ]',
 			'p.price_base_type' => 'HT|TTC',

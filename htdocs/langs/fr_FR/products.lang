@@ -418,3 +418,8 @@ SwitchOffPurchaseStatus=Basculer le statut Hors Achat
 # import product | update by id
 #
 ProductsRowid= Produit (modification par rowid)
+NotManagedInStock=Désactiver la gestion des stocks
+NotManagedInStockDescription=Si cette option est activée, la modification du stock pour cet élément n'est pas prise en compte. Les mouvements de stock ne seront pas pris en compte dans les commandes client, commande fournisseur, expédition, réception, ordre de fabrication.<br /> Dans les faits, cette option se comporte comme une activation/désactivation du module stock mais à l'échelle du produit/service
+stock_disabled=Stock désactivé
+stock_enabled=Stock activé
+NoWarehouseInBase= Pas d'entrepôt dans la base de données

@@ -138,10 +138,12 @@ if ($id > 0) {
 		$sql = "SELECT s.nom, s.rowid as socid, f.ref, f.total_ttc, f.datef as df,";
 		$sql .= " f.paye as paye, f.fk_statut as statut, f.rowid as facid,";
 		$sql .= " u.login, u.rowid as userid";
-		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."user as u";
+		//$sql .= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."user as u";
+		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."facture as f";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON f.fk_user_valid = u.rowid";
 		$sql .= " WHERE f.fk_soc = s.rowid AND s.rowid = ".((int) $object->id);
 		$sql .= " AND f.entity IN (".getEntity('invoice').")";
-		$sql .= " AND f.fk_user_valid = u.rowid";
+		// $sql .= " AND f.fk_user_valid = u.rowid";
 		$sql .= $db->order($sortfield, $sortorder);
 
 		$resql = $db->query($sql);
@@ -172,6 +174,10 @@ if ($id > 0) {
 					'amount' => $fac->total_ttc,
 					'author' => $userstatic->getLoginUrl(1)
 				);
+
+				if (empty($objf->userid)) {
+					unset($values[author]);
+				}
 
 				$parameters = array('socid' => $id, 'values' => &$values, 'fac' => $fac, 'userstatic' => $userstatic);
 				$reshook = $hookmanager->executeHooks('facdao', $parameters, $object); // Note that $parameters['values'] and $object may have been modified by some hooks

@@ -81,6 +81,8 @@ $lineid = GETPOST('lineid', 'int');
 $contactid = GETPOST('contactid', 'int');
 $projectid = GETPOST('projectid', 'int');
 $rank = (GETPOST('rank', 'int') > 0) ? GETPOST('rank', 'int') : -1;
+$massaction = GETPOST('massaction', 'alpha');
+$toselect = GETPOST('line_checkbox', 'array');
 
 // PDF
 $hidedetails = (GETPOST('hidedetails', 'int') ? GETPOST('hidedetails', 'int') : (!empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS) ? 1 : 0));
@@ -152,6 +154,18 @@ if (empty($reshook)) {
 		if (!empty($backtopage)) {
 			header("Location: ".$backtopage);
 			exit;
+		}
+		$action = '';
+	}
+
+	if (!empty($toselect)){
+		$objectclass = 'PropaleLigne';
+		$uploaddir = $conf->propal->multidir_output[$conf->entity];
+		$permissiontodelete = $usercandelete;
+		include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
+		if ($action == 'delete'){
+			header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $id);
+			exit();
 		}
 		$action = '';
 	}
@@ -568,6 +582,7 @@ if (empty($reshook)) {
 							$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been
 																											   // modified by hook
 							if ($reshook < 0) {
+								setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 								$error++;
 							}
 						} else {
@@ -1654,13 +1669,13 @@ if ($action == 'create') {
 	// Terms of payment
 	print '<tr><td class="nowrap">'.$langs->trans('PaymentConditionsShort').'</td><td>';
 	print img_picto('', 'paiment');
-	$form->select_conditions_paiements((GETPOSTISSET('cond_reglement_id') ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id), 'cond_reglement_id', -1, 1);
+	$form->select_conditions_paiements(((GETPOSTISSET('cond_reglement_id') && GETPOST('cond_reglement_id', 'int') > 0) ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id), 'cond_reglement_id', -1, 1);
 	print '</td></tr>';
 
 	// Mode of payment
 	print '<tr><td>'.$langs->trans('PaymentMode').'</td><td>';
 	print img_picto('', 'bank').'&ensp;';
-	$form->select_types_paiements((GETPOSTISSET('mode_reglement_id') ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id), 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
+	$form->select_types_paiements(((GETPOSTISSET('mode_reglement_id') && GETPOST('mode_reglement_id', 'int') > 0) ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id), 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
 	print '</td></tr>';
 
 	// Bank Account
@@ -2467,6 +2482,19 @@ if ($action == 'create') {
 		include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
 	}
 
+	// List of mass actions available
+	$arrayofmassactions = array();
+
+	if ($usercandelete) {
+		$arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"') . $langs->trans('Delete');
+	}
+
+	if (in_array($massaction, array('predelete'))) {
+		$arrayofmassactions = array();
+	}
+
+	$massactionbutton = $form->selectMassAction('', $arrayofmassactions,0,'massaction','linecheckbox , .linecheckboxtoggle');
+
 	/*
 	 * Lines
 	 */
@@ -2485,6 +2513,8 @@ if ($action == 'create') {
 	if (!empty($conf->use_javascript_ajax) && $object->statut == Propal::STATUS_DRAFT) {
 		include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
 	}
+	print $massactionbutton;
+	include DOL_DOCUMENT_ROOT.'/core/tpl/massactions_pre.tpl.php';
 
 	print '<div class="div-table-responsive-no-min">';
 	if (!empty($object->lines) || ($object->statut == Propal::STATUS_DRAFT && $usercancreate && $action != 'selectlines' && $action != 'editline')) {

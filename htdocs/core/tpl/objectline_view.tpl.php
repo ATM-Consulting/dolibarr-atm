@@ -455,9 +455,21 @@ if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlin
 	$coldisplay = $coldisplay + 3;
 }
 
-if ($action == 'selectlines') { ?>
-	<td class="linecolcheck center"><input type="checkbox" class="linecheckbox" name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
-<?php }
+$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+if (!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES)  && $object->status == $object::STATUS_DRAFT && $usercandelete || $action =='selectlines' && in_array($object->element,$Telement)){
+	$checked = '';
+	if (in_array($line->id,$toselect)){
+		$checked = 'checked';
+	}
+
+if ($action != 'editline'&& in_array($object->element,$Telement)){
+
+		?>
+		<td class='linecolcheck center'><input type='checkbox' class='linecheckbox' <?php print $checked; ?> name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
+			<?php
+}
+
+}
 
 print "</tr>\n";
 

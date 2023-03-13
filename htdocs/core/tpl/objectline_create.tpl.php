@@ -153,10 +153,18 @@ if ($nolinesbefore) {
 		}
 		?>
 		<td class="linecoledit" colspan="<?php echo $colspan; ?>">&nbsp;</td>
+		<?php
+		$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+		if (!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES) && in_array($object->element,$Telement)) {
+			if ($object->status == $object::STATUS_DRAFT && $usercandelete) {
+				print '<td></td>';
+			}
+		}?>
 	</tr>
 	<?php
 }
 ?>
+
 <tr class="pair nodrag nodrop nohoverpair<?php echo ($nolinesbefore || $object->element == 'contrat') ? '' : ' liste_titre_create'; ?>">
 	<?php
 	$coldisplay = 0;
@@ -276,7 +284,7 @@ if ($nolinesbefore) {
 				// $senderissupplier=2 is the same as 1 but disables test on minimum qty, disable autofill qty with minimum and autofill unit price
 				if ($senderissupplier != 2) {
 					$ajaxoptions = array(
-						'update' => array('qty'=>'qty', 'remise_percent' => 'discount', 'idprod' => 'idprod'), // html id tags that will be edited with each ajax json response key
+						'update' => array('fourn_ref'=>'fourn_ref', 'qty'=>'qty', 'remise_percent' => 'discount', 'idprod' => 'idprod'), // html id tags that will be edited with each ajax json response key
 						'option_disabled' => 'idthatdoesnotexists', // html id to disable once select is done
 						'warning' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'warning' (for example shown we select a disabled option into combo)
 					);
@@ -471,6 +479,12 @@ if ($nolinesbefore) {
 	<td class="nobottom linecoledit center valignmiddle" colspan="<?php echo $colspan; ?>">
 		<input type="submit" class="button reposition" value="<?php echo $langs->trans('Add'); ?>" name="addline" id="addline">
 	</td>
+	<?php
+	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+	if(!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES) && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)){
+		print '<td class="nobottom"></td>';
+	}
+	?>
 </tr>
 
 <?php
@@ -554,6 +568,11 @@ if ((!empty($conf->service->enabled) || ($object->element == 'contrat')) && $dat
 	}
 	print '</script>';
 	print '</td>';
+
+	$Telement = array('propal','commande','facture','supplier_proposal','order_supplier','invoice_supplier');
+	if (!empty($conf->global->MASSACTION_CARD_ENABLE_SELECTLINES) && $object->status == $object::STATUS_DRAFT && $usercandelete && in_array($object->element,$Telement)) {
+		print '<td></td>';
+	}
 	print '</tr>'."\n";
 }
 
@@ -754,7 +773,7 @@ if (!empty($usemargins) && $user->rights->margins->creer) {
 						<?php
 						if (!empty($conf->global->PRODUCT_LOAD_EXTRAFIELD_INTO_OBJECTLINES)) { ?>
 							jQuery.each(data.array_options, function( key, value ) {
-								jQuery('div[class$="det'+key.replace('options_','_extras_')+'"] > #'+key).val(value);
+								jQuery('div[class*="det'+key.replace('options_','_extras_')+'"] > #'+key).val(value);
 							});
 							<?php
 						} ?>
