@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2013-2014 Olivier Geffroy      <jeff@jeffinfo.com>
  * Copyright (C) 2013-2014 Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2013-2021 Alexandre Spangaro   <aspangaro@open-dsi.fr>
+ * Copyright (C) 2013-2023 Alexandre Spangaro   <aspangaro@open-dsi.fr>
  * Copyright (C) 2014-2015 Ari Elbaz (elarifr)  <github@accedinfo.com>
  * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
  * Copyright (C) 2014      Juanjo Menent        <jmenent@2byte.es>
@@ -261,6 +261,47 @@ if ($action == 'setenablelettering') {
 	}
 }
 
+if ($action == 'setenableautolettering') {
+	$setenableautolettering = GETPOST('value', 'int');
+	$res = dolibarr_set_const($db, "ACCOUNTING_ENABLE_AUTOLETTERING", $setenableautolettering, 'yesno', 0, '', $conf->entity);
+	if (!($res > 0)) {
+		$error++;
+	}
+
+	if (!$error) {
+		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+	} else {
+		setEventMessages($langs->trans("Error"), null, 'mesgs');
+	}
+}
+
+if ($action == 'setenableaccountancynewinterface') {
+	$setenableaccountancynewinterface = GETPOST('value', 'int');
+	$res = dolibarr_set_const($db, "ACCOUNTANCY_ENABLE_NEWINTERFACE", $setenableaccountancynewinterface, 'yesno', 0, '', $conf->entity);
+	if (!($res > 0)) {
+		$error++;
+	}
+
+	if (!$error) {
+		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+	} else {
+		setEventMessages($langs->trans("Error"), null, 'mesgs');
+	}
+}
+
+if ($action == 'setenablevatreversecharge') {
+	$setenablevatreversecharge = GETPOST('value', 'int');
+	$res = dolibarr_set_const($db, "ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE", $setenablevatreversecharge, 'yesno', 0, '', $conf->entity);
+	if (!($res > 0)) {
+		$error++;
+	}
+
+	if (!$error) {
+		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+	} else {
+		setEventMessages($langs->trans("Error"), null, 'mesgs');
+	}
+}
 
 /*
  * View
@@ -479,6 +520,7 @@ if (!empty($conf->global->ACCOUNTING_DISABLE_BINDING_ON_EXPENSEREPORTS)) {
 print '</tr>';
 
 print '</table>';
+print '<br>';
 
 // Lettering params
 print '<table class="noborder centpercent">';
@@ -494,6 +536,67 @@ if (!empty($conf->global->ACCOUNTING_ENABLE_LETTERING)) {
 	print '</a></td>';
 } else {
 	print '<td class="right"><a class="reposition" href="'.$_SERVER['PHP_SELF'].'?token='.newToken().'&action=setenablelettering&value=1">';
+	print img_picto($langs->trans("Disabled"), 'switch_off');
+	print '</a></td>';
+}
+print '</tr>';
+
+if (!empty($conf->global->ACCOUNTING_ENABLE_LETTERING)) {
+	print '<tr class="oddeven">';
+	print '<td>' . $langs->trans("ACCOUNTING_ENABLE_AUTOLETTERING") . '</td>';
+	if (!empty($conf->global->ACCOUNTING_ENABLE_AUTOLETTERING)) {
+		print '<td class="right"><a class="reposition" href="' . $_SERVER['PHP_SELF'] . '?token=' . newToken() . '&action=setenableautolettering&value=0">';
+		print img_picto($langs->trans("Activated"), 'switch_on');
+		print '</a></td>';
+	} else {
+		print '<td class="right"><a class="reposition" href="' . $_SERVER['PHP_SELF'] . '?token=' . newToken() . '&action=setenableautolettering&value=1">';
+		print img_picto($langs->trans("Disabled"), 'switch_off');
+		print '</a></td>';
+	}
+	print '</tr>';
+}
+
+print '</table>';
+print '<br>';
+
+// Advanced params
+print '<table class="noborder centpercent">';
+print '<tr class="liste_titre">';
+print '<td colspan="2">'.$langs->trans('OptionsAdvanced').'</td>';
+print "</tr>\n";
+
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ACCOUNTANCY_ENABLE_NEWINTERFACE").'</td>';
+if (!empty($conf->global->ACCOUNTANCY_ENABLE_NEWINTERFACE)) {
+	print '<td class="right"><a class="reposition" href="'.$_SERVER['PHP_SELF'].'?token='.newToken().'&action=setenableaccountancynewinterface&value=0">';
+	print img_picto($langs->trans("Activated"), 'switch_on');
+	print '</a></td>';
+} else {
+	print '<td class="right"><a class="reposition" href="'.$_SERVER['PHP_SELF'].'?token='.newToken().'&action=setenableaccountancynewinterface&value=1">';
+	print img_picto($langs->trans("Disabled"), 'switch_off');
+	print '</a></td>';
+}
+print '</tr>';
+
+if (!empty($conf->global->ACCOUNTANCY_ENABLE_NEWINTERFACE)) {
+// Additional key on product accountancy codes
+	print '<tr class="oddeven">';
+	print '<td>' . $langs->trans("ACCOUNTING_PRODUCT_ACCOUNTANCY_CODE_ADDITIONAL_KEY") . '</td>';
+	print '<td class="right">';
+	$array = $productaccountancycode->getKeyTypes();
+	print $form->selectarray("ACCOUNTING_PRODUCT_ACCOUNTANCY_CODE_ADDITIONAL_KEY", $array, $conf->global->ACCOUNTING_PRODUCT_ACCOUNTANCY_CODE_ADDITIONAL_KEY, $langs->trans('None'));
+	print '</td>';
+	print '</tr>';
+}
+
+print '<tr class="oddeven">';
+print '<td>'.$langs->trans("ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE").'</td>';
+if (!empty($conf->global->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
+	print '<td class="right"><a class="reposition" href="'.$_SERVER['PHP_SELF'].'?token='.newToken().'&action=setenablevatreversecharge&value=0">';
+	print img_picto($langs->trans("Activated"), 'switch_on');
+	print '</a></td>';
+} else {
+	print '<td class="right"><a class="reposition" href="'.$_SERVER['PHP_SELF'].'?token='.newToken().'&action=setenablevatreversecharge&value=1">';
 	print img_picto($langs->trans("Disabled"), 'switch_off');
 	print '</a></td>';
 }
