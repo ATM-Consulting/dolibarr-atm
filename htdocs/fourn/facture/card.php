@@ -747,6 +747,7 @@ if (empty($reshook)) {
 				$object->mode_reglement_id	= GETPOST('mode_reglement_id', 'int');
 				$object->fk_account			= GETPOST('fk_account', 'int');
 				$object->fk_project			= ($tmpproject > 0) ? $tmpproject : null;
+				$object->vat_reverse_charge	= GETPOST('vat_reverse_charge') == 'on' ? 1 : 0;
 				$object->fk_incoterms = GETPOST('incoterm_id', 'int');
 				$object->location_incoterms	= GETPOST('location_incoterms', 'alpha');
 				$object->multicurrency_code	= GETPOST('multicurrency_code', 'alpha');
@@ -813,6 +814,7 @@ if (empty($reshook)) {
 				$object->mode_reglement_id	= GETPOST('mode_reglement_id');
 				$object->fk_account			= GETPOST('fk_account', 'int');
 				$object->fk_project			= ($tmpproject > 0) ? $tmpproject : null;
+				$object->vat_reverse_charge		= GETPOST('vat_reverse_charge') == 'on' ? 1 : 0;
 				$object->fk_incoterms = GETPOST('incoterm_id', 'int');
 				$object->location_incoterms	= GETPOST('location_incoterms', 'alpha');
 				$object->multicurrency_code	= GETPOST('multicurrency_code', 'alpha');
@@ -924,6 +926,7 @@ if (empty($reshook)) {
 				$object->mode_reglement_id	= GETPOST('mode_reglement_id');
 				$object->fk_account			= GETPOST('fk_account', 'int');
 				$object->fk_project			= ($tmpproject > 0) ? $tmpproject : null;
+				$object->vat_reverse_charge	= GETPOST('vat_reverse_charge') == 'on' ? 1 : 0;
 				$object->fk_incoterms		= GETPOST('incoterm_id', 'int');
 				$object->location_incoterms	= GETPOST('location_incoterms', 'alpha');
 				$object->multicurrency_code	= GETPOST('multicurrency_code', 'alpha');
@@ -2367,7 +2370,7 @@ if ($action == 'create') {
 
 	// Vat reverse-charge by default
 	if (!empty($conf->global->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
-		print '<tr><td>' . $langs->trans('VATReverseChargeByDefault') . '</td><td>';
+		print '<tr><td>' . $langs->trans('VATReverseCharge') . '</td><td>';
 		//print '<input type="checkbox" class="flat minwidth150" name="use_vat_reverse_charge"'. ($object->vat_reverse_charge ? ' checked ' : '') . '>';
 		if(!empty($vat_reverse_charge)) {
 			$vat_reverse_charge = 1;
@@ -2377,7 +2380,7 @@ if ($action == 'create') {
 			$vat_reverse_charge = 0;
 		}
 
-		print '<input type="checkbox" name="use_vat_reverse_charge"'. (!empty($vat_reverse_charge) ? ' checked ' : '') . '>';
+		print '<input type="checkbox" name="vat_reverse_charge"'. (!empty($vat_reverse_charge) ? ' checked ' : '') . '>';
 		print '</td></tr>';
 	}
 
