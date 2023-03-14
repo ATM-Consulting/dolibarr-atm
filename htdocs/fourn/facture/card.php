@@ -3024,7 +3024,7 @@ if ($action == 'create') {
 		// Vat reverse-charge by default
 		if (!empty($conf->global->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
 			print '<tr><td>' . $langs->trans('VATReverseCharge') . '</td><td>';
-			print '<input type="checkbox" class="flat minwidth150" name="use_vat_reverse_charge"'. ($object->vat_reverse_charge ? ' checked ' : '') . '>';
+			print '<input type="checkbox" class="flat minwidth150" name="vat_reverse_charge"'. ($object->vat_reverse_charge == '1' ? ' checked ' : '') . '>';
 			print '</td></tr>';
 		}
 
