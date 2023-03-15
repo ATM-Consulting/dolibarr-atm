@@ -927,7 +927,7 @@ class Societe extends CommonObject
 			$sql .= ", ".(int) $this->fk_multicurrency;
 			$sql .= ", '".$this->db->escape($this->multicurrency_code)."'";
 			if (empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
-				$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
+				$sql .= ", ".(empty($this->vat_reverse_charge) ? '0' : '1');
 				$sql .= ", '" . $this->db->escape($this->accountancy_code_buy) . "'";
 				$sql .= ", '" . $this->db->escape($this->accountancy_code_sell) . "'";
 			}
@@ -957,7 +957,7 @@ class Societe extends CommonObject
 					$sql .= ") VALUES (";
 					$sql .= $this->id;
 					$sql .= ", " . $conf->entity;
-					$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
+					$sql .= ", ".(empty($this->vat_reverse_charge) ? '0' : '1');
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer_general) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_supplier_general) . "'";
@@ -1601,7 +1601,7 @@ class Societe extends CommonObject
 					$sql .= ") VALUES (";
 					$sql .= $this->id;
 					$sql .= ", " . $conf->entity;
-					$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
+					$sql .= ", ".(empty($this->vat_reverse_charge) ? '0' : '1');
 					$sql .= ", '".$this->db->escape($this->accountancy_code_customer_general)."'";
 					$sql .= ", '".$this->db->escape($this->code_compta_client)."'";
 					$sql .= ", '".$this->db->escape($this->accountancy_code_supplier_general)."'";
