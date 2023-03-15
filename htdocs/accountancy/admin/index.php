@@ -565,6 +565,7 @@ print '<tr class="liste_titre">';
 print '<td colspan="2">'.$langs->trans('OptionsAdvanced').'</td>';
 print "</tr>\n";
 
+/*
 print '<tr class="oddeven">';
 print '<td>'.$langs->trans("ACCOUNTANCY_ENABLE_NEWINTERFACE").'</td>';
 if (!empty($conf->global->ACCOUNTANCY_ENABLE_NEWINTERFACE)) {
@@ -588,6 +589,7 @@ if (!empty($conf->global->ACCOUNTANCY_ENABLE_NEWINTERFACE)) {
 	print '</td>';
 	print '</tr>';
 }
+*/
 
 print '<tr class="oddeven">';
 print '<td>'.$langs->trans("ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE").'</td>';
