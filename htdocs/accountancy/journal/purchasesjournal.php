@@ -252,7 +252,7 @@ if ($result) {
 		}
 
 		// VAT Reverse charge
-		if (($mysoc->country_code == 'fr' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) && $obj->vat_reverse_charge == 1 && in_array($obj->country_code, $country_code_in_EEC)) {
+		if (($mysoc->country_code == 'FR' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) && $obj->vat_reverse_charge == 1 && in_array($obj->country_code, $country_code_in_EEC)) {
 			$rcvatdata = getTaxesFromId($obj->product_buy_vat . ($obj->product_buy_default_vat_code ? ' (' . $obj->product_buy_default_vat_code . ')' : ''), $mysoc, $mysoc, 0);
 			$rcc_compta_tva = (!empty($vatdata['accountancy_code_vat_reverse_charge_credit']) ? $vatdata['accountancy_code_vat_reverse_charge_credit'] : $rcctva);
 			$rcd_compta_tva = (!empty($vatdata['accountancy_code_vat_reverse_charge_debit']) ? $vatdata['accountancy_code_vat_reverse_charge_debit'] : $rcdtva);
@@ -525,7 +525,7 @@ if ($action == 'writebookkeeping') {
 				}
 
 				// VAT Reverse charge
-				if ($mysoc->country_code == 'fr' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
+				if ($mysoc->country_code == 'FR' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
 					$has_vat = false;
 					foreach ($arrayofvat[$key] as $k => $mt) {
 						if ($mt) {
@@ -799,7 +799,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 			}
 
 			// VAT Reverse charge
-			if ($mysoc->country_code == 'fr' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
+			if ($mysoc->country_code == 'FR' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
 				$has_vat = false;
 				foreach ($arrayofvat[$key] as $k => $mt) {
 					if ($mt) {
@@ -1095,7 +1095,7 @@ if (empty($action) || $action == 'view') {
 			}
 
 			// VAT Reverse charge
-			if ($mysoc->country_code == 'fr' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
+			if ($mysoc->country_code == 'FR' || !empty($conf->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
 				$has_vat = false;
 				foreach ($arrayofvat[$key] as $k => $mt) {
 					if ($mt) {
