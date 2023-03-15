@@ -20,7 +20,8 @@ create table llx_societe_perentity
 (
   rowid                                 integer AUTO_INCREMENT PRIMARY KEY,
   fk_soc                                integer,
-  entity                                integer DEFAULT 1 NOT NULL,               -- multi company id
+  entity                                integer DEFAULT 1 NOT NULL,             -- multi company id
+  vat_reverse_charge                    tinyint DEFAULT 0,                      -- VAT reverse charge
   accountancy_code_customer_general     varchar(32),
   accountancy_code_customer             varchar(32),
   accountancy_code_supplier_general     varchar(32),

@@ -910,6 +910,7 @@ class Societe extends CommonObject
 			$sql .= ", fk_multicurrency";
 			$sql .= ", multicurrency_code";
 			if (empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
+				$sql .= ", vat_reverse_charge";
 				$sql .= ", accountancy_code_buy";
 				$sql .= ", accountancy_code_sell";
 			}
@@ -926,6 +927,7 @@ class Societe extends CommonObject
 			$sql .= ", ".(int) $this->fk_multicurrency;
 			$sql .= ", '".$this->db->escape($this->multicurrency_code)."'";
 			if (empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
+				$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
 				$sql .= ", '" . $this->db->escape($this->accountancy_code_buy) . "'";
 				$sql .= ", '" . $this->db->escape($this->accountancy_code_sell) . "'";
 			}
@@ -945,6 +947,7 @@ class Societe extends CommonObject
 					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "societe_perentity (";
 					$sql .= " fk_soc";
 					$sql .= ", entity";
+					$sql .= ", vat_reverse_charge";
 					$sql .= ", accountancy_code_customer_general";
 					$sql .= ", accountancy_code_customer";
 					$sql .= ", accountancy_code_supplier_general";
@@ -954,6 +957,7 @@ class Societe extends CommonObject
 					$sql .= ") VALUES (";
 					$sql .= $this->id;
 					$sql .= ", " . $conf->entity;
+					$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer_general) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_customer) . "'";
 					$sql .= ", '" . $this->db->escape($this->accountancy_code_supplier_general) . "'";
@@ -1427,7 +1431,9 @@ class Societe extends CommonObject
 
 			$sql .= ",tva_assuj = ".($this->tva_assuj != '' ? "'".$this->db->escape($this->tva_assuj)."'" : "null");
 			$sql .= ",tva_intra = '".$this->db->escape($this->tva_intra)."'";
-			$sql .= ",vat_reverse_charge = ".($this->vat_reverse_charge != '' ? "'".$this->db->escape($this->vat_reverse_charge)."'" : 0);
+			if (empty($conf->global->MAIN_COMPANY_PERENTITY_SHARED)) {
+				$sql .= ",vat_reverse_charge = " . ($this->vat_reverse_charge != '' ? "'" . $this->db->escape($this->vat_reverse_charge) . "'" : 0);
+			}
 			$sql .= ",status = ".((int) $this->status);
 
 			// Local taxes
@@ -1585,6 +1591,7 @@ class Societe extends CommonObject
 					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "societe_perentity (";
 					$sql .= " fk_soc";
 					$sql .= ", entity";
+					$sql .= ", vat_reverse_charge";
 					$sql .= ", accountancy_code_customer_general";
 					$sql .= ", accountancy_code_customer";
 					$sql .= ", accountancy_code_supplier_general";
@@ -1594,6 +1601,7 @@ class Societe extends CommonObject
 					$sql .= ") VALUES (";
 					$sql .= $this->id;
 					$sql .= ", " . $conf->entity;
+					$sql .= ", ".(!empty(vat_reverse_charge) ? '1' : '0');
 					$sql .= ", '".$this->db->escape($this->accountancy_code_customer_general)."'";
 					$sql .= ", '".$this->db->escape($this->code_compta_client)."'";
 					$sql .= ", '".$this->db->escape($this->accountancy_code_supplier_general)."'";
@@ -1710,9 +1718,10 @@ class Societe extends CommonObject
 		$sql .= ', spe.accountancy_code_supplier as spe_accountancy_code_supplier';
 		$sql .= ', spe.accountancy_code_buy as spe_accountancy_code_buy';
 		$sql .= ', spe.accountancy_code_sell as spe_accountancy_code_sell';
+		$sql .= ', spe.vat_reverse_charge as spe_vat_reverse_charge';
 		$sql .= ', s.code_client, s.code_fournisseur, s.parent, s.barcode';
 		$sql .= ', s.fk_departement as state_id, s.fk_pays as country_id, s.fk_stcomm, s.mode_reglement, s.cond_reglement, s.transport_mode';
-		$sql .= ', s.fk_account, s.tva_assuj, s.vat_reverse_charge';
+		$sql .= ', s.fk_account, s.tva_assuj, s.vat_reverse_charge as soc_vat_reverse_charge';
 		$sql .= ', s.mode_reglement_supplier, s.cond_reglement_supplier, s.transport_mode_supplier';
 		$sql .= ', s.localtax1_assuj, s.localtax1_value, s.localtax2_assuj, s.localtax2_value, s.fk_prospectlevel, s.default_lang, s.logo, s.logo_squarred';
 		$sql .= ', s.fk_shipping_method';
@@ -1892,8 +1901,15 @@ class Societe extends CommonObject
 
 				$this->tva_assuj			= $obj->tva_assuj;
 				$this->tva_intra			= $obj->tva_intra;
-				$this->vat_reverse_charge	= $obj->vat_reverse_charge;
 				$this->status				= $obj->status;
+
+				if (!empty($obj->spe_vat_reverse_charge)) {
+					$this->vat_reverse_charge = $obj->spe_vat_reverse_charge;
+				} elseif (!empty($obj->soc_vat_reverse_charge)) {
+					$this->vat_reverse_charge = $obj->soc_vat_reverse_charge;
+				} else {
+					$this->vat_reverse_charge = 0;
+				}
 
 				// Local Taxes
 				$this->localtax1_assuj      = $obj->localtax1_assuj;
