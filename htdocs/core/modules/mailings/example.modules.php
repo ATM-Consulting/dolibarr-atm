@@ -20,7 +20,7 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 // CHANGE THIS: Class name must be called mailing_xxx with xxx=name of your selector
 
 /**
-	    \class      mailing_example
+		\class      mailing_example
 		\brief      Class to manage a list of personalised recipients for mailing feature
 */
 class mailing_example extends MailingTargets
@@ -111,8 +111,8 @@ class mailing_example extends MailingTargets
 	 *  For example if this selector is used to extract 500 different
 	 *  emails from a text file, this function must return 500.
 	 *
-	 *  @param		string		$sql		Requete sql de comptage
-	 *  @return		int|string				Number of recipient or '?'
+	 *  @param		string			$sql		Requete sql de comptage
+	 *  @return     int|string      			Nb of recipient, or <0 if error, or '' if NA
 	 */
 	public function getNbOfRecipients($sql = '')
 	{

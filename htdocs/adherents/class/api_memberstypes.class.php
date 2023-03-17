@@ -30,7 +30,7 @@ class MembersTypes extends DolibarrApi
 	/**
 	 * @var array   $FIELDS     Mandatory fields, checked when create and update object
 	 */
-	static $FIELDS = array(
+	public static $FIELDS = array(
 		'label',
 	);
 
@@ -102,10 +102,11 @@ class MembersTypes extends DolibarrApi
 
 		// Add sql filters
 		if ($sqlfilters) {
-			if (!DolibarrApi::_checkFilters($sqlfilters)) {
-				throw new RestException(503, 'Error when validating parameter sqlfilters '.$sqlfilters);
+			$errormessage = '';
+			if (!DolibarrApi::_checkFilters($sqlfilters, $errormessage)) {
+				throw new RestException(503, 'Error when validating parameter sqlfilters -> '.$errormessage);
 			}
-			$regexstring = '\(([^:\'\(\)]+:[^:\'\(\)]+:[^:\(\)]+)\)';
+			$regexstring = '\(([^:\'\(\)]+:[^:\'\(\)]+:[^\(\)]+)\)';
 			$sql .= " AND (".preg_replace_callback('/'.$regexstring.'/', 'DolibarrApi::_forge_criteria_callback', $sqlfilters).")";
 		}
 
@@ -190,9 +191,11 @@ class MembersTypes extends DolibarrApi
 		}
 
 		foreach ($request_data as $field => $value) {
-			if ($field == 'id') continue;
+			if ($field == 'id') {
+				continue;
+			}
 			// Process the status separately because it must be updated using
-			// the validate() and resiliate() methods of the class AdherentType.
+			// the validate(), resiliate() and exclude() methods of the class AdherentType.
 			$membertype->$field = $value;
 		}
 
@@ -201,7 +204,7 @@ class MembersTypes extends DolibarrApi
 		if ($membertype->update(DolibarrApiAccess::$user) >= 0) {
 			return $this->get($id);
 		} else {
-			throw new RestException(500, $membertype->error);
+			throw new RestException(500, 'Error when updating member type: '.$membertype->error);
 		}
 	}
 
@@ -226,14 +229,17 @@ class MembersTypes extends DolibarrApi
 			throw new RestException(401, 'Access not allowed for login '.DolibarrApiAccess::$user->login);
 		}
 
-		if (!$membertype->delete()) {
-			throw new RestException(401, 'error when deleting member type');
+		$res = $membertype->delete();
+		if ($res < 0) {
+			throw new RestException(500, "Can't delete, error occurs");
+		} elseif ($res == 0) {
+			throw new RestException(409, "Can't delete, that product is probably used");
 		}
 
 		return array(
 			'success' => array(
 				'code' => 200,
-				'message' => 'member type deleted'
+				'message' => 'Member type deleted'
 			)
 		);
 	}
@@ -250,8 +256,9 @@ class MembersTypes extends DolibarrApi
 	{
 		$membertype = array();
 		foreach (MembersTypes::$FIELDS as $field) {
-			if (!isset($data[$field]))
+			if (!isset($data[$field])) {
 				throw new RestException(400, "$field field missing");
+			}
 			$membertype[$field] = $data[$field];
 		}
 		return $membertype;
