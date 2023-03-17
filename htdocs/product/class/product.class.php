@@ -4855,7 +4855,7 @@ class Product extends CommonObject
 					3=>$this->db->escape($rec['label']),
 					4=>$rec['incdec'],
 					5=>$rec['ref'],
-					6=>$rec['optional']
+					6=>$rec['optional'],
 					7=>$rec['fk_association'],
 					8=>$rec['rang']
 				);
