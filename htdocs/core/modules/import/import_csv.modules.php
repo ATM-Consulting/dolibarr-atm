@@ -762,11 +762,6 @@ class ImportCsv extends ModeleImports
 						if ($val == 'user->id') {
 							$listfields[] = preg_replace('/^'.preg_quote($alias, '/').'\./', '', $key);
 							$listvalues[] = $user->id;
-							/** ************************** SPECIFIQUE EUROCHEF  */
-						} elseif ($val == 'datec') {
-							// Custom - We skip else datec will be add in update and create mode
-							continue;
-							/** FIN ************************** SPECIFIQUE EUROCHEF  */
 						} elseif (preg_match('/^lastrowid-/', $val)) {
 							$tmp = explode('-', $val);
 							$lastinsertid = (isset($last_insert_id_array[$tmp[1]])) ? $last_insert_id_array[$tmp[1]] : 0;
@@ -931,16 +926,6 @@ class ImportCsv extends ModeleImports
 
 						// Update not done, we do insert
 						if (!$error && !$updatedone) {
-
-							/** ************************** SPECIFIQUE EUROCHEF  */
-							//Custom - if datec defined in array_import_fieldshidden then add it to the listfields and listvalues for create mode
-							if ((array_key_exists(array_search('datec', $objimport->array_import_fieldshidden[0]), $objimport->array_import_fieldshidden[0]))){
-								$dateCreationKey = array_search('datec', $objimport->array_import_fieldshidden[0]);
-								$listfields[] = preg_replace('/^' . preg_quote($alias, '/') . '\./', '', $dateCreationKey);
-								$listvalues[] = "'" . $this->db->idate(dol_now()) . "'";
-							}
-							/** FIN ************************** SPECIFIQUE EUROCHEF  */
-
 							// Build SQL INSERT request
 							$sqlstart = 'INSERT INTO '.$tablename.'('.implode(', ', $listfields).', import_key';
 							$sqlend = ') VALUES('.implode(', ', $listvalues).", '".$this->db->escape($importid)."'";
