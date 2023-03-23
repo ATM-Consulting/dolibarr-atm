@@ -441,7 +441,7 @@ class FormAccounting extends Form
 	 * @param string   		$usecache       Key to use to store result into a cache. Next call with same key will reuse the cache.
 	 * @return string       	   			String with HTML select
 	 */
-	public function select_auxaccount($selectid, $htmlname = 'account_num_aux', $showempty = 0, $morecss = 'maxwidth250', $usecache = '')
+	public function select_auxaccount($selectid, $htmlname = 'account_num_aux', $showempty = 0, $morecss = 'minwidth100 maxwidth300 maxwidthonsmartphone', $usecache = '')
 	{
 		// phpcs:enable
 
