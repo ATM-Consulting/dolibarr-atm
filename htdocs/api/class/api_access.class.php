@@ -69,7 +69,7 @@ class DolibarrApiAccess implements iAuthenticate
 	public function __isAllowed()
 	{
         // phpcs:enable
-		global $conf, $db;
+		global $conf, $db, $mysoc;
 
 		$login = '';
 		$stored_key = '';
@@ -123,7 +123,10 @@ class DolibarrApiAccess implements iAuthenticate
 						$conf->entity = ($obj->entity?$obj->entity:1);
 						// We must also reload global conf to get params from the entity
 						dol_syslog("Entity was not set on http header with HTTP_DOLAPIENTITY (recommanded for performance purpose), so we switch now on entity of user (".$conf->entity .") and we have to reload configuration.", LOG_WARNING);
-						$conf->setValues($db);
+
+                        $conf->global = new stdClass();
+                        $conf->setValues($db);
+                        $mysoc->setMysoc($conf);
 					}
 				}
 			}
