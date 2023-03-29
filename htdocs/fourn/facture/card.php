@@ -2247,12 +2247,12 @@ if ($action == 'create') {
 
 				print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
 				$tmp = '<input type="radio" id="radio_creditnote" name="type" value="2"'.(GETPOST('type') == 2 ? ' checked' : '');
-				if (!$optionsav) {
+				if ((!$optionsav && empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) || $invoice_predefined->id > 0) {
 					$tmp .= ' disabled';
 				}
 				$tmp .= '> ';
 				// Show credit note options only if we checked credit note
-				print '<script type="text/javascript" language="javascript">
+				print '<script type="text/javascript">
    				jQuery(document).ready(function() {
    					if (! jQuery("#radio_creditnote").is(":checked"))
    					{
@@ -2295,6 +2295,11 @@ if ($action == 'create') {
 		} else {
 			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
 			$tmp = '<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) {
+				$tmp = '<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			} else {
+				$tmp='<input type="radio" name="type" id="radio_creditnote" value="2"> ';
+			}
 			$text = $tmp.$langs->trans("InvoiceAvoir").' ';
 			$text .= '<span class="opacitymedium">('.$langs->trans("YouMustCreateInvoiceFromSupplierThird").')</span> ';
 			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
