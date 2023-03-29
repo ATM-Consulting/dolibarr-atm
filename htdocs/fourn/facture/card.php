@@ -2844,12 +2844,14 @@ if ($action == 'create') {
 		if ($object->type == FactureFournisseur::TYPE_REPLACEMENT) {
 			$facreplaced = new FactureFournisseur($db);
 			$facreplaced->fetch($object->fk_facture_source);
-			print ' ('.$langs->transnoentities("ReplaceInvoice", $facreplaced->getNomUrl(1)).')';
+			print ' <span class="opacitymediumbycolor paddingleft">'.$langs->transnoentities("ReplaceInvoice", $facreplaced->getNomUrl(1)).'</span>';
 		}
 		if ($object->type == FactureFournisseur::TYPE_CREDIT_NOTE) {
 			$facusing = new FactureFournisseur($db);
-			$facusing->fetch($object->fk_facture_source);
-			print ' ('.$langs->transnoentities("CorrectInvoice", $facusing->getNomUrl(1)).')';
+			if ($object->fk_facture_source > 0) {
+				$facusing->fetch($object->fk_facture_source);
+				print ' <span class="opacitymediumbycolor paddingleft">'.$langs->transnoentities("CorrectInvoice", $facusing->getNomUrl(1)).'</span>';
+			}
 		}
 
 		$facidavoir = $object->getListIdAvoirFromInvoice();
