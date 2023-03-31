@@ -2,8 +2,10 @@
 /* Copyright (C) 2013-2016  Olivier Geffroy         <jeff@jeffinfo.com>
  * Copyright (C) 2013-2016  Florian Henry           <florian.henry@open-concept.pro>
  * Copyright (C) 2013-2022  Alexandre Spangaro      <aspangaro@open-dsi.fr>
+ * Copyright (C) 2022  		Lionel Vessiller        <lvessiller@open-dsi.fr>
  * Copyright (C) 2016-2017  Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2018-2021  Frédéric France         <frederic.france@netlogic.fr>
+ * Copyright (C) 2022  		Progiseize         		<a.bisotti@progiseize.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -694,7 +696,8 @@ if (!empty($sortfield)) {
 // Export into a file with format defined into setup (FEC, CSV, ...)
 // Must be after definition of $sql
 if ($action == 'export_fileconfirm' && $user->rights->accounting->mouvements->export) {
-	// TODO Replace the fetchAll to get all ->line followed by call to ->export(). It consumew too much memory on large export. Replace this with the query($sql) and loop on each line to export them.
+	// TODO Replace the fetchAll to get all ->line followed by call to ->export(). It consumes too much memory on large export.
+	// Replace this with the query($sql) and loop on each line to export them.
 	$result = $object->fetchAll($sortorder, $sortfield, 0, 0, $filter, 'AND', (empty($conf->global->ACCOUNTING_REEXPORT) ? 0 : 1));
 
 	if ($result < 0) {
@@ -714,58 +717,62 @@ if ($action == 'export_fileconfirm' && $user->rights->accounting->mouvements->ex
 			}
 		}
 
-		$mimetype = $accountancyexport->getMimeType($formatexportset);
-
-		top_httphead($mimetype, 1);
-
-		// Output data on screen
-		$accountancyexport->export($object->lines, $formatexportset);
-
 		$notifiedexportdate = GETPOST('notifiedexportdate', 'alpha');
 		$notifiedvalidationdate = GETPOST('notifiedvalidationdate', 'alpha');
+		$withAttachment = !empty(trim(GETPOST('notifiedexportfull', 'alphanohtml'))) ? 1 : 0;
 
-		if (!empty($accountancyexport->errors)) {
-			dol_print_error('', '', $accountancyexport->errors);
-		} elseif (!empty($notifiedexportdate) || !empty($notifiedvalidationdate)) {
-			// Specify as export : update field date_export or date_validated
-			$error = 0;
-			$db->begin();
+		// Output data on screen or download
+		$result = $accountancyexport->export($object->lines, $formatexportset, $withAttachment);
 
-			if (is_array($object->lines)) {
-				foreach ($object->lines as $movement) {
-					$now = dol_now();
+		$error = 0;
+		if ($result < 0) {
+			$error++;
+		} else {
+			if (!empty($notifiedexportdate) || !empty($notifiedvalidationdate)) {
+				if (is_array($object->lines)) {
+					// Specify as export : update field date_export or date_validated
+					$db->begin();
 
-					$sql = " UPDATE ".MAIN_DB_PREFIX."accounting_bookkeeping";
-					$sql .= " SET";
-					if (!empty($notifiedexportdate) && !empty($notifiedvalidationdate)) {
-						$sql .= " date_export = '".$db->idate($now)."'";
-						$sql .= ", date_validated = '".$db->idate($now)."'";
-					} elseif (!empty($notifiedexportdate)) {
-						$sql .= " date_export = '".$db->idate($now)."'";
-					} elseif (!empty($notifiedvalidationdate)) {
-						$sql .= " date_validated = '".$db->idate($now)."'";
+					foreach ($object->lines as $movement) {
+						$now = dol_now();
+
+						$sql = " UPDATE ".MAIN_DB_PREFIX."accounting_bookkeeping";
+						$sql .= " SET";
+						if (!empty($notifiedexportdate) && !empty($notifiedvalidationdate)) {
+							$sql .= " date_export = '".$db->idate($now)."'";
+							$sql .= ", date_validated = '".$db->idate($now)."'";
+						} elseif (!empty($notifiedexportdate)) {
+							$sql .= " date_export = '".$db->idate($now)."'";
+						} elseif (!empty($notifiedvalidationdate)) {
+							$sql .= " date_validated = '".$db->idate($now)."'";
+						}
+						$sql .= " WHERE rowid = ".((int) $movement->id);
+
+						dol_syslog("/accountancy/bookkeeping/list.php Function export_file Specify movements as exported", LOG_DEBUG);
+
+						$result = $db->query($sql);
+						if (!$result) {
+							$error++;
+							break;
+						}
 					}
-					$sql .= " WHERE rowid = ".((int) $movement->id);
 
-					dol_syslog("/accountancy/bookkeeping/list.php Function export_file Specify movements as exported", LOG_DEBUG);
-
-					$result = $db->query($sql);
-					if (!$result) {
+					if (!$error) {
+						$db->commit();
+					} else {
 						$error++;
-						break;
+						$accountancyexport->errors[] = $langs->trans('NotAllExportedMovementsCouldBeRecordedAsExportedOrValidated');
+						$db->rollback();
 					}
 				}
 			}
-
-			if (!$error) {
-				$db->commit();
-			} else {
-				$error++;
-				$db->rollback();
-				dol_print_error('', $langs->trans("NotAllExportedMovementsCouldBeRecordedAsExportedOrValidated"));
-			}
 		}
-		exit;
+
+		if ($error) {
+			setEventMessages('', $accountancyexport->errors, 'errors');
+			header('Location: '.$_SERVER['PHP_SELF']);
+		}
+		exit(); // download or show errors
 	}
 }
 
@@ -850,10 +857,20 @@ if ($action == 'export_file') {
 			'value' => $checked,
 		);
 
-		$form_question['separator3'] = array('name'=>'separator3', 'type'=>'separator');
+		$form_question['separator3'] = array('name' => 'separator3', 'type' => 'separator');
 	}
 
-	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans("ExportFilteredList").' ('.$listofformat[$formatexportset].')', $langs->trans('ConfirmExportFile'), 'export_fileconfirm', $form_question, '', 1, 350, 600);
+	// add documents in an archive for accountancy export (Quadratus)
+	if (getDolGlobalString('ACCOUNTING_EXPORT_MODELCSV') == AccountancyExport::$EXPORT_TYPE_QUADRATUS) {
+		$form_question['notifiedexportfull'] = array(
+			'name' => 'notifiedexportfull',
+			'type' => 'checkbox',
+			'label' => $langs->trans('NotifiedExportFull'),
+			'value' => 'false',
+		);
+	}
+
+	$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?'.$param, $langs->trans("ExportFilteredList").' ('.$listofformat[$formatexportset].')', $langs->trans('ConfirmExportFile'), 'export_fileconfirm', $form_question, '', 1, 400, 600);
 }
 
 //if ($action == 'delbookkeepingyear') {
@@ -943,6 +960,7 @@ if (count($filter)) {
 
 $parameters = array();
 $reshook = $hookmanager->executeHooks('addMoreActionsButtonsList', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
+
 if ($reshook < 0) {
 	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
@@ -959,7 +977,7 @@ if (empty($reshook)) {
 	$newcardbutton .= '<span class="valignmiddle marginrightonly">'.$langs->trans("IncludeDocsAlreadyExported").'</span>';
 
 	if (!empty($user->rights->accounting->mouvements->export)) {
-		$newcardbutton .= dolGetButtonTitle($buttonLabel, $langs->trans("ExportFilteredList").' ('.$listofformat[$formatexportset].')', 'fa fa-file-export paddingleft', $_SERVER["PHP_SELF"].'?action=export_file'.($param ? '&'.$param : ''), $user->rights->accounting->mouvements->export);
+		$newcardbutton .= dolGetButtonTitle($buttonLabel, $langs->trans("ExportFilteredList").' ('.$listofformat[$formatexportset].')', 'fa fa-file-export paddingleft', $_SERVER["PHP_SELF"].'?action=export_file&token='.newToken().($param ? '&'.$param : ''), $user->rights->accounting->mouvements->export);
 	}
 
 	$newcardbutton .= dolGetButtonTitle($langs->trans('ViewFlatList'), '', 'fa fa-list paddingleft imgforviewmode', DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?'.$param, '', 1, array('morecss' => 'marginleftonly btnTitleSelected'));
@@ -1212,13 +1230,6 @@ $line = new BookKeepingLine();
 // --------------------------------------------------------------------
 $i = 0;
 $totalarray = array();
-$totalarray['nbfield'] = 0;
-$total_debit = 0;
-$total_credit = 0;
-$totalarray['val'] = array ();
-$totalarray['val']['totaldebit'] = 0;
-$totalarray['val']['totalcredit'] = 0;
-
 while ($i < min($num, $limit)) {
 	$obj = $db->fetch_object($resql);
 	if (empty($obj)) {
@@ -1483,7 +1494,6 @@ while ($i < min($num, $limit)) {
 // Show total line
 include DOL_DOCUMENT_ROOT.'/core/tpl/list_print_total.tpl.php';
 
-
 $parameters = array('arrayfields'=>$arrayfields, 'sql'=>$sql);
 $reshook = $hookmanager->executeHooks('printFieldListFooter', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 print $hookmanager->resPrint;
@@ -1502,5 +1512,4 @@ print '</form>';
 
 // End of page
 llxFooter();
-
 $db->close();

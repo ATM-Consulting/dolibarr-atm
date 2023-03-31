@@ -57,7 +57,7 @@ class modAccounting extends DolibarrModules
 		$this->picto = 'accountancy';
 
 		// Data directories to create when module is enabled
-		$this->dirs = array('/accounting/temp');
+		$this->dirs = array('/accounting/temp', '/accounting/export');
 
 		// Config pages
 		$this->config_page_url = array('accounting.php?mainmenu=accountancy&leftmenu=accountancy_admin');
@@ -356,8 +356,12 @@ class modAccounting extends DolibarrModules
 			'b.sens'=>'rule-computeSens'
 		); // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
 		$this->import_convertvalue_array[$r]=array(
+			'b.piece_num' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'cleanValue', 'element' => 'Accountancy'),
 			'b.numero_compte'=>array('rule'=>'accountingaccount'),
 			'b.subledger_account'=>array('rule'=>'accountingaccount'),
+			'b.debit' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'cleanAmount', 'element' => 'Accountancy'),
+			'b.credit' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'cleanAmount', 'element' => 'Accountancy'),
+			'b.multicurrency_amount' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'cleanAmount', 'element' => 'Accountancy'),
 			'b.montant' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'computeAmount', 'element' => 'Accountancy'),
 			'b.sens' => array('rule' => 'compute', 'classfile' => '/accountancy/class/accountancyimport.class.php', 'class' => 'AccountancyImport', 'method' => 'computeDirection', 'element' => 'Accountancy'),
 		);

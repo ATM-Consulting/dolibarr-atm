@@ -1,6 +1,8 @@
 <?php
-/* Copyright (C) 2015-2018  Alexandre Spangaro	<aspangaro@open-dsi.fr>
+/* Copyright (C) 2015-2022  Alexandre Spangaro	<aspangaro@open-dsi.fr>
+ * Copyright (C) 2022  		Lionel Vessiller    <lvessiller@open-dsi.fr>
  * Copyright (C) 2016       Charlie Benke		<charlie@patas-monkey.com>
+ * Copyright (C) 2022  		Progiseize         	<a.bisotti@progiseize.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +18,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// $formatexportset ùust be defined
+// $formatexportset must be defined
+// $downloadMode 	=0 for direct download or =1 to download after writing files or =-1 not to download files
 
 // Protection to avoid direct call of template
 if (empty($conf) || !is_object($conf)) {
@@ -33,7 +36,9 @@ $siren = $conf->global->MAIN_INFO_SIREN;
 $date_export = "_".dol_print_date(dol_now(), '%Y%m%d%H%M%S');
 $endaccountingperiod = dol_print_date(dol_now(), '%Y%m%d');
 
-header('Content-Type: text/csv');
+if (empty($downloadMode)) {
+	header('Content-Type: text/csv');
+}
 
 include_once DOL_DOCUMENT_ROOT.'/accountancy/class/accountancyexport.class.php';
 $accountancyexport = new AccountancyExport($db);
@@ -60,7 +65,6 @@ if (($accountancyexport->getFormatCode($formatexportset) == 'fec'  ||
 	}
 
 	$endaccountingperiod = dol_print_date(dol_get_last_day($tmparray['year'], $tmparray['mon']), 'dayxcard');
-	
 
 	$completefilename = $siren."FEC".$endaccountingperiod.($nodateexport ? "" : $date_export).".txt";
 } elseif ($accountancyexport->getFormatCode($formatexportset) == 'ciel' && $type_export == "general_ledger" && !empty($conf->global->ACCOUNTING_EXPORT_XIMPORT_FORCE_FILENAME)) {
@@ -69,4 +73,6 @@ if (($accountancyexport->getFormatCode($formatexportset) == 'fec'  ||
 	$completefilename = ($code ? $code."_" : "").($prefix ? $prefix."_" : "").$filename.($nodateexport ? "" : $date_export).".".$format;
 }
 
-header('Content-Disposition: attachment;filename='.$completefilename);
+if (empty($downloadMode)) {
+	header('Content-Disposition: attachment;filename=' . $completefilename);
+}
