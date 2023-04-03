@@ -12,6 +12,7 @@
  * Copyright (C) 2016		Ferran Marcet			<fmarcet@2byte.es>
  * Copyright (C) 2016		Yasser Carreón			<yacasia@gmail.com>
  * Copyright (C) 2018	    Quentin Vial-Gouteyron  <quentin.vial-gouteyron@atm-consulting.fr>
+ * Copyright (C) 2023	    Alexandre Spangaro		<aspangaro@open-dsi.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -891,11 +892,11 @@ if ($action == 'create') {
 			// Here $object can be of an object Reception
 			$extrafields->fetch_name_optionals_label($object->table_element);
 			if (empty($reshook) && !empty($extrafields->attributes[$object->table_element]['label'])) {
-				// copy from order
+				// copy from supplier order
 				if ($objectsrc->fetch_optionals() > 0) {
 					$recept->array_options = array_merge($recept->array_options, $objectsrc->array_options);
 				}
-				print $object->showOptionals($extrafields, 'create', $parameters);
+				print $recept->showOptionals($extrafields, 'create', $parameters);
 			}
 
 			// Incoterms
