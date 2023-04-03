@@ -629,13 +629,18 @@ class modProduct extends DolibarrModules
 			$this->import_icon[$r] = $this->picto;
 			$this->import_entities_array[$r] = array(); // We define here only fields that use another icon that the one defined into import_icon
 			$this->import_tables_array[$r] = array('pwp'=>MAIN_DB_PREFIX.'product_warehouse_properties');
-			$this->import_fields_array[$r] = array('pwp.fk_product'=>"Product*",
-				'pwp.fk_entrepot'=>"Warehouse*", 'pwp.seuil_stock_alerte'=>"StockLimit",
-				'pwp.desiredstock'=>"DesiredStock");
 			$this->import_regex_array[$r] = array(
 				'pwp.fk_product' => 'rowid@'.MAIN_DB_PREFIX.'product',
 				'pwp.fk_entrepot' => 'rowid@'.MAIN_DB_PREFIX.'entrepot',
+				'pwp.date_start' => '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
+				'pwp.date_end' => '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$',
+				'pwp.recurrent' => '^[0|1]$',
 			);
+			$this->import_fields_array[$r] = array('pwp.fk_product'=>"Product*",
+				'pwp.fk_entrepot'=>"Warehouse*", 'pwp.seuil_stock_alerte'=>"StockLimit",
+				'pwp.desiredstock'=>"DesiredStock",
+				'pwp.date_start'=>"DateStart", 'pwp.date_end'=>"DateEnd",
+				'pwp.recurrent'=>"Recurring");
 			$this->import_convertvalue_array[$r] = array(
 				'pwp.fk_product'=>array('rule'=>'fetchidfromref', 'classfile'=>'/product/class/product.class.php', 'class'=>'Product', 'method'=>'fetch', 'element'=>'Product')
 				,'pwp.fk_entrepot'=>array('rule'=>'fetchidfromref', 'classfile'=>'/product/stock/class/entrepot.class.php', 'class'=>'Entrepot', 'method'=>'fetch', 'element'=>'Entrepot')
@@ -643,9 +648,12 @@ class modProduct extends DolibarrModules
 			$this->import_examplevalues_array[$r] = array('pwp.fk_product'=>"ref:PRODUCT_REF or id:123456",
 				'pwp.fk_entrepot'=>"ref:WAREHOUSE_REF or id:123456",
 				'pwp.seuil_stock_alerte'=>"100",
-				'pwp.desiredstock'=>"110"
+				'pwp.desiredstock'=>"110",
+				'pwp.date_start'=>date('Y-m-d'),
+				'pwp.date_end'=>date('Y-m-d'),
+				'pwp.recurrent'=>"0 (not recurring) / 1 (recurring)"
 			);
-			$this->import_updatekeys_array[$r] = array('pwp.fk_product'=>'Product', 'pwp.fk_entrepot'=>'Warehouse');
+			$this->import_updatekeys_array[$r] = array('pwp.fk_product'=>'Product', 'pwp.fk_entrepot'=>'Warehouse', 'pwp.date_start'=>'DateStart', 'pwp.date_end'=>'DateEnd');
 
 		}
 
