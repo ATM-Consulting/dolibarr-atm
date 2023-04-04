@@ -2,6 +2,8 @@
 Le format du fichier est basé sur [Tenez un ChangeLog](http://keepachangelog.com/fr/1.0.0/).
 
 ATM-Consulting Dolibarr v14 - MAJ Projet Eurochef
+## [1.8.0] - 04-04-2023
+- Fix translation for DisableStockChangeOfSubProduct
 
 ## [1.7.0] - 15-02-2023
 - FIX : suppression de la condition d'affichage bouton classé facturé
