@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2016       Olivier Geffroy         <jeff@jeffinfo.com>
  * Copyright (C) 2016       Florian Henry           <florian.henry@open-concept.pro>
- * Copyright (C) 2016-2021  Alexandre Spangaro      <aspangaro@open-dsi.fr>
+ * Copyright (C) 2016-2023  Alexandre Spangaro      <aspangaro@open-dsi.fr>
  * Copyright (C) 2018       Frédéric France         <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
  *  \brief 		Balance of book keeping
  */
 
+// Load Dolibarr environment
 require '../../main.inc.php';
 
 // Class
@@ -40,6 +41,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 $langs->loadLangs(array("accountancy", "compta"));
 
 $action = GETPOST('action', 'aZ09');
+$optioncss = GETPOST('optioncss', 'alpha');
 $type = GETPOST('type', 'alpha');
 if ($type == 'sub') {
 	$context_default = 'balancesubaccountlist';
@@ -114,7 +116,7 @@ if (empty($search_date_start) && !GETPOSTISSET('formfilteraction')) {
 	}
 }
 
-if (empty($conf->accounting->enabled)) {
+if (!isModEnabled('accounting')) {
 	accessforbidden();
 }
 if ($user->socid > 0) {
@@ -280,7 +282,6 @@ if ($action != 'export_csv') {
 	if ($optioncss != '') {
 		print '<input type="hidden" name="optioncss" value="'.$optioncss.'">';
 	}
-	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 	print '<input type="hidden" name="type" value="'.$type.'">';
 	print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
@@ -301,7 +302,7 @@ if ($action != 'export_csv') {
 	if (empty($reshook)) {
 		$newcardbutton = '<input type="button" id="exportcsvbutton" name="exportcsvbutton" class="butAction" value="'.$langs->trans("Export").' ('.$conf->global->ACCOUNTING_EXPORT_FORMAT.')" />';
 
-		print '<script type="text/javascript" language="javascript">
+		print '<script type="text/javascript">
 		jQuery(document).ready(function() {
 			jQuery("#exportcsvbutton").click(function() {
 				event.preventDefault();
@@ -333,6 +334,11 @@ if ($action != 'export_csv') {
 
 	$selectedfields = '';
 
+	// Warning to explain why list of record is not consistent with the other list view (missing a lot of lines)
+	if ($type == 'sub') {
+		print info_admin($langs->trans("WarningRecordWithoutSubledgerAreExcluded"));
+	}
+
 	$moreforfilter = '';
 
 	$moreforfilter .= '<div class="divsearchfield">';
@@ -348,7 +354,7 @@ if ($action != 'export_csv') {
 	$moreforfilter .= '</div>';
 
 	$moreforfilter .= '<div class="divsearchfield">';
-	$moreforfilter .= $langs->trans("Journal");
+	$moreforfilter .= $langs->trans("Journals").': ';
 	$moreforfilter .= $formaccounting->multi_select_journal($search_ledger_code, 'search_ledger_code', 0, 1, 1, 1);
 	$moreforfilter .= '</div>';
 
@@ -384,7 +390,7 @@ if ($action != 'export_csv') {
 	}
 
 
-	$colspan = (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE) ? 6 : 5);
+	$colspan = (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE) ? 5 : 4);
 
 	print '<table class="liste '.($moreforfilter ? "listwithfilterbefore" : "").'">';
 
@@ -406,9 +412,10 @@ if ($action != 'export_csv') {
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre("AccountAccounting", $_SERVER['PHP_SELF'], "t.numero_compte", "", $param, "", $sortfield, $sortorder);
-	if ($type == 'sub') {
-		print_liste_field_titre("Type", $_SERVER['PHP_SELF'], "t.type", "", $param, "", $sortfield, $sortorder);
-	}
+	// TODO : Retrieve the type of third party: Customer / Supplier / Employee
+	//if ($type == 'sub') {
+	//	print_liste_field_titre("Type", $_SERVER['PHP_SELF'], "t.type", "", $param, "", $sortfield, $sortorder);
+	//}
 	if (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE)) {
 		print_liste_field_titre("OpeningBalance", $_SERVER['PHP_SELF'], "", $param, "", 'class="right"', $sortfield, $sortorder);
 	}
@@ -460,7 +467,7 @@ if ($action != 'export_csv') {
 		if ($type != 'sub') {
 			$accountingaccountstatic->fetch(null, $line->numero_compte, true);
 			if (!empty($accountingaccountstatic->account_number)) {
-				$accounting_account = $accountingaccountstatic->getNomUrl(0, 1, 0, '', 0, -1, 0, 'ledger');
+				$accounting_account = $accountingaccountstatic->getNomUrl(0, 1, 1);
 			} else {
 				$accounting_account = length_accountg($line->numero_compte);
 			}
@@ -533,9 +540,10 @@ if ($action != 'export_csv') {
 		}
 
 		// Type
-		if ($type == 'sub') {
-			print '<td></td>';
-		}
+		// TODO Retrieve the type of third party: Customer / Supplier / Employee
+		//if ($type == 'sub') {
+		//	print '<td></td>';
+		//}
 
 		if (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE)) {
 			print '<td class="right nowraponall amount">'.price(price2num($opening_balance, 'MT')).'</td>';
@@ -585,7 +593,7 @@ if ($action != 'export_csv') {
 	}
 
 	if (!empty($show_subgroup)) {
-		print '<tr class="liste_total"><td class="right" colspan="2">'.$langs->trans("SubTotal").':</td>';
+		print '<tr class="liste_total"><td class="right">'.$langs->trans("SubTotal").':</td>';
 		if (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE)) {
 			print '<td class="right nowraponall amount">'.price(price2num($sous_total_opening_balance, 'MT')).'</td>';
 		}
@@ -600,7 +608,7 @@ if ($action != 'export_csv') {
 		print '</tr>';
 	}
 
-	print '<tr class="liste_total"><td class="right" colspan="2">'.$langs->trans("AccountBalance").':</td>';
+	print '<tr class="liste_total"><td class="right">'.$langs->trans("AccountBalance").':</td>';
 	if (!empty($conf->global->ACCOUNTANCY_SHOW_OPENING_BALANCE)) {
 		print '<td class="nowrap right">'.price(price2num($total_opening_balance, 'MT')).'</td>';
 	}
