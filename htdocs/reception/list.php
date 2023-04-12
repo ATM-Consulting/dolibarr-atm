@@ -357,6 +357,9 @@ if (empty($reshook)) {
 				$objecttmp->remise_absolue = $remise_absolue;
 				$objecttmp->transport_mode_id = $transport_mode_id;
 
+				// if the VAT reverse-charge is activated by default in supplier card to resume the information
+				$objecttmp->vat_reverse_charge = $soc->vat_reverse_charge;
+
 				$objecttmp->fk_project			= $rcp->fk_project;
 				//$objecttmp->multicurrency_code = $rcp->multicurrency_code;
 				if (empty($createbills_onebythird)) {
