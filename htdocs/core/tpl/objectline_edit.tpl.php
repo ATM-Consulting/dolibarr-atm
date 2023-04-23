@@ -309,6 +309,12 @@ $coldisplay++;
 			}
 		}
 	}
+
+	// Custom Eurochef: déja facturé sur facture et Avancement réception
+	if ((in_array($object->element, ['commande', 'propal']) && $conf->global->INTERVOLD_SHOW_RECEPTION_PROGRESS) || (in_array($object->element, ['facture']) && $conf->global->INTERVOLD_SHOW_ALREADY_INVOICED_PROGRESS)) {
+		print '<td></td>';
+	}
+
 	?>
 
 	<!-- colspan for this td because it replace total_ht+3 td for buttons+... -->

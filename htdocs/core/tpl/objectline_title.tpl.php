@@ -149,6 +149,16 @@ if ($outputalsopricetotalwithtax) {
 	print '<th class="right" style="width: 80px">'.$langs->trans('TotalTTCShort').'</th>';
 }
 
+// Custom Eurochef: avancement de la réception sur commande
+if (in_array($object->element, ['commande', 'propal']) && $conf->global->INTERVOLD_SHOW_RECEPTION_PROGRESS) {
+	print '<th class="right" style="width: 80px">Avancement réception</th>';
+}
+
+// Custom Eurochef: déja facturé sur facture
+if (in_array($object->element, ['facture']) && $conf->global->INTERVOLD_SHOW_ALREADY_INVOICED_PROGRESS) {
+	print '<th class="right" style="width: 80px">Déja facturé</th>';
+}
+
 print '<th class="linecoledit"></th>'; // No width to allow autodim
 
 print '<th class="linecoldelete" style="width: 10px"></th>';

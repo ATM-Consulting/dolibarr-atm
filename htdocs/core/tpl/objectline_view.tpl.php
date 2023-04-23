@@ -405,6 +405,46 @@ if ($outputalsopricetotalwithtax) {
 	$coldisplay++;
 }
 
+// Custom Eurochef: avancement de la réception sur commande
+if (in_array($object->element, ['commande', 'propal']) && $conf->global->INTERVOLD_SHOW_RECEPTION_PROGRESS) {
+	if ($object->element === 'commande') {
+		$sql = <<<SQL
+select cl.qty as want, cfd.qty as got
+from llx_commandedet cl
+	 inner join llx_element_element ee on ee.sourcetype = 'commandedet' and ee.fk_source = cl.rowid and ee.targettype = 'commande_fournisseurdet'
+	 inner join llx_commande_fournisseur_dispatch cfd on cfd.fk_commandefourndet = ee.fk_target
+where cl.rowid = {$line->id};
+SQL;
+	} else {
+		$sql = <<<SQL
+select cd.qty as want, cfd.qty as got
+from llx_propaldet pd
+	inner join llx_element_element ee1 on ee1.sourcetype = 'propal' and ee1.fk_source = pd.fk_propal and ee1.targettype = 'commande'
+	inner join llx_commandedet cd on cd.fk_commande = ee1.fk_target and cd.fk_product = pd.fk_product
+	inner join llx_element_element ee2 on ee2.sourcetype = 'commandedet' and ee2.fk_source = cd.rowid and ee2.targettype = 'commande_fournisseurdet'
+	inner join llx_commande_fournisseur_dispatch cfd on cfd.fk_commandefourndet = ee2.fk_target
+where pd.rowid = {$line->id};
+SQL;
+	}
+
+	$resql = $object->db->query($sql);
+	if ($resql) {
+		$row = $object->db->fetch_object($resql);
+		$progress = 0;
+		if ($row !== null) {
+			$progress = (intval($row->got) / intval($row->want)) * 100;
+		}
+
+		print '<td><div style="display: flex; align-items: center;">' . img_picto('', 'reception') . ' <progress value="' . $progress . '" max="100">' . $progress . '%</progress></div></td>';
+	}
+}
+
+// Custom Eurochef: déja facturé sur facture
+if (in_array($object->element, ['facture']) && $conf->global->INTERVOLD_SHOW_ALREADY_INVOICED_PROGRESS) {
+	$progress = $object->status == Facture::STATUS_DRAFT ? 0 : 100;
+	print '<td><div style="display: flex; align-items: center; ">' . img_picto('', 'bill') . ' <progress value="' . $progress . '" max="100">' . $progress . '%</progress></div></td>';
+}
+
 if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlines') {
 	$situationinvoicelinewithparent = 0;
 	if ($line->fk_prev_id != null && in_array($object->element, array('facture', 'facturedet'))) {
