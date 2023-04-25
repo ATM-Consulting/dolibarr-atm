@@ -475,6 +475,12 @@ if ($nolinesbefore) {
 		}
 	}
 	$coldisplay += $colspan;
+
+	// Custom Eurochef: déja facturé sur facture et Avancement réception
+	if ((in_array($object->element, ['commande', 'propal']) && $conf->global->INTERVOLD_SHOW_RECEPTION_PROGRESS) || (in_array($object->element, ['facture']) && $conf->global->INTERVOLD_SHOW_ALREADY_INVOICED_PROGRESS)) {
+		print '<td></td>';
+	}
+
 	?>
 	<td class="nobottom linecoledit center valignmiddle" colspan="<?php echo $colspan; ?>">
 		<input type="submit" class="button reposition" value="<?php echo $langs->trans('Add'); ?>" name="addline" id="addline">

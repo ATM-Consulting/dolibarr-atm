@@ -344,7 +344,7 @@ ACCOUNTING_ENABLE_AUTOLETTERING=Activer le lettrage automatique lors du transfer
 OptionsAdvanced=Options avancées
 ACCOUNTANCY_ENABLE_NEWINTERFACE=Activer la nouvelle interface de gestion des comptes comptables dans les fiches produits (Détail selon taux de TVA & champ supplémentaire)
 ACCOUNTING_PRODUCT_ACCOUNTANCY_CODE_ADDITIONAL_KEY=Choix d'une deuxième clé autre que la TVA pour différencier le compte comptable du produit
-ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE=Activer la gestion de la TVA autoliquidée sur les achats fournisseurs
+ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE=Activer la gestion de la TVA intracommunautaire sur les achats fournisseurs
 
 ## Export
 NotExportLettering=Ne pas exporter les lettrages dans le fichier d'export comptable

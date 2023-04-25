@@ -2247,12 +2247,12 @@ if ($action == 'create') {
 
 				print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
 				$tmp = '<input type="radio" id="radio_creditnote" name="type" value="2"'.(GETPOST('type') == 2 ? ' checked' : '');
-				if (!$optionsav) {
+				if (!$optionsav && empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) {
 					$tmp .= ' disabled';
 				}
 				$tmp .= '> ';
 				// Show credit note options only if we checked credit note
-				print '<script type="text/javascript" language="javascript">
+				print '<script type="text/javascript">
    				jQuery(document).ready(function() {
    					if (! jQuery("#radio_creditnote").is(":checked"))
    					{
@@ -2294,7 +2294,11 @@ if ($action == 'create') {
 			}
 		} else {
 			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
-			$tmp = '<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) {
+				$tmp = '<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			} else {
+				$tmp='<input type="radio" name="type" id="radio_creditnote" value="2"> ';
+			}
 			$text = $tmp.$langs->trans("InvoiceAvoir").' ';
 			$text .= '<span class="opacitymedium">('.$langs->trans("YouMustCreateInvoiceFromSupplierThird").')</span> ';
 			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
@@ -2374,7 +2378,7 @@ if ($action == 'create') {
 	// Vat reverse-charge by default
 	if (!empty($conf->global->ACCOUNTING_FORCE_ENABLE_VAT_REVERSE_CHARGE)) {
 		print '<tr><td>' . $langs->trans('VATReverseCharge') . '</td><td>';
-		if ($vat_reverse_charge == 1 || ($societe->country_code != 'FR' && isInEEC($societe) && !empty($societe->tva_intra))) {
+		if ($vat_reverse_charge == 1 || $societe->vat_reverse_charge == 1 || ($societe->country_code != 'FR' && isInEEC($societe) && !empty($societe->tva_intra)) ) {
 			$vat_reverse_charge = 1;
 		} else {
 			$vat_reverse_charge = 0;
@@ -2840,12 +2844,14 @@ if ($action == 'create') {
 		if ($object->type == FactureFournisseur::TYPE_REPLACEMENT) {
 			$facreplaced = new FactureFournisseur($db);
 			$facreplaced->fetch($object->fk_facture_source);
-			print ' ('.$langs->transnoentities("ReplaceInvoice", $facreplaced->getNomUrl(1)).')';
+			print ' <span class="opacitymediumbycolor paddingleft">'.$langs->transnoentities("ReplaceInvoice", $facreplaced->getNomUrl(1)).'</span>';
 		}
 		if ($object->type == FactureFournisseur::TYPE_CREDIT_NOTE) {
 			$facusing = new FactureFournisseur($db);
-			$facusing->fetch($object->fk_facture_source);
-			print ' ('.$langs->transnoentities("CorrectInvoice", $facusing->getNomUrl(1)).')';
+			if ($object->fk_facture_source > 0) {
+				$facusing->fetch($object->fk_facture_source);
+				print ' <span class="opacitymediumbycolor paddingleft">'.$langs->transnoentities("CorrectInvoice", $facusing->getNomUrl(1)).'</span>';
+			}
 		}
 
 		$facidavoir = $object->getListIdAvoirFromInvoice();

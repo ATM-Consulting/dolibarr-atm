@@ -41,6 +41,8 @@ class FormOrder extends Form
 	 */
 	public function selectSupplierOrderStatus($selected = '', $short = 0, $hmlname = 'order_status')
 	{
+		global $hookmanager;
+
 		$options = array();
 
 		// 7 is same label than 6. 8 does not exists (billed is another field)
@@ -54,6 +56,17 @@ class FormOrder extends Form
 			'6' => '6,7',
 			'9' => '9'
 		);
+
+		// CUSTOM EUROCHEF
+		$parameters = array('addSupplierOrderStatusToSelect' => $statustohow);
+		$resHook = $hookmanager->executeHooks('addSupplierOrderStatusToSelect', $parameters, $object, $action);
+		if ($resHook < 0) {
+			setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+		}
+
+		if (!empty($hookmanager->resArray)) {
+			$statustohow = $statustohow + $hookmanager->resArray;
+		}
 
 		$tmpsupplierorder = new CommandeFournisseur($this->db);
 
