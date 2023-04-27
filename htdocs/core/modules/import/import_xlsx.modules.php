@@ -965,6 +965,20 @@ class ImportXlsx extends ModeleImports
 						// Update not done, we do insert
 						if (!$error && !$updatedone) {
 							// Build SQL INSERT request
+
+							/** ************************** SPECIFIQUE EUROCHEF  */
+							if ($tablename === MAIN_DB_PREFIX.'product') {
+								if ($index = array_search('datec', $listfields)) {
+									if (empty($listvalues[$index]) || $listvalues[$index] === 'null') {
+										$listvalues[$index] = "'" . dol_print_date(dol_now(), "%Y-%m-%d %H:%M:%S") . "'";
+									}
+								}else {
+									$listfields[] = 'datec';
+									$listvalues[] = "'" . dol_print_date(dol_now(), "%Y-%m-%d %H:%M:%S") . "'";
+								}
+							}
+							/** ************************** FIN SPECIFIQUE EUROCHEF  */
+
 							$sqlstart = 'INSERT INTO ' . $tablename . '(' . implode(', ', $listfields) . ', import_key';
 							$sqlend = ') VALUES(' . implode(', ', $listvalues) . ", '" . $this->db->escape($importid) . "'";
 							if (!empty($tablewithentity_cache[$tablename]) && $keyEntity < 0) {
