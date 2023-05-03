@@ -274,10 +274,15 @@ function getDefaultDatesForTransfer()
 {
 	global $db, $conf;
 
+	$date_start = '';
+	$date_end = '';
+	$pastmonth = 0;
+	$pastmonthyear = 0;
+
 	// Period by default on transfer (0: previous month | 1: current month | 2: fiscal year)
 	$periodbydefaultontransfer = (empty($conf->global->ACCOUNTING_DEFAULT_PERIOD_ON_TRANSFER) ? 0 : $conf->global->ACCOUNTING_DEFAULT_PERIOD_ON_TRANSFER);
-	if ($periodbydefaultontransfer == 2) {
-		$sql = "SELECT date_start, date_end FROM ".MAIN_DB_PREFIX."accounting_fiscalyear ";
+	if ($periodbydefaultontransfer == 2) {	// fiscal year
+		$sql = "SELECT date_start, date_end FROM ".MAIN_DB_PREFIX."accounting_fiscalyear";
 		$sql .= " WHERE date_start < '".$db->idate(dol_now())."' AND date_end > '".$db->idate(dol_now())."'";
 		$sql .= $db->plimit(1);
 		$res = $db->query($sql);
@@ -288,7 +293,7 @@ function getDefaultDatesForTransfer()
 		} else {
 			$month_start = ($conf->global->SOCIETE_FISCAL_MONTH_START ? ($conf->global->SOCIETE_FISCAL_MONTH_START) : 1);
 			$year_start = dol_print_date(dol_now(), '%Y');
-			if ($conf->global->SOCIETE_FISCAL_MONTH_START > dol_print_date(dol_now(), '%m')) {
+			if ($month_start > dol_print_date(dol_now(), '%m')) {
 				$year_start = $year_start - 1;
 			}
 			$year_end = $year_start + 1;
@@ -344,7 +349,7 @@ function getCurrentPeriodOfFiscalYear($db, $conf, $from_time = null)
 	$from_db_time = $db->idate($from_time);
 
 	$sql  = "SELECT date_start, date_end FROM ".$db->prefix()."accounting_fiscalyear";
-	$sql .= " WHERE date_start <= '".$from_db_time."' AND date_end >= '".$from_db_time."'";
+	$sql .= " WHERE date_start <= '".$db->escape($from_db_time)."' AND date_end >= '".$db->escape($from_db_time)."'";
 	$sql .= $db->order('date_start', 'DESC');
 	$sql .= $db->plimit(1);
 	$res = $db->query($sql);
