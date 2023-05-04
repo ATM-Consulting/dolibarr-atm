@@ -4661,7 +4661,7 @@ class Form
 		} else if ($type === Categorie::TYPE_PRODUCT_ACCOUNTING) {
             $cate_arbo = array();
             $sql = "SELECT c.label, c.rowid";
-            $sql .= " FROM ".MAIN_DB_PREFIX."categ as c";
+            $sql .= " FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link as c";
             $sql .= " WHERE entity = ".$conf->entity;
             $sql .= " ORDER BY c.label";
             $result = $this->db->query($sql);
