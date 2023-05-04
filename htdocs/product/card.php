@@ -1439,7 +1439,8 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				// Categories
 				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
 				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
-				print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+				// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+				print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, GETPOST('categories_accounting', 'array'), 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth50 maxwidth100', 1);
 				print "</td></tr>";
 			}
 
@@ -1966,7 +1967,8 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 							$arrayselected[] = $cat->id;
 						}
 					}
-					print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, $arrayselected, '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+					// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, $arrayselected, '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+					print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, $arrayselected, 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth50 maxwidth100', 1);
 					print "</td></tr>";
 				}
 
