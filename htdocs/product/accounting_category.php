@@ -257,7 +257,7 @@ if ($result) {
 		print '<tr class="oddeven">';
 		print '<td>'.$objp->rowid.'</td>';
 		if (GETPOST('action', 'aZ09') == 'edit' && GETPOST("categid") == $objp->rowid) {
-			print '<td colspan="3">';
+			print '<td>';
 			print '<input type="hidden" name="categid" value="'.$objp->rowid.'">';
 			print '<input name="label" type="text" size=45 value="'.$objp->label.'">';
 
@@ -273,18 +273,19 @@ if ($result) {
 			}
 			print $langs->trans("ProductAccountancyBuyExportCode");
 			print '<td>';
-			print $formaccounting->select_account($accountancy_code_sell, 'accountancy_code_sell', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			print $formaccounting->select_account($objp->accountancy_code_sell, 'accountancy_code_sell', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
 			if ($mysoc->isInEEC()) {
-				print $formaccounting->select_account($accountancy_code_sell_intra, 'accountancy_code_sell_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
+				print $formaccounting->select_account($objp->accountancy_code_sell_intra, 'accountancy_code_sell_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
 			}
-			print $formaccounting->select_account($accountancy_code_sell_export, 'accountancy_code_sell_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
-			print $formaccounting->select_account($accountancy_code_buy, 'accountancy_code_buy', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			print $formaccounting->select_account($objp->accountancy_code_sell_export, 'accountancy_code_sell_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			print $formaccounting->select_account($objp->accountancy_code_buy, 'accountancy_code_buy', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
 			if ($mysoc->isInEEC()) {
-				print $formaccounting->select_account($accountancy_code_buy_intra, 'accountancy_code_buy_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
+				print $formaccounting->select_account($objp->accountancy_code_buy_intra, 'accountancy_code_buy_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
 			}
-			print $formaccounting->select_account($accountancy_code_buy_export, 'accountancy_code_buy_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1);
+			print $formaccounting->select_account($objp->accountancy_code_buy_export, 'accountancy_code_buy_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1);
 			print '</td>';
 
+			print '<td class="center">';
 			print '<input type="submit" name="update" class="button" value="'.$langs->trans("Edit").'">';
 			print "</td>";
 		} else {
@@ -303,7 +304,7 @@ if ($result) {
 			print '<td>';
 			if (!empty($objp->accountancy_code_sell)) {
 				$accountingaccount = new AccountingAccount($db);
-				$accountingaccount->fetch('', clean_account($objp->accountancy_code_sell), 1);
+				$accountingaccount->fetch('', $objp->accountancy_code_sell, 1);
 
 				print $accountingaccount->getNomUrl(0, 1, 1, '', 1);
 			}
@@ -311,7 +312,7 @@ if ($result) {
 			if ($mysoc->isInEEC()) {
 				if (!empty($objp->accountancy_code_sell_intra)) {
 					$accountingaccount2 = new AccountingAccount($db);
-					$accountingaccount2->fetch('', clean_account($objp->accountancy_code_sell_intra), 1);
+					$accountingaccount2->fetch('', $objp->accountancy_code_sell_intra, 1);
 
 					print $accountingaccount2->getNomUrl(0, 1, 1, '', 1);
 				}
@@ -319,14 +320,14 @@ if ($result) {
 			}
 			if (!empty($objp->accountancy_code_sell_export)) {
 				$accountingaccount3 = new AccountingAccount($db);
-				$accountingaccount3->fetch('', clean_account($objp->accountancy_code_sell_export), 1);
+				$accountingaccount3->fetch('', $objp->accountancy_code_sell_export, 1);
 
 				print $accountingaccount3->getNomUrl(0, 1, 1, '', 1);
 			}
 			print '<br>';
 			if (!empty($objp->accountancy_code_buy)) {
 				$accountingaccount4 = new AccountingAccount($db);
-				$accountingaccount4->fetch('', clean_account($objp->accountancy_code_buy), 1);
+				$accountingaccount4->fetch('', $objp->accountancy_code_buy, 1);
 
 				print $accountingaccount4->getNomUrl(0, 1, 1, '', 1);
 			}
@@ -334,7 +335,7 @@ if ($result) {
 			if ($mysoc->isInEEC()) {
 				if (!empty($objp->accountancy_code_buy_intra)) {
 					$accountingaccount5 = new AccountingAccount($db);
-					$accountingaccount5->fetch('', clean_account($objp->accountancy_code_buy_intra), 1);
+					$accountingaccount5->fetch('', $objp->accountancy_code_buy_intra, 1);
 
 					print $accountingaccount5->getNomUrl(0, 1, 1, '', 1);
 				}
@@ -342,7 +343,7 @@ if ($result) {
 			}
 			if (!empty($objp->accountancy_code_buy_export)) {
 				$accountingaccount6 = new AccountingAccount($db);
-				$accountingaccount6->fetch('', clean_account($objp->accountancy_code_buy_export), 1);
+				$accountingaccount6->fetch('', $objp->accountancy_code_buy_export, 1);
 
 				print $accountingaccount6->getNomUrl(0, 1, 1, '', 1);
 			}
