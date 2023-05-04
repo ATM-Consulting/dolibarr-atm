@@ -1234,7 +1234,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				print '<tr><td>'.$form->textwithpicto($langs->trans("DesiredStock"), $langs->trans("DesiredStockDesc"), 1).'</td><td>';
 				print '<input name="desiredstock" class="maxwidth50" value="'.GETPOST('desiredstock').'">';
 				print '</td></tr>';
-				
+
 				// Stock not managed
 				print '<tr><td valign="top">' . $langs->trans("NotManagedInStock") . '</td>';
 				print '<td><input type="checkbox" id="not_managed_in_stock" name="not_managed_in_stock"/></td></tr>';
@@ -1375,7 +1375,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 		if ($conf->categorie->enabled) {
 			// Categories
-			print '<tr><td>'.$langs->trans("Categories").'</td><td>';
+			print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 			$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
 			print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
 			print "</td></tr>";
@@ -1422,6 +1422,14 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 				print '<br>';
 			}
+		}
+
+		if ($conf->categorie->enabled) {
+			// Categories
+			print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+			$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
+			print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+			print "</td></tr>";
 		}
 
 		// Accountancy codes
@@ -2150,6 +2158,14 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
             if ($usercanupdateaccountancyinformation) {
+				if ($conf->categorie->enabled) {
+					// Categories
+					print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+					$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
+					print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+					print "</td></tr>";
+				}
+
                 // Accountancy sell code
                 print '<tr><td class="nowrap">';
                 print $langs->trans("ProductAccountancySellCode");
@@ -2270,7 +2286,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				print (!empty($warehouse->id) ? $warehouse->getNomUrl(1) : '');
 				print '</td>';
 			}
-			
+
 			// view not_managed_in_stock
 			if (($object->isProduct() || ($object->isService() && !empty($conf->global->STOCK_SUPPORTS_SERVICES))) && !empty($conf->stock->enabled)) {
 				print '<tr><td valign="top">' . $form->textwithpicto($langs->trans("NotManagedInStock"), $langs->trans('NotManagedInStockDescription')) . '</td>';

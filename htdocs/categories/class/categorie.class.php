@@ -45,6 +45,7 @@ class Categorie extends CommonObject
 {
 	// Categories types (we use string because we want to accept any modules/types in a future)
 	const TYPE_PRODUCT   = 'product';
+	const TYPE_PRODUCT_ACCOUNTING = 'product_accounting';
 	const TYPE_SUPPLIER  = 'supplier';
 	const TYPE_CUSTOMER  = 'customer';
 	const TYPE_MEMBER    = 'member';
@@ -78,7 +79,8 @@ class Categorie extends CommonObject
 		'bank_line'    => 8,
 		'warehouse'    => 9,
 		'actioncomm'   => 10,
-		'website_page' => 11
+		'website_page' => 11,
+		'product_accounting' => 12
 	);
 
 	/**
@@ -98,7 +100,8 @@ class Categorie extends CommonObject
 		8 => 'bank_line',
 		9 => 'warehouse',
 		10 => 'actioncomm',
-		11 => 'website_page'
+		11 => 'website_page',
+		12 => 'product_accounting',
 	);
 
 	/**
@@ -223,6 +226,7 @@ class Categorie extends CommonObject
 	 * @var string	Category type
 	 *
 	 * @see Categorie::TYPE_PRODUCT
+	 * @see Categorie::TYPE_PRODUCT_ACCOUNTING
 	 * @see Categorie::TYPE_SUPPLIER
 	 * @see Categorie::TYPE_CUSTOMER
 	 * @see Categorie::TYPE_MEMBER
@@ -618,6 +622,7 @@ class Categorie extends CommonObject
 			'categorie_societe' => 'fk_categorie',
 			'categorie_fournisseur' => 'fk_categorie',
 			'categorie_product' => 'fk_categorie',
+			'categorie_product_accounting' => 'fk_categorie',
 			'categorie_member' => 'fk_categorie',
 			'categorie_contact' => 'fk_categorie',
 			'categorie_account' => 'fk_categorie',
