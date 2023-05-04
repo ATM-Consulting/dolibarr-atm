@@ -22,7 +22,7 @@ create table llx_product_accounting_category
 (
   rowid							integer AUTO_INCREMENT PRIMARY KEY,
   label							varchar(255),
-  entity						integer DEFAULT 1 NOT NULL  	-- multi company id
+  entity						integer DEFAULT 1 NOT NULL,  	-- multi company id
   accountancy_code_sell         varchar(32),                        -- Selling accountancy code
   accountancy_code_sell_intra   varchar(32),                        -- Selling accountancy code for vat intracommunity
   accountancy_code_sell_export  varchar(32),                        -- Selling accountancy code for vat export

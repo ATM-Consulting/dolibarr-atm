@@ -22,6 +22,6 @@ create table llx_product_accounting_categorie_link
 (
   fk_categorie  integer NOT NULL,
   fk_product    integer NOT NULL,
-  entity        integer DEFAULT 1 NOT NULL  	-- multi company id
+  entity        integer DEFAULT 1 NOT NULL,  	-- multi company id
   import_key    varchar(14)
 )ENGINE=innodb;
