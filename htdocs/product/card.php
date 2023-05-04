@@ -1424,14 +1424,6 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 		}
 
-		if ($conf->categorie->enabled) {
-			// Categories
-			print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
-			$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
-			print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
-			print "</td></tr>";
-		}
-
 		// Accountancy codes
         //if ($usercanupdateaccountancyinformation) {
             print '<!-- accountancy codes -->' . "\n";
@@ -2158,14 +2150,6 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
             if ($usercanupdateaccountancyinformation) {
-				if ($conf->categorie->enabled) {
-					// Categories
-					print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
-					$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
-					print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
-					print "</td></tr>";
-				}
-
                 // Accountancy sell code
                 print '<tr><td class="nowrap">';
                 print $langs->trans("ProductAccountancySellCode");
