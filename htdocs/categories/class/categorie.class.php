@@ -1500,6 +1500,39 @@ class Categorie extends CommonObject
 				dol_print_error($this->db);
 				return -1;
 			}
+		} else if ($type === Categorie::TYPE_PRODUCT_ACCOUNTING) {
+			// Load accounting categories
+			$sql = "SELECT c.rowid";
+			$sql .= ", c.label";
+			$sql .= ", c.accountancy_code_buy";
+			$sql .= ", c.accountancy_code_buy_intra";
+			$sql .= ", c.accountancy_code_buy_export";
+			$sql .= ", c.accountancy_code_sell";
+			$sql .= ", c.accountancy_code_sell_intra";
+			$sql .= ", c.accountancy_code_sell_export";
+			$sql .= " FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link as a, ".MAIN_DB_PREFIX."product_accounting_category as c";
+			$sql .= " WHERE a.fk_product=".((int) $id)." AND a.fk_categorie = c.rowid";
+			$sql .= " AND c.entity IN (".getEntity('category').")";
+			$sql .= " ORDER BY c.label";
+
+			$res = $this->db->query($sql);
+			if ($res) {
+				while ($obj = $this->db->fetch_object($res)) {
+					if ($mode == 'id') {
+						$cats[] = $obj->rowid;
+					} elseif ($mode == 'label') {
+						$cats[] = $obj->label;
+					} else {
+						$cat = new Categorie($this->db);
+						$cat->id = $obj->rowid;
+						$cat->label = $obj->label;
+						$cats[] = $cat;
+					}
+				}
+			} else {
+				dol_print_error($this->db);
+				return -1;
+			}
 		} else {
 			$sql = "SELECT ct.fk_categorie, c.label, c.rowid";
 			$sql .= " FROM ".MAIN_DB_PREFIX."categorie_".(empty($this->MAP_CAT_TABLE[$type]) ? $type : $this->MAP_CAT_TABLE[$type])." as ct, ".MAIN_DB_PREFIX."categorie as c";

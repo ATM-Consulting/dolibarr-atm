@@ -233,7 +233,14 @@ if ($action != 'edit') {
 }
 
 
-$sql = "SELECT rowid, label";
+$sql = "SELECT rowid";
+$sql .= ", label";
+$sql .= ", accountancy_code_buy";
+$sql .= ", accountancy_code_buy_intra";
+$sql .= ", accountancy_code_buy_export";
+$sql .= ", accountancy_code_sell";
+$sql .= ", accountancy_code_sell_intra";
+$sql .= ", accountancy_code_sell_export";
 $sql .= " FROM ".MAIN_DB_PREFIX."product_accounting_category";
 $sql .= " WHERE entity = ".$conf->entity;
 $sql .= " ORDER BY rowid";
@@ -296,7 +303,7 @@ if ($result) {
 			print '<td>';
 			if (!empty($objp->accountancy_code_sell)) {
 				$accountingaccount = new AccountingAccount($db);
-				$accountingaccount->fetch('', $objp->accountancy_code_sell, 1);
+				$accountingaccount->fetch('', clean_account($objp->accountancy_code_sell), 1);
 
 				print $accountingaccount->getNomUrl(0, 1, 1, '', 1);
 			}
@@ -304,7 +311,7 @@ if ($result) {
 			if ($mysoc->isInEEC()) {
 				if (!empty($objp->accountancy_code_sell_intra)) {
 					$accountingaccount2 = new AccountingAccount($db);
-					$accountingaccount2->fetch('', $objp->accountancy_code_sell_intra, 1);
+					$accountingaccount2->fetch('', clean_account($objp->accountancy_code_sell_intra), 1);
 
 					print $accountingaccount2->getNomUrl(0, 1, 1, '', 1);
 				}
@@ -312,14 +319,14 @@ if ($result) {
 			}
 			if (!empty($objp->accountancy_code_sell_export)) {
 				$accountingaccount3 = new AccountingAccount($db);
-				$accountingaccount3->fetch('', $objp->accountancy_code_sell_export, 1);
+				$accountingaccount3->fetch('', clean_account($objp->accountancy_code_sell_export), 1);
 
 				print $accountingaccount3->getNomUrl(0, 1, 1, '', 1);
 			}
 			print '<br>';
 			if (!empty($objp->accountancy_code_buy)) {
 				$accountingaccount4 = new AccountingAccount($db);
-				$accountingaccount4->fetch('', $objp->accountancy_code_buy, 1);
+				$accountingaccount4->fetch('', clean_account($objp->accountancy_code_buy), 1);
 
 				print $accountingaccount4->getNomUrl(0, 1, 1, '', 1);
 			}
@@ -327,7 +334,7 @@ if ($result) {
 			if ($mysoc->isInEEC()) {
 				if (!empty($objp->accountancy_code_buy_intra)) {
 					$accountingaccount5 = new AccountingAccount($db);
-					$accountingaccount5->fetch('', $objp->accountancy_code_buy_intra, 1);
+					$accountingaccount5->fetch('', clean_account($objp->accountancy_code_buy_intra), 1);
 
 					print $accountingaccount5->getNomUrl(0, 1, 1, '', 1);
 				}
@@ -335,7 +342,7 @@ if ($result) {
 			}
 			if (!empty($objp->accountancy_code_buy_export)) {
 				$accountingaccount6 = new AccountingAccount($db);
-				$accountingaccount6->fetch('', $objp->accountancy_code_buy_export, 1);
+				$accountingaccount6->fetch('', clean_account($objp->accountancy_code_buy_export), 1);
 
 				print $accountingaccount6->getNomUrl(0, 1, 1, '', 1);
 			}
