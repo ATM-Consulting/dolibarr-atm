@@ -449,6 +449,9 @@ if (empty($reshook)) {
 				$categories = GETPOST('categories', 'array');
 				$object->setCategories($categories);
 
+				$categories_accounting = GETPOST('categories_accounting', 'array');
+				$object->setCategories($categories_accounting);
+
 				if (!empty($backtopage)) {
 					$backtopage = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $backtopage); // New method to autoselect project after a New on another form object creation
 					if (preg_match('/\?/', $backtopage)) {
@@ -607,6 +610,9 @@ if (empty($reshook)) {
 						// Category association
 						$categories = GETPOST('categories', 'array');
 						$object->setCategories($categories);
+
+						$categories_accounting = GETPOST('categories_accounting', 'array');
+						$object->setCategories($categories_accounting);
 
 						$action = 'view';
 					} else {
@@ -1429,6 +1435,14 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
             print '<!-- accountancy codes -->' . "\n";
             print '<table class="border centpercent">';
 
+			if ($conf->categorie->enabled) {
+				// Categories
+				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
+				print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+				print "</td></tr>";
+			}
+
             if (empty($conf->global->PRODUCT_DISABLE_ACCOUNTING)) {
                 if (!empty($conf->accounting->enabled)) {
                     // Accountancy_code_sell
@@ -1909,7 +1923,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 			// Tags-Categories
 			if ($conf->categorie->enabled) {
-				print '<tr><td>'.$langs->trans("Categories").'</td><td>';
+				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
 				$c = new Categorie($db);
 				$cats = $c->containing($object->id, Categorie::TYPE_PRODUCT);
@@ -1940,6 +1954,22 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			print '<table class="border centpercent">';
 
             if ($usercanupdateaccountancyinformation) {
+				// Tags-Categories
+				if ($conf->categorie->enabled) {
+					print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+					$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
+					$c = new Categorie($db);
+					$cats = $c->containing($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING);
+					$arrayselected = array();
+					if (is_array($cats)) {
+						foreach ($cats as $cat) {
+							$arrayselected[] = $cat->id;
+						}
+					}
+					print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, $arrayselected, '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+					print "</td></tr>";
+				}
+
                 if (empty($conf->global->PRODUCT_DISABLE_ACCOUNTING)) {
                     if (!empty($conf->accounting->enabled)) {
                         // Accountancy_code_sell
@@ -2150,6 +2180,13 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
             if ($usercanupdateaccountancyinformation) {
+				// Categories product accounting
+				if ($conf->categorie->enabled) {
+					print '<tr><td class="valignmiddle">'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+					print $form->showCategories($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING, 1);
+					print "</td></tr>";
+				}
+
                 // Accountancy sell code
                 print '<tr><td class="nowrap">';
                 print $langs->trans("ProductAccountancySellCode");
@@ -2420,9 +2457,9 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			$parameters = array();
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
 
-			// Categories
+			// Categories product
 			if ($conf->categorie->enabled) {
-				print '<tr><td class="valignmiddle">'.$langs->trans("Categories").'</td><td>';
+				print '<tr><td class="valignmiddle">'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 				print $form->showCategories($object->id, Categorie::TYPE_PRODUCT, 1);
 				print "</td></tr>";
 			}

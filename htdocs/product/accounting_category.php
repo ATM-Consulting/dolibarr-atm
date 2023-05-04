@@ -204,7 +204,7 @@ if ($action != 'edit') {
 	print '<td>&nbsp;</td><td><input name="label" type="text" class="maxwidth100"></td>';
 
 	// Accountancy_code_sell
-	print '<td class="titlefieldcreate">';
+	print '<td class="minwidth400 nowraponall">';
 	print $langs->trans("ProductAccountancySellCode"). '<br>';
 	if ($mysoc->isInEEC()) {
 		print $langs->trans("ProductAccountancySellIntraCode") . '<br>';
@@ -253,12 +253,92 @@ if ($result) {
 			print '<td colspan="3">';
 			print '<input type="hidden" name="categid" value="'.$objp->rowid.'">';
 			print '<input name="label" type="text" size=45 value="'.$objp->label.'">';
+
+			print '<td class="minwidth400 nowraponall">';
+			print $langs->trans("ProductAccountancySellCode"). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $langs->trans("ProductAccountancySellIntraCode") . '<br>';
+			}
+			print $langs->trans("ProductAccountancySellExportCode"). '<br>';
+			print $langs->trans("ProductAccountancyBuyCode"). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $langs->trans("ProductAccountancyBuyIntraCode") . '<br>';
+			}
+			print $langs->trans("ProductAccountancyBuyExportCode");
+			print '<td>';
+			print $formaccounting->select_account($accountancy_code_sell, 'accountancy_code_sell', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $formaccounting->select_account($accountancy_code_sell_intra, 'accountancy_code_sell_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
+			}
+			print $formaccounting->select_account($accountancy_code_sell_export, 'accountancy_code_sell_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			print $formaccounting->select_account($accountancy_code_buy, 'accountancy_code_buy', 1, null, 1, 1, 'minwidth150 maxwidth300', 1). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $formaccounting->select_account($accountancy_code_buy_intra, 'accountancy_code_buy_intra', 1, null, 1, 1, 'minwidth150 maxwidth300', 1) . '<br>';
+			}
+			print $formaccounting->select_account($accountancy_code_buy_export, 'accountancy_code_buy_export', 1, null, 1, 1, 'minwidth150 maxwidth300', 1);
+			print '</td>';
+
 			print '<input type="submit" name="update" class="button" value="'.$langs->trans("Edit").'">';
 			print "</td>";
 		} else {
 			print "<td>".$objp->label."</td>";
+			print '<td class="minwidth400 nowraponall">';
+			print $langs->trans("ProductAccountancySellCode"). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $langs->trans("ProductAccountancySellIntraCode") . '<br>';
+			}
+			print $langs->trans("ProductAccountancySellExportCode"). '<br>';
+			print $langs->trans("ProductAccountancyBuyCode"). '<br>';
+			if ($mysoc->isInEEC()) {
+				print $langs->trans("ProductAccountancyBuyIntraCode") . '<br>';
+			}
+			print $langs->trans("ProductAccountancyBuyExportCode");
 			print '<td>';
-			//print '<a href="'.DOL_URL_ROOT.'/compta/bank/budget.php?bid='.$objp->rowid.'">'.$langs->trans("List").'</a>';
+			if (!empty($object->accountancy_code_sell)) {
+				$accountingaccount = new AccountingAccount($db);
+				$accountingaccount->fetch('', $object->accountancy_code_sell, 1);
+
+				print $accountingaccount->getNomUrl(0, 1, 1, '', 1);
+			}
+			print '<br>';
+			if ($mysoc->isInEEC()) {
+				if (!empty($object->accountancy_code_sell_intra)) {
+					$accountingaccount2 = new AccountingAccount($db);
+					$accountingaccount2->fetch('', $object->accountancy_code_sell_intra, 1);
+
+					print $accountingaccount2->getNomUrl(0, 1, 1, '', 1);
+				}
+				print '<br>';
+			}
+			if (!empty($object->accountancy_code_sell_export)) {
+				$accountingaccount3 = new AccountingAccount($db);
+				$accountingaccount3->fetch('', $object->accountancy_code_sell_export, 1);
+
+				print $accountingaccount3->getNomUrl(0, 1, 1, '', 1);
+			}
+			print '<br>';
+			if (!empty($object->accountancy_code_buy)) {
+				$accountingaccount4 = new AccountingAccount($db);
+				$accountingaccount4->fetch('', $object->accountancy_code_buy, 1);
+
+				print $accountingaccount4->getNomUrl(0, 1, 1, '', 1);
+			}
+			print '<br>';
+			if ($mysoc->isInEEC()) {
+				if (!empty($object->accountancy_code_buy_intra)) {
+					$accountingaccount5 = new AccountingAccount($db);
+					$accountingaccount5->fetch('', $object->accountancy_code_buy_intra, 1);
+
+					print $accountingaccount5->getNomUrl(0, 1, 1, '', 1);
+				}
+				print '<br>';
+			}
+			if (!empty($object->accountancy_code_buy_export)) {
+				$accountingaccount6 = new AccountingAccount($db);
+				$accountingaccount6->fetch('', $object->accountancy_code_buy_export, 1);
+
+				print $accountingaccount6->getNomUrl(0, 1, 1, '', 1);
+			}
 			print '</td>';
 			print '<td class="center">';
 			print '<a class="editfielda reposition marginleftonly marginrightonly" href="'.$_SERVER["PHP_SELF"].'?categid='.$objp->rowid.'&amp;action=edit&amp;token='.newToken().'">'.img_edit().'</a>';
