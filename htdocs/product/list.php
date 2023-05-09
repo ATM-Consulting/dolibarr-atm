@@ -99,6 +99,7 @@ $search_accountancy_code_buy = GETPOST("search_accountancy_code_buy", 'alpha');
 $search_accountancy_code_buy_intra = GETPOST("search_accountancy_code_buy_intra", 'alpha');
 $search_accountancy_code_buy_export = GETPOST("search_accountancy_code_buy_export", 'alpha');
 $search_finished = GETPOST("search_finished", 'int');
+$search_units = GETPOST('search_units', 'int');
 $optioncss = GETPOST('optioncss', 'alpha');
 $type = GETPOST("type", "int");
 
@@ -445,7 +446,8 @@ if (!empty($extrafields->attributes[$object->table_element]['label']) && is_arra
 if (!empty($searchCategoryProductList) || !empty($catid)) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
 }
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+$linktopfp = " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+$sql .= $linktopfp;
 // multilang
 if (!empty($conf->global->MAIN_MULTILANGS)) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang = '".$db->escape($langs->getDefaultLang())."'";
@@ -848,13 +850,13 @@ if ($sall) {
 
 // Filter on categories
 $moreforfilter = '';
-if (!empty($conf->global->categorie) && $user->rights->categorie->read)) {
+if (!empty($conf->global->categorie) && $user->rights->categorie->read) {
 	$formcategory = new FormCategory($db);
 	$moreforfilter .= $formcategory->getFilterBox(Categorie::TYPE_PRODUCT, $searchCategoryProductList, 'minwidth300', $searchCategoryProductOperator ? $searchCategoryProductOperator : 0);
 }
 
 //Show/hide child products. Hidden by default
-if (!empty($conf->global->variants) && !empty($conf->global->PRODUIT_ATTRIBUTES_HIDECHILD)) {
+if (!empty($conf->variants->enabled) && !empty($conf->global->PRODUIT_ATTRIBUTES_HIDECHILD)) {
 	$moreforfilter .= '<div class="divsearchfield">';
 	$moreforfilter .= '<input type="checkbox" id="search_show_childproducts" name="search_show_childproducts"'.($show_childproducts ? 'checked="checked"' : '').'>';
 	$moreforfilter .= ' <label for="search_show_childproducts">'.$langs->trans('ShowChildProducts').'</label>';
@@ -1398,110 +1400,113 @@ while ($i < $imaxinloop) {
 		}
 	}
 
+	$usercancreadprice = !empty($conf->global->MAIN_USE_ADVANCED_PERMS) ? $user->rights->product->product_advance->read_prices : $user->rights->product->lire;
+	if ($product_static->isService()) {
+		$usercancreadprice = !empty($conf->global->MAIN_USE_ADVANCED_PERMS)? $user->rights->service->service_advance->read_prices : $user->rights->service->lire;
+	}
+	print '<tr class="oddeven">';
 
-		print '<tr class="oddeven">';
-
-		// Action column
-		if (!empty($conf->global->MAIN_CHECKBOX_LEFT_COLUMN)) {
-			print '<td class="nowrap center">';
-			if ($massactionbutton || $massaction) {   // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
-				$selected = 0;
-				if (in_array($obj->rowid, $arrayofselected)) {
-					$selected = 1;
-				}
-				print '<input id="cb'.$obj->rowid.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$obj->rowid.'"'.($selected ? ' checked="checked"' : '').'>';
+	// Action column
+	if (!empty($conf->global->MAIN_CHECKBOX_LEFT_COLUMN)) {
+		print '<td class="nowrap center">';
+		if ($massactionbutton || $massaction) {   // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+			$selected = 0;
+			if (in_array($obj->rowid, $arrayofselected)) {
+				$selected = 1;
 			}
-			print '</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
+			print '<input id="cb'.$obj->rowid.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$obj->rowid.'"'.($selected ? ' checked="checked"' : '').'>';
 		}
-		// Rowid
-		if (!empty($arrayfields['p.rowid']['checked'])) {
-			print '<td class="nowraponall">';
-			print $product_static->id;
-			print "</td>\n";
-			if (!$i) {
-				$totalarray['nbfield']++;
+		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+	// Rowid
+	if (!empty($arrayfields['p.rowid']['checked'])) {
+		print '<td class="nowraponall">';
+		print $product_static->id;
+		print "</td>\n";
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Ref
+	if (!empty($arrayfields['p.ref']['checked'])) {
+		print '<td class="tdoverflowmax250">';
+		print $product_static->getNomUrl(1);
+		print "</td>\n";
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Ref supplier
+	if (!empty($arrayfields['pfp.ref_fourn']['checked'])) {
+		print '<td class="tdoverflowmax200">';
+		print $product_static->getNomUrl(1);
+		print "</td>\n";
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Label
+	if (!empty($arrayfields['p.label']['checked'])) {
+		print '<td class="tdoverflowmax200" title="'.dol_escape_htmltag($product_static->label).'">'.$product_static->label.'</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Type
+	if (!empty($arrayfields['p.fk_product_type']['checked'])) {
+		print '<td class="center">';
+		$s = '';
+		if ($product_static->type == 0) {
+			$s .= img_picto($langs->trans("Product"), 'product', 'class="paddingleftonly paddingrightonly colorgrey"');
+		} else {
+			$s .= img_picto($langs->trans("Service"), 'service', 'class="paddingleftonly paddingrightonly colorgrey"');
+		}
+		print $s;
+		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Barcode
+	if (!empty($arrayfields['p.barcode']['checked'])) {
+		print '<td>'.$product_static->barcode.'</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+
+	// Duration
+	if (!empty($arrayfields['p.duration']['checked'])) {
+		print '<td class="center nowraponall">';
+
+		if (preg_match('/([^a-z]+)[a-z]$/i', $obj->duration)) {
+			$duration_value = substr($obj->duration, 0, dol_strlen($obj->duration) - 1);
+			$duration_unit = substr($obj->duration, -1);
+
+			if ((float) $duration_value > 1) {
+				$dur = array("i"=>$langs->trans("Minutes"), "h"=>$langs->trans("Hours"), "d"=>$langs->trans("Days"), "w"=>$langs->trans("Weeks"), "m"=>$langs->trans("Months"), "y"=>$langs->trans("Years"));
+			} elseif ((float) $duration_value > 0) {
+				$dur = array("i"=>$langs->trans("Minute"), "h"=>$langs->trans("Hour"), "d"=>$langs->trans("Day"), "w"=>$langs->trans("Week"), "m"=>$langs->trans("Month"), "y"=>$langs->trans("Year"));
 			}
+			print $duration_value;
+			print ((!empty($duration_unit) && isset($dur[$duration_unit]) && $duration_value != '') ? ' '.$langs->trans($dur[$duration_unit]) : '');
+		} elseif (!preg_match('/^[a-z]$/i', $obj->duration)) {		// If duration is a simple char (like 's' of 'm'), we do not show value
+			print $obj->duration;
 		}
 
-		// Ref
-		if (!empty($arrayfields['p.ref']['checked'])) {
-			print '<td class="tdoverflowmax250">';
-			print $product_static->getNomUrl(1);
-			print "</td>\n";
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
+		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
 		}
-
-		// Ref supplier
-		if (!empty($arrayfields['pfp.ref_fourn']['checked'])) {
-			print '<td class="tdoverflowmax200">';
-			print $product_static->getNomUrl(1);
-			print "</td>\n";
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-		}
-
-		// Label
-		if (!empty($arrayfields['p.label']['checked'])) {
-			print '<td class="tdoverflowmax200" title="'.dol_escape_htmltag($product_static->label).'">'.$product_static->label.'</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-		}
-
-		// Type
-		if (!empty($arrayfields['p.fk_product_type']['checked'])) {
-			print '<td class="center">';
-			$s = '';
-			if ($product_static->type == 0) {
-				$s .= img_picto($langs->trans("Product"), 'product', 'class="paddingleftonly paddingrightonly colorgrey"');
-			} else {
-				$s .= img_picto($langs->trans("Service"), 'service', 'class="paddingleftonly paddingrightonly colorgrey"');
-			}
-			print $s;
-			print '</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-		}
-
-		// Barcode
-		if (!empty($arrayfields['p.barcode']['checked'])) {
-			print '<td>'.$product_static->barcode.'</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-		}
-
-		// Duration
-		if (!empty($arrayfields['p.duration']['checked'])) {
-			print '<td class="center nowraponall">';
-
-			if (preg_match('/([^a-z]+)[a-z]$/i', $obj->duration)) {
-				$duration_value = substr($obj->duration, 0, dol_strlen($obj->duration) - 1);
-				$duration_unit = substr($obj->duration, -1);
-
-				if ((float) $duration_value > 1) {
-					$dur = array("i"=>$langs->trans("Minutes"), "h"=>$langs->trans("Hours"), "d"=>$langs->trans("Days"), "w"=>$langs->trans("Weeks"), "m"=>$langs->trans("Months"), "y"=>$langs->trans("Years"));
-				} elseif ((float) $duration_value > 0) {
-					$dur = array("i"=>$langs->trans("Minute"), "h"=>$langs->trans("Hour"), "d"=>$langs->trans("Day"), "w"=>$langs->trans("Week"), "m"=>$langs->trans("Month"), "y"=>$langs->trans("Year"));
-				}
-				print $duration_value;
-				print ((!empty($duration_unit) && isset($dur[$duration_unit]) && $duration_value != '') ? ' '.$langs->trans($dur[$duration_unit]) : '');
-			} elseif (!preg_match('/^[a-z]$/i', $obj->duration)) {		// If duration is a simple char (like 's' of 'm'), we do not show value
-				print $obj->duration;
-			}
-
-			print '</td>';
-			if (!$i) {
-				$totalarray['nbfield']++;
-			}
-		}
+	}
 
 		// Finished
 		if (!empty($arrayfields['p.finished']['checked'])) {
@@ -1575,7 +1580,7 @@ while ($i < $imaxinloop) {
 		}
 		// Height
 		if (!empty($arrayfields['p.height']['checked'])) {
-			print '<td align="center">';
+			print '<td class="center">';
 			print $product_static->height;
 			print '</td>';
 			if (!$i) {
@@ -1977,7 +1982,6 @@ while ($i < $imaxinloop) {
 		}
 
 		print "</tr>\n";
-	}
 
 	$i++;
 }
