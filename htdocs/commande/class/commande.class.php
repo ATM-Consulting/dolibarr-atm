@@ -401,7 +401,7 @@ class Commande extends CommonOrder
 	public function getNextNumRef($soc)
 	{
 		global $langs, $conf;
-		$langs->load("order");
+		$langs->load("orders");
 
 		if (!empty($conf->global->COMMANDE_ADDON)) {
 			$mybool = false;

@@ -890,7 +890,7 @@ class CommandeFournisseur extends CommonOrder
 	 */
 	public function getNextNumRef($soc)
 	{
-		global $db, $langs, $conf;
+		global $langs, $conf;
 		$langs->load("orders");
 
 		if (!empty($conf->global->COMMANDE_SUPPLIER_ADDON_NUMBER)) {
