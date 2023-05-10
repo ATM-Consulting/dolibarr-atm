@@ -245,6 +245,14 @@ class modAccounting extends DolibarrModules
 		$this->rights[$r][5] = 'write';
 		$r++;
 
+		$this->rights[$r][0] = 50450;
+		$this->rights[$r][1] = 'Manage accounting categories';
+		$this->rights[$r][2] = 'r';
+		$this->rights[$r][3] = 0;
+		$this->rights[$r][4] = 'categories';
+		$this->rights[$r][5] = 'write';
+		$r++;
+
 		// Menus
 		//-------
 		$this->menu = 1; // This module add menu entries. They are coded into menu manager.

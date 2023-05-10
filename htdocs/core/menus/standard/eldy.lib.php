@@ -1607,7 +1607,7 @@ function print_left_eldy_menu($db, $menu_array_before, $menu_array_after, &$tabM
 				if (!empty($conf->categorie->enabled)) {
 					$langs->load("categories");
 					$newmenu->add("/categories/index.php?leftmenu=cat&amp;type=0", $langs->trans("Categories"), 1, $user->rights->categorie->lire, '', $mainmenu, 'cat');
-					$newmenu->add("/product/accounting_category.php", $langs->trans("RubriquesAccounting"), 1, $user->rights->produit->creer, '', $mainmenu, 'tags');
+					$newmenu->add("/product/accounting_category.php", $langs->trans("RubriquesAccounting"), 1, $user->rights->accounting->categories->write, '', $mainmenu, 'tags');
 					//if ($usemenuhider || empty($leftmenu) || $leftmenu=="cat") $newmenu->add("/categories/list.php", $langs->trans("List"), 1, $user->rights->categorie->lire);
 				}
 			}

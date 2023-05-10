@@ -612,7 +612,7 @@ if (empty($reshook)) {
 						$object->setCategories($categories);
 
 						$categories_accounting = GETPOST('categories_accounting', 'array');
-						$object->setCategories($categories_accounting);
+						$object->setCategoriesAccounting($categories_accounting);
 
 						$action = 'view';
 					} else {
