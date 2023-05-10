@@ -614,23 +614,22 @@ if (empty($reshook)) {
 						$categories_accounting = GETPOST('categories_accounting', 'array');
 						//$object->setCategoriesAccounting($categories_accounting);
 
-						if ($categories_accounting > 0) {
-							$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
-							$sql .= "fk_categorie";
-							$sql .= ", fk_product";
-							$sql .= ", entity";
-							$sql .= ") VALUES (";
-							$sql .= "'".$db->escape($categories_accounting)."'";
-							$sql .= "," . ((int) $object->id);
-							$sql .= "," . ((int) $conf->entity);
-							$sql .= ")";
+						if (count($categories_accounting)) {
+							foreach ($categories_accounting as $val) {
+								$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
+								$sql .= "fk_categorie";
+								$sql .= ", fk_product";
+								$sql .= ", entity";
+								$sql .= ") VALUES (";
+								$sql .= " " . ((int) $val);
+								$sql .= "," . ((int) $object->id);
+								$sql .= "," . ((int) $conf->entity);
+								$sql .= ")";
 
-							$result = $db->query($sql);
-							if (!$result) {
-								$error = $db->lasterror();
-								$db->rollback();
-
-								return -3;
+								if (!$db->query($sql)) {
+									$error++;
+									dol_print_error($db);
+								}
 							}
 						}
 
