@@ -450,7 +450,7 @@ if (empty($reshook)) {
 				$object->setCategories($categories);
 
 				$categories_accounting = GETPOST('categories_accounting', 'array');
-				$object->setCategories($categories_accounting);
+				$object->setCategoriesAccounting($categories_accounting);
 
 				if (!empty($backtopage)) {
 					$backtopage = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $backtopage); // New method to autoselect project after a New on another form object creation
@@ -1968,7 +1968,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 						}
 					}
 					// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, $arrayselected, '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
-					print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, $arrayselected, 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth50 maxwidth100', 1);
+					print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, $arrayselected, 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth100 maxwidth300', 1);
 					print "</td></tr>";
 				}
 

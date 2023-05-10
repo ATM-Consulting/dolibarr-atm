@@ -1191,6 +1191,12 @@ class Product extends CommonObject
 
 				// update accountancy for this entity
 				if (!$error && !empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+					$updsql = "UPDATE " . MAIN_DB_PREFIX . "product SET";
+					$updsql .= " accountancy_code_buy = '', accountancy_code_buy_intra = '', accountancy_code_buy_export = ''";
+					$updsql .= " accountancy_code_sell = '', accountancy_code_sell_intra = '', accountancy_code_sell_export = ''";
+					$updsql .= " WHERE rowid = " . ((int) $this->id) . " AND entity = " . ((int) $conf->entity);
+					$this->db->query($updsql);
+
 					$this->db->query("DELETE FROM " . MAIN_DB_PREFIX . "product_perentity WHERE fk_product = " . ((int) $this->id) . " AND entity = " . ((int) $conf->entity));
 
 					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_perentity (";
@@ -5868,6 +5874,23 @@ class Product extends CommonObject
 
 		require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 		return parent::setCategoriesCommon($categories, Categorie::TYPE_PRODUCT);
+	}
+
+	/**
+	 * Sets object to supplied categories.
+	 *
+	 * Deletes object from existing categories not supplied.
+	 * Adds it to non existing supplied categories.
+	 * Existing categories are left untouch.
+	 *
+	 * @param  int[]|int $categories_accounting Category or categories IDs
+	 * @return void
+	 */
+	public function setCategoriesAccounting($categories_accounting)
+	{
+
+		require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+		return parent::setCategoriesCommon($categories_accounting, Categorie::TYPE_PRODUCT_ACCOUNTING);
 	}
 
 	/**
