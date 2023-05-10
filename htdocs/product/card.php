@@ -620,15 +620,15 @@ if (empty($reshook)) {
 							$sql .= ", fk_product";
 							$sql .= ", entity";
 							$sql .= ") VALUES (";
-							$sql .= "'".$this->db->escape($categories_accounting)."'";
+							$sql .= "'".$db->escape($categories_accounting)."'";
 							$sql .= "," . ((int) $object->id);
 							$sql .= "," . ((int) $conf->entity);
 							$sql .= ")";
 
-							$result = $this->db->query($sql);
+							$result = $db->query($sql);
 							if (!$result) {
 								$this->error = $this->db->lasterror();
-								$this->db->rollback();
+								$db->rollback();
 
 								return -3;
 							}
