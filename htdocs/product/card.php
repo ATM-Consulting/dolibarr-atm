@@ -614,6 +614,8 @@ if (empty($reshook)) {
 						$categories_accounting = GETPOST('categories_accounting', 'array');
 						//$object->setCategoriesAccounting($categories_accounting);
 
+						dol_syslog("Cat_compta::".$categories_accounting, LOG_ERR);
+
 						if (count($categories_accounting)) {
 							foreach ($categories_accounting as $val) {
 								$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
@@ -625,6 +627,8 @@ if (empty($reshook)) {
 								$sql .= "," . ((int) $object->id);
 								$sql .= "," . ((int) $conf->entity);
 								$sql .= ")";
+
+								dol_syslog("Cat_compta::".$sql, LOG_ERR);
 
 								if (!$db->query($sql)) {
 									$error++;
