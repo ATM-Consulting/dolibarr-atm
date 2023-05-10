@@ -627,7 +627,7 @@ if (empty($reshook)) {
 
 							$result = $db->query($sql);
 							if (!$result) {
-								$this->error = $this->db->lasterror();
+								$this->error = $db->lasterror();
 								$db->rollback();
 
 								return -3;
