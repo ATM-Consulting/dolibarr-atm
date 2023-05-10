@@ -5871,26 +5871,8 @@ class Product extends CommonObject
 	 */
 	public function setCategories($categories)
 	{
-
 		require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 		return parent::setCategoriesCommon($categories, Categorie::TYPE_PRODUCT);
-	}
-
-	/**
-	 * Sets object to supplied categories.
-	 *
-	 * Deletes object from existing categories not supplied.
-	 * Adds it to non existing supplied categories.
-	 * Existing categories are left untouch.
-	 *
-	 * @param  int[]|int $categories_accounting Category or categories IDs
-	 * @return void
-	 */
-	public function setCategoriesAccounting($categories_accounting)
-	{
-
-		require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-		return parent::setCategoriesCommon($categories_accounting, Categorie::TYPE_PRODUCT_ACCOUNTING);
 	}
 
 	/**

@@ -612,7 +612,27 @@ if (empty($reshook)) {
 						$object->setCategories($categories);
 
 						$categories_accounting = GETPOST('categories_accounting', 'array');
-						$object->setCategoriesAccounting($categories_accounting);
+						//$object->setCategoriesAccounting($categories_accounting);
+
+						if ($categories_accounting > 0) {
+							$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
+							$sql .= "fk_categ";
+							$sql .= ", fk_product";
+							$sql .= ", entity";
+							$sql .= ") VALUES (";
+							$sql .= "'".$this->db->escape($categories_accounting)."'";
+							$sql .= "," . ((int) $object->id);
+							$sql .= "," . ((int) $conf->entity);
+							$sql .= ")";
+
+							$result = $this->db->query($sql);
+							if (!$result) {
+								$this->error = $this->db->lasterror();
+								$this->db->rollback();
+
+								return -3;
+							}
+						}
 
 						$action = 'view';
 					} else {
