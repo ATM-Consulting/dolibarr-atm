@@ -616,7 +616,7 @@ if (empty($reshook)) {
 
 						if ($categories_accounting > 0) {
 							$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
-							$sql .= "fk_categ";
+							$sql .= "fk_categorie";
 							$sql .= ", fk_product";
 							$sql .= ", entity";
 							$sql .= ") VALUES (";
@@ -627,7 +627,7 @@ if (empty($reshook)) {
 
 							$result = $db->query($sql);
 							if (!$result) {
-								$this->error = $db->lasterror();
+								$error = $db->lasterror();
 								$db->rollback();
 
 								return -3;
