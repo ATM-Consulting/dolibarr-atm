@@ -2095,6 +2095,7 @@ if (($id > 0 || !empty($ref)) || $projectidforalltimes > 0 || $allprojectforuser
 			} elseif ($action !== 'createtime') {
 				print '<input type="hidden" name="taskid" value="'.$id.'">';
 			}
+			//print '<input type="hidden" name="taskid" value="'.$id.'">';
 
 			// Task label
 			if (!empty($arrayfields['t.task_label']['checked'])) {
