@@ -4606,7 +4606,7 @@ class Form
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 	/**
-	 *    Return list of categories having choosed type
+	 *    Return list of categories having chosed type
 	 *
 	 *    @param	string|int	            $type				Type of category ('customer', 'supplier', 'contact', 'product', 'member'). Old mode (0, 1, 2, ...) is deprecated.
 	 *    @param    string		            $selected    		Id of category preselected or 'auto' (autoselect category if there is only one element). Not used if $outputmode = 1.
@@ -4658,7 +4658,28 @@ class Form
 			} else {
 				dol_print_error($this->db);
 			}
-		} else {
+		} else if ($type === Categorie::TYPE_PRODUCT_ACCOUNTING) {
+            $cate_arbo = array();
+            $sql = "SELECT c.label, c.rowid";
+            $sql .= " FROM ".MAIN_DB_PREFIX."product_accounting_category as c";
+            $sql .= " WHERE entity = ".$conf->entity;
+            $sql .= " ORDER BY c.label";
+            $result = $this->db->query($sql);
+            if ($result) {
+                $num = $this->db->num_rows($result);
+                $i = 0;
+                while ($i < $num) {
+                    $objp = $this->db->fetch_object($result);
+                    if ($objp) {
+                        $cate_arbo[$objp->rowid] = array('id'=>$objp->rowid, 'fulllabel'=>$objp->label);
+                    }
+                    $i++;
+                }
+                $this->db->free($result);
+            } else {
+                dol_print_error($this->db);
+            }
+        } else {
 			$cat = new Categorie($this->db);
 			$cate_arbo = $cat->get_full_arbo($type, $markafterid, $include);
 		}

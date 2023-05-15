@@ -401,7 +401,7 @@ class Commande extends CommonOrder
 	public function getNextNumRef($soc)
 	{
 		global $langs, $conf;
-		$langs->load("order");
+		$langs->load("orders");
 
 		if (!empty($conf->global->COMMANDE_ADDON)) {
 			$mybool = false;
@@ -458,7 +458,7 @@ class Commande extends CommonOrder
 
 		// Protection
 		if ($this->statut == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::valid action abandonned: already validated", LOG_WARNING);
+			dol_syslog(get_class($this)."::valid action abandoned: already validated", LOG_WARNING);
 			return 0;
 		}
 

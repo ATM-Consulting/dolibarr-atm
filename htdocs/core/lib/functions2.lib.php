@@ -2212,6 +2212,10 @@ function dolGetElementUrl($objectid, $objecttype, $withpicto = 0, $option = '')
 		$classpath = 'product/stock/class';
 		$classfile = 'entrepot';
 		$classname = 'Entrepot';
+	} elseif ($objecttype == 'mailing')   {
+		$classpath = 'comm/mailing/class';
+		$classfile = 'mailing';
+		$classname = 'Mailing';
 	}
 
 	if (!empty($conf->$module->enabled)) {
@@ -2633,6 +2637,8 @@ function getModuleDirForApiClass($moduleobject)
 		$moduledirforclass = 'fichinter';
 	} elseif ($moduleobject == 'mos') {
 		$moduledirforclass = 'mrp';
+	} elseif ($moduleobject == 'accounting') {
+		$moduledirforclass = 'accountancy';
 	} elseif (in_array($moduleobject, array('products', 'expensereports', 'users', 'tickets', 'boms'))) {
 		$moduledirforclass = preg_replace('/s$/', '', $moduleobject);
 	}

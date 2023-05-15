@@ -449,6 +449,9 @@ if (empty($reshook)) {
 				$categories = GETPOST('categories', 'array');
 				$object->setCategories($categories);
 
+				$categories_accounting = GETPOST('categories_accounting', 'array');
+				$object->setCategoriesAccounting($categories_accounting);
+
 				if (!empty($backtopage)) {
 					$backtopage = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $backtopage); // New method to autoselect project after a New on another form object creation
 					if (preg_match('/\?/', $backtopage)) {
@@ -607,6 +610,32 @@ if (empty($reshook)) {
 						// Category association
 						$categories = GETPOST('categories', 'array');
 						$object->setCategories($categories);
+
+						$categories_accounting = GETPOST('categories_accounting', 'array');
+						//$object->setCategoriesAccounting($categories_accounting);
+
+						dol_syslog("Cat_compta::".$categories_accounting, LOG_ERR);
+
+						if (count($categories_accounting)) {
+							foreach ($categories_accounting as $val) {
+								$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
+								$sql .= "fk_categorie";
+								$sql .= ", fk_product";
+								$sql .= ", entity";
+								$sql .= ") VALUES (";
+								$sql .= " " . ((int) $val);
+								$sql .= "," . ((int) $object->id);
+								$sql .= "," . ((int) $conf->entity);
+								$sql .= ")";
+
+								dol_syslog("Cat_compta::".$sql, LOG_ERR);
+
+								if (!$db->query($sql)) {
+									$error++;
+									dol_print_error($db);
+								}
+							}
+						}
 
 						$action = 'view';
 					} else {
@@ -1234,7 +1263,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				print '<tr><td>'.$form->textwithpicto($langs->trans("DesiredStock"), $langs->trans("DesiredStockDesc"), 1).'</td><td>';
 				print '<input name="desiredstock" class="maxwidth50" value="'.GETPOST('desiredstock').'">';
 				print '</td></tr>';
-				
+
 				// Stock not managed
 				print '<tr><td valign="top">' . $langs->trans("NotManagedInStock") . '</td>';
 				print '<td><input type="checkbox" id="not_managed_in_stock" name="not_managed_in_stock"/></td></tr>';
@@ -1375,7 +1404,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 		if ($conf->categorie->enabled) {
 			// Categories
-			print '<tr><td>'.$langs->trans("Categories").'</td><td>';
+			print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 			$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
 			print img_picto('', 'category').$form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
 			print "</td></tr>";
@@ -1428,6 +1457,15 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
         //if ($usercanupdateaccountancyinformation) {
             print '<!-- accountancy codes -->' . "\n";
             print '<table class="border centpercent">';
+
+			if ($conf->categorie->enabled) {
+				// Categories
+				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
+				// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+				print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, GETPOST('categories_accounting', 'array'), 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth50 maxwidth100', 1);
+				print "</td></tr>";
+			}
 
             if (empty($conf->global->PRODUCT_DISABLE_ACCOUNTING)) {
                 if (!empty($conf->accounting->enabled)) {
@@ -1909,7 +1947,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 			// Tags-Categories
 			if ($conf->categorie->enabled) {
-				print '<tr><td>'.$langs->trans("Categories").'</td><td>';
+				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
 				$c = new Categorie($db);
 				$cats = $c->containing($object->id, Categorie::TYPE_PRODUCT);
@@ -1940,6 +1978,23 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			print '<table class="border centpercent">';
 
             if ($usercanupdateaccountancyinformation) {
+				// Tags-Categories
+				if ($conf->categorie->enabled) {
+					print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+					$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
+					$c = new Categorie($db);
+					$cats = $c->containing($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING);
+					$arrayselected = array();
+					if (is_array($cats)) {
+						foreach ($cats as $cat) {
+							$arrayselected[] = $cat->id;
+						}
+					}
+					// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, $arrayselected, '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
+					print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, $arrayselected, 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth100 maxwidth300', 1);
+					print "</td></tr>";
+				}
+
                 if (empty($conf->global->PRODUCT_DISABLE_ACCOUNTING)) {
                     if (!empty($conf->accounting->enabled)) {
                         // Accountancy_code_sell
@@ -2150,6 +2205,13 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 
             if ($usercanupdateaccountancyinformation) {
+				// Categories product accounting
+				if ($conf->categorie->enabled) {
+					print '<tr><td class="valignmiddle">'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+					print $form->showCategories($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING, 1);
+					print "</td></tr>";
+				}
+
                 // Accountancy sell code
                 print '<tr><td class="nowrap">';
                 print $langs->trans("ProductAccountancySellCode");
@@ -2270,7 +2332,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				print (!empty($warehouse->id) ? $warehouse->getNomUrl(1) : '');
 				print '</td>';
 			}
-			
+
 			// view not_managed_in_stock
 			if (($object->isProduct() || ($object->isService() && !empty($conf->global->STOCK_SUPPORTS_SERVICES))) && !empty($conf->stock->enabled)) {
 				print '<tr><td valign="top">' . $form->textwithpicto($langs->trans("NotManagedInStock"), $langs->trans('NotManagedInStockDescription')) . '</td>';
@@ -2420,9 +2482,9 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			$parameters = array();
 			include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
 
-			// Categories
+			// Categories product
 			if ($conf->categorie->enabled) {
-				print '<tr><td class="valignmiddle">'.$langs->trans("Categories").'</td><td>';
+				print '<tr><td class="valignmiddle">'.$langs->trans("Categories").' '.$langs->trans("Product").'</td><td>';
 				print $form->showCategories($object->id, Categorie::TYPE_PRODUCT, 1);
 				print "</td></tr>";
 			}

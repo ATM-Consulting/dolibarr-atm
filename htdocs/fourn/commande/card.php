@@ -1854,26 +1854,28 @@ if ($action == 'create') {
 	if ($action == 'valid') {
 		$object->date_commande = dol_now();
 
-		// We check if number is temporary number
-		if (preg_match('/^[\(]?PROV/i', $object->ref) || empty($object->ref)) { // empty should not happened, but when it occurs, the test save life
-			$newref = $object->getNextNumRef($object->thirdparty);
+		// We check that object has a temporary ref
+		$ref = substr($object->ref, 1, 4);
+		if ($ref == 'PROV' || $ref == '') { // empty should not happened, but when it occurs, the test save life
+			$numref = $object->getNextNumRef($object->thirdparty);
+			if (empty($numref)) {
+				$error++;
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
 		} else {
-			$newref = $object->ref;
+			$numref = $object->ref;
 		}
 
-		if ($newref < 0) {
-			setEventMessages($object->error, $object->errors, 'errors');
-			$action = '';
-		} else {
-			$text = $langs->trans('ConfirmValidateOrder', $newref);
-			if (!empty($conf->notification->enabled)) {
-				require_once DOL_DOCUMENT_ROOT.'/core/class/notify.class.php';
-				$notify = new	Notify($db);
-				$text .= '<br>';
-				$text .= $notify->confirmMessage('ORDER_SUPPLIER_VALIDATE', $object->socid, $object);
-			}
+		$text = $langs->trans('ConfirmValidateOrder', $numref);
+		if (!empty($conf->notification->enabled)) {
+			require_once DOL_DOCUMENT_ROOT.'/core/class/notify.class.php';
+			$notify = new	Notify($db);
+			$text .= '<br>';
+			$text .= $notify->confirmMessage('ORDER_SUPPLIER_VALIDATE', $object->socid, $object);
+		}
 
-			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateOrder'), $text, 'confirm_valid', '', 0, 1);
+		if (!$error) {
+			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('ValidateOrder'), $text, 'confirm_valid', '', 0, 1);
 		}
 	}
 

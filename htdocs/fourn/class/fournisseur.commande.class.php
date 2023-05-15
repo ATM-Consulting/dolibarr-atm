@@ -590,104 +590,116 @@ class CommandeFournisseur extends CommonOrder
 	public function valid($user, $idwarehouse = 0, $notrigger = 0)
 	{
 		global $langs, $conf;
+
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$error = 0;
 
-		dol_syslog(get_class($this)."::valid");
-		$result = 0;
+		// Protection
+		if ($this->statut == self::STATUS_VALIDATED) {
+			dol_syslog(get_class($this)."::valid action abandoned: already validated", LOG_WARNING);
+			return 0;
+		}
+
 		if ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && (!empty($user->rights->fournisseur->commande->creer) || !empty($user->rights->supplier_order->creer)))
 			|| (!empty($conf->global->MAIN_USE_ADVANCED_PERMS) && !empty($user->rights->fournisseur->supplier_order_advance->validate))) {
-				$this->db->begin();
+			$this->error = 'NotEnoughPermissions';
+			dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
+			return -1;
+		}
 
-				// Definition of supplier order numbering model name
-				$soc = new Societe($this->db);
-				$soc->fetch($this->fourn_id);
+		$now = dol_now();
 
-				// Check if object has a temporary ref
-			if (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref)) { // empty should not happened, but when it occurs, the test save life
-				$num = $this->getNextNumRef($soc);
-			} else {
-				$num = $this->ref;
-			}
-				$this->newref = dol_sanitizeFileName($num);
+		$this->db->begin();
 
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."commande_fournisseur";
-				$sql .= " SET ref='".$this->db->escape($num)."',";
-				$sql .= " fk_statut = ".self::STATUS_VALIDATED.",";
-				$sql .= " date_valid='".$this->db->idate(dol_now())."',";
-				$sql .= " fk_user_valid = ".((int) $user->id);
-				$sql .= " WHERE rowid = ".((int) $this->id);
-				$sql .= " AND fk_statut = ".self::STATUS_DRAFT;
+		// Definition of supplier order numbering model name
+		$soc = new Societe($this->db);
+		$soc->fetch($this->fourn_id);
 
-				$resql = $this->db->query($sql);
-			if (!$resql) {
-				dol_print_error($this->db);
+		// Define new ref
+		if (!$error && (preg_match('/^[\(]?PROV/i', $this->ref) || empty($this->ref))) { // empty should not happened, but when it occurs, the test save life
+			$num = $this->getNextNumRef($soc);
+		} else {
+			$num = $this->ref;
+		}
+		$this->newref = dol_sanitizeFileName($num);
+
+		// Validate
+		$sql = 'UPDATE '.MAIN_DB_PREFIX."commande_fournisseur";
+		$sql .= " SET ref='".$this->db->escape($num)."',";
+		$sql .= " fk_statut = ".self::STATUS_VALIDATED.",";
+		$sql .= " date_valid='".$this->db->idate(dol_now())."',";
+		$sql .= " fk_user_valid = ".((int) $user->id);
+		$sql .= " WHERE rowid = ".((int) $this->id);
+		//$sql .= " AND fk_statut = ".self::STATUS_DRAFT;
+
+		dol_syslog(get_class($this)."::valid", LOG_DEBUG);
+
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_print_error($this->db);
+			$this->error = $this->db->lasterror();
+			$error++;
+		}
+
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('ORDER_SUPPLIER_VALIDATE', $user);
+			if ($result < 0) {
 				$error++;
 			}
+			// End call triggers
+		}
 
-			if (!$error && !$notrigger) {
-				// Call trigger
-				$result = $this->call_trigger('ORDER_SUPPLIER_VALIDATE', $user);
-				if ($result < 0) {
+		if (!$error) {
+			$this->oldref = $this->ref;
+
+			// Rename directory if dir was a temporary ref
+			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
+				// Now we rename also files into index
+				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'fournisseur/commande/".$this->db->escape($this->newref)."'";
+				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'fournisseur/commande/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$resql = $this->db->query($sql);
+				if (!$resql) {
 					$error++;
+					$this->error = $this->db->lasterror();
 				}
-				// End call triggers
-			}
 
-			if (!$error) {
-				$this->oldref = $this->ref;
+				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
+				$oldref = dol_sanitizeFileName($this->ref);
+				$newref = dol_sanitizeFileName($num);
+				$dirsource = $conf->fournisseur->commande->dir_output.'/'.$oldref;
+				$dirdest = $conf->fournisseur->commande->dir_output.'/'.$newref;
+				if (!$error && file_exists($dirsource)) {
+					dol_syslog(get_class($this)."::valid rename dir ".$dirsource." into ".$dirdest);
 
-				// Rename directory if dir was a temporary ref
-				if (preg_match('/^[\(]?PROV/i', $this->ref)) {
-					// Now we rename also files into index
-					$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'fournisseur/commande/".$this->db->escape($this->newref)."'";
-					$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'fournisseur/commande/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
-					$resql = $this->db->query($sql);
-					if (!$resql) {
-						$error++; $this->error = $this->db->lasterror();
-					}
-
-					// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
-					$oldref = dol_sanitizeFileName($this->ref);
-					$newref = dol_sanitizeFileName($num);
-					$dirsource = $conf->fournisseur->commande->dir_output.'/'.$oldref;
-					$dirdest = $conf->fournisseur->commande->dir_output.'/'.$newref;
-					if (!$error && file_exists($dirsource)) {
-						dol_syslog(get_class($this)."::valid rename dir ".$dirsource." into ".$dirdest);
-
-						if (@rename($dirsource, $dirdest)) {
-							dol_syslog("Rename ok");
-							// Rename docs starting with $oldref with $newref
-							$listoffiles = dol_dir_list($conf->fournisseur->commande->dir_output.'/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-							foreach ($listoffiles as $fileentry) {
-								$dirsource = $fileentry['name'];
-								$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-								$dirsource = $fileentry['path'].'/'.$dirsource;
-								$dirdest = $fileentry['path'].'/'.$dirdest;
-								@rename($dirsource, $dirdest);
-							}
+					if (@rename($dirsource, $dirdest)) {
+						dol_syslog("Rename ok");
+						// Rename docs starting with $oldref with $newref
+						$listoffiles = dol_dir_list($conf->fournisseur->commande->dir_output.'/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
+						foreach ($listoffiles as $fileentry) {
+							$dirsource = $fileentry['name'];
+							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
+							$dirsource = $fileentry['path'].'/'.$dirsource;
+							$dirdest = $fileentry['path'].'/'.$dirdest;
+							@rename($dirsource, $dirdest);
 						}
 					}
 				}
 			}
+		}
 
-			if (!$error) {
-				$result = 1;
-				$this->statut = self::STATUS_VALIDATED;
-				$this->ref = $num;
-			}
+		// Set new ref and current status
+		if (!$error) {
+			$this->ref = $num;
+			$this->statut = self::STATUS_VALIDATED;
+		}
 
-			if (!$error) {
-				$this->db->commit();
-				return 1;
-			} else {
-				$this->db->rollback();
-				return -1;
-			}
+		if (!$error) {
+			$this->db->commit();
+			return 1;
 		} else {
-			$this->error = 'NotAuthorized';
-			dol_syslog(get_class($this)."::valid ".$this->error, LOG_ERR);
+			$this->db->rollback();
 			return -1;
 		}
 	}
@@ -890,7 +902,7 @@ class CommandeFournisseur extends CommonOrder
 	 */
 	public function getNextNumRef($soc)
 	{
-		global $db, $langs, $conf;
+		global $langs, $conf;
 		$langs->load("orders");
 
 		if (!empty($conf->global->COMMANDE_SUPPLIER_ADDON_NUMBER)) {
