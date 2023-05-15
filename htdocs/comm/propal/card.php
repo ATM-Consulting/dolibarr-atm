@@ -164,6 +164,7 @@ if (empty($reshook)) {
 		$permissiontodelete = $usercandelete;
 		include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
 		if ($action == 'delete'){
+			$object->update_price(1);
 			header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $id);
 			exit();
 		}
