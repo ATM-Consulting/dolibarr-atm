@@ -677,3 +677,24 @@ ALTER TABLE llx_societe ADD COLUMN vat_reverse_charge tinyint DEFAULT 0 AFTER tv
 ALTER TABLE llx_societe_perentity ADD COLUMN vat_reverse_charge tinyint DEFAULT 0 AFTER entity;
 ALTER TABLE llx_facture_fourn ADD COLUMN vat_reverse_charge tinyint DEFAULT 0 AFTER close_note;
 
+create table llx_product_accounting_category
+(
+    rowid							integer AUTO_INCREMENT PRIMARY KEY,
+    label							varchar(255),
+    entity						integer DEFAULT 1 NOT NULL,  	-- multi company id
+    accountancy_code_sell         varchar(32),                        -- Selling accountancy code
+    accountancy_code_sell_intra   varchar(32),                        -- Selling accountancy code for vat intracommunity
+    accountancy_code_sell_export  varchar(32),                        -- Selling accountancy code for vat export
+    accountancy_code_buy          varchar(32),                        -- Buying accountancy code
+    accountancy_code_buy_intra    varchar(32),                        -- Buying accountancy code for vat intracommunity
+    accountancy_code_buy_export   varchar(32)                  		-- Buying accountancy code for vat import
+)ENGINE=innodb;
+
+create table llx_product_accounting_categorie_link
+(
+    fk_categorie  integer NOT NULL,
+    fk_product    integer NOT NULL,
+    entity        integer DEFAULT 1 NOT NULL,  	-- multi company id
+    import_key    varchar(14)
+)ENGINE=innodb;
+
