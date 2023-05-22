@@ -271,12 +271,17 @@ if ($result) {
 			$tablocaltax2[$obj->rowid][$compta_localtax2] = 0;
 		}
 
+		// Compensation of data for invoice situation by using $situation_ratio. This works (nearly) for invoice that was not correctly recorded
+		// but it may introduces an error for situation invoices that were correctly saved. There is still rounding problem that differs between
+		// real data we should have stored and result obtained with a compensation.
+		// It also seems that credit notes on situation invoices are correctly saved (but it depends on the version used in fact).
+		// For credit notes, we hope to have situation_ratio = 1 so the compensation has no effect to avoid introducing troubles with credit notes.
 		$total_ttc = $obj->total_ttc * $situation_ratio;
 		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
 			if (!isset($tabwarranty[$obj->rowid][$compta_soc])) {
 				$tabwarranty[$obj->rowid][$compta_soc] = 0;
 			}
-			$retained_warranty = (double)price2num($total_ttc * $obj->retained_warranty / 100, 'MT');
+			$retained_warranty = (double) price2num($total_ttc * $obj->retained_warranty / 100, 'MT');
 			$tabwarranty[$obj->rowid][$compta_soc] += $retained_warranty;
 			$total_ttc -= $retained_warranty;
 		}
@@ -361,6 +366,7 @@ if ($action == 'writebookkeeping') {
 	$accountingaccountcustomer->fetch(null, $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER, true);
 
 	$accountingaccountcustomerwarranty = new AccountingAccount($db);
+
 	$accountingaccountcustomerwarranty->fetch(null, $conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY, true);
 
 	foreach ($tabfac as $key => $val) {		// Loop on each invoice
@@ -908,7 +914,6 @@ if (empty($action) || $action == 'view') {
 	 */
 	print '<br>';
 
-	$i = 0;
 	print '<div class="div-table-responsive">';
 	print "<table class=\"noborder\" width=\"100%\">";
 	print "<tr class=\"liste_titre\">";
@@ -921,7 +926,7 @@ if (empty($action) || $action == 'view') {
 	print '<td class="center">'.$langs->trans("Credit")."</td>";
 	print "</tr>\n";
 
-	$r = '';
+	$i = 0;
 
 	$companystatic = new Client($db);
 	$invoicestatic = new Facture($db);
@@ -972,6 +977,7 @@ if (empty($action) || $action == 'view') {
 			print '<td class="right"></td>';
 			print "</tr>";
 
+			$i++;
 			continue;
 		}
 		if ($errorforinvoice[$key] == 'somelinesarenotbound') {
@@ -991,13 +997,15 @@ if (empty($action) || $action == 'view') {
 			print '<td class="right"></td>';
 			print '<td class="right"></td>';
 			print "</tr>";
+
+			$i++;
 		}
 
 		// Warranty
 		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && !empty($tabwarranty[$key])) {
 			foreach ($tabwarranty[$key] as $k => $mt) {
 				print '<tr class="oddeven">';
-				print "<!-- Thirdparty -->";
+				print "<!-- Thirdparty warranty -->";
 				print "<td>".$date."</td>";
 				print "<td>".$invoicestatic->getNomUrl(1)."</td>";
 				// Account
@@ -1053,6 +1061,8 @@ if (empty($action) || $action == 'view') {
 			print '<td class="right nowraponall amount">'.($mt >= 0 ? price($mt) : '')."</td>";
 			print '<td class="right nowraponall amount">'.($mt < 0 ? price(-$mt) : '')."</td>";
 			print "</tr>";
+
+			$i++;
 		}
 
 		// Product / Service
@@ -1089,6 +1099,8 @@ if (empty($action) || $action == 'view') {
 			print '<td class="right nowraponall amount">'.($mt < 0 ? price(-$mt) : '')."</td>";
 			print '<td class="right nowraponall amount">'.($mt >= 0 ? price($mt) : '')."</td>";
 			print "</tr>";
+
+			$i++;
 		}
 
 		// VAT
@@ -1125,9 +1137,15 @@ if (empty($action) || $action == 'view') {
 					print '<td class="right nowraponall amount">'.($mt < 0 ? price(-$mt) : '')."</td>";
 					print '<td class="right nowraponall amount">'.($mt >= 0 ? price($mt) : '')."</td>";
 					print "</tr>";
+
+					$i++;
 				}
 			}
 		}
+	}
+
+	if (!$i) {
+		print '<tr class="oddeven"><td colspan="7"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td></tr>';
 	}
 
 	print "</table>";
