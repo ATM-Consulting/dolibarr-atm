@@ -106,7 +106,7 @@ if (!GETPOSTISSET('date_startmonth') && (empty($date_start) || empty($date_end))
 	$date_end = dol_get_last_day($pastmonthyear, $pastmonth, false);
 }
 
-$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.ref_client, f.date_lim_reglement as dlr, f.close_code, f.retained_warranty,";
+$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.ref_client, f.date_lim_reglement as dlr, f.close_code, f.retained_warranty, f.situation_final,";
 // Modification - Situation invoice - Begin
 $sql .= " f.total_ht AS invoice_total_ht, f.total_tva AS invoice_total_tva, f.localtax1 AS invoice_total_localtax1, f.localtax2 AS invoice_total_localtax2, f.total_ttc AS invoice_total_ttc,";
 // Modification - Situation invoice - End
@@ -271,17 +271,9 @@ if ($result) {
 			$tablocaltax2[$obj->rowid][$compta_localtax2] = 0;
 		}
 
-		// Compensation of data for invoice situation by using $situation_ratio. This works (nearly) for invoice that was not correctly recorded
-		// but it may introduces an error for situation invoices that were correctly saved. There is still rounding problem that differs between
-		// real data we should have stored and result obtained with a compensation.
-		// It also seems that credit notes on situation invoices are correctly saved (but it depends on the version used in fact).
-		// For credit notes, we hope to have situation_ratio = 1 so the compensation has no effect to avoid introducing troubles with credit notes.
 		$total_ttc = $obj->total_ttc * $situation_ratio;
-		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && !empty($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER_RETAINED_WARRANTY) && $obj->retained_warranty > 0) {
-			if (!isset($tabwarranty[$obj->rowid][$compta_soc])) {
-				$tabwarranty[$obj->rowid][$compta_soc] = 0;
-			}
-			$retained_warranty = (double) price2num($total_ttc * $obj->retained_warranty / 100, 'MT');
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $obj->retained_warranty > 0 && (empty($conf->global->INVOICE_RETAINED_WARRANTY_LIMITED_TO_FINAL_SITUATION) || !empty($obj->situation_final))) {
+			$retained_warranty = (double)price2num($total_ttc * $obj->retained_warranty / 100, 'MT');
 			$tabwarranty[$obj->rowid][$compta_soc] += $retained_warranty;
 			$total_ttc -= $retained_warranty;
 		}
@@ -313,6 +305,14 @@ foreach ($tab_list as $tab_property => $total_property) {
 	foreach ($tabfac as $invoice_id => $invoice_info) {
 		// Fix HT
 		$total_amount = 0;
+		if (!empty($conf->global->INVOICE_USE_RETAINED_WARRANTY) && $tab_property == 'tabttc') {
+			foreach ($tabwarranty[$invoice_id] as $compta_prod => $amount) {
+				// Fix precision
+				$amount = price2num($amount, 'MT');
+				$total_amount += $amount;
+				$tabwarranty[$invoice_id][$compta_prod] = $amount;
+			}
+		}
 		foreach (${$tab_property}[$invoice_id] as $compta_prod => $amount) {
 			// Fix precision
 			$amount = price2num($amount, 'MT');
