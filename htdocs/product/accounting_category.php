@@ -53,7 +53,7 @@ $accountancy_code_buy_export	= GETPOST('accountancy_code_buy_export', 'alpha');
 // by default 'alphanohtml' (better security); hidden conf MAIN_SECURITY_ALLOW_UNSECURED_LABELS_WITH_HTML allows basic html
 $label_security_check = empty($conf->global->MAIN_SECURITY_ALLOW_UNSECURED_LABELS_WITH_HTML) ? 'alphanohtml' : 'restricthtml';
 
-if ((!$user->rights->produit->creer) || (!$user->rights->service->creer)) {
+if ((!$user->rights->accounting->categories->write) || (!$user->rights->accounting->categories->write)) {
 	accessforbidden();
 }
 

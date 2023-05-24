@@ -18,9 +18,4 @@
 --
 -- ============================================================================
 
-create table llx_categorie_product_accounting
-(
-  fk_categorie  integer NOT NULL,
-  fk_product    integer NOT NULL,
-  import_key    varchar(14)
-)ENGINE=innodb;
+ALTER TABLE llx_product_accounting_categorie_link ADD UNIQUE INDEX uk_product_accounting_categorie_link_fk_categorie (fk_categorie, fk_product, entity);

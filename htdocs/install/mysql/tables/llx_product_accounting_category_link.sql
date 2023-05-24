@@ -20,6 +20,7 @@
 
 create table llx_product_accounting_categorie_link
 (
+  rowid			integer AUTO_INCREMENT PRIMARY KEY,
   fk_categorie  integer NOT NULL,
   fk_product    integer NOT NULL,
   entity        integer DEFAULT 1 NOT NULL,  	-- multi company id

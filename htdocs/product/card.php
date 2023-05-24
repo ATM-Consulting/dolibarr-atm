@@ -449,8 +449,87 @@ if (empty($reshook)) {
 				$categories = GETPOST('categories', 'array');
 				$object->setCategories($categories);
 
-				$categories_accounting = GETPOST('categories_accounting', 'array');
-				$object->setCategoriesAccounting($categories_accounting);
+				$categories_accounting = GETPOST('categories_accounting', 'int');
+
+				if (count($categories_accounting) > 0) {
+					$sql1 = "DELETE FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link";
+					$sql1 .= " WHERE fk_product = " . ((int) $object->id);
+
+					if (!$db->query($sql1)) {
+						$error++;
+						dol_print_error($db);
+					}
+
+					// dol_syslog("Cat_compta_delete::".$sql1, LOG_ERR);
+
+					$sql2 = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
+					$sql2 .= "fk_categorie";
+					$sql2 .= ", fk_product";
+					$sql2 .= ", entity";
+					$sql2 .= ") VALUES (";
+					$sql2 .= " " . ((int) $categories_accounting);
+					$sql2 .= "," . ((int) $object->id);
+					$sql2 .= "," . ((int) $conf->entity);
+					$sql2 .= ")";
+
+					// dol_syslog("Cat_compta_insert::".$sql2, LOG_ERR);
+
+					if (!$db->query($sql2)) {
+						$error++;
+						dol_print_error($db);
+					}
+
+					$sql3 = "SELECT c.rowid";
+					$sql3 .= ", c.label";
+					$sql3 .= ", c.accountancy_code_buy";
+					$sql3 .= ", c.accountancy_code_buy_intra";
+					$sql3 .= ", c.accountancy_code_buy_export";
+					$sql3 .= ", c.accountancy_code_sell";
+					$sql3 .= ", c.accountancy_code_sell_intra";
+					$sql3 .= ", c.accountancy_code_sell_export";
+					$sql3 .= " FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link as a, ".MAIN_DB_PREFIX."product_accounting_category as c";
+					$sql3 .= " WHERE a.fk_product=".((int) $object->id)." AND a.fk_categorie = c.rowid";
+					$sql3 .= " AND c.entity = " . $conf->entity;
+					$sql3 .= " ORDER BY c.label";
+
+					// dol_syslog("Cat_compta_read::".$sql3, LOG_ERR);
+
+					$resql = $db->query($sql3);
+					if ($resql) {
+						$objpdtcompta = $db->fetch_object($resql);
+					}
+
+					if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+						$sql4 = "UPDATE " . MAIN_DB_PREFIX . "product_perentity";
+						$sql4 .= " SET";
+						$sql4 .= " accountancy_code_buy = '". $db->escape($objpdtcompta->accountancy_code_buy)."'";
+						$sql4 .= ", accountancy_code_buy_intra = '". $db->escape($objpdtcompta->accountancy_code_buy_intra)."'";
+						$sql4 .= ", accountancy_code_buy_export = '". $db->escape($objpdtcompta->accountancy_code_buy_export)."'";
+						$sql4 .= ", accountancy_code_sell = '". $db->escape($objpdtcompta->accountancy_code_sell)."'";
+						$sql4 .= ", accountancy_code_sell_intra = '". $db->escape($objpdtcompta->accountancy_code_sell_intra)."'";
+						$sql4 .= ", accountancy_code_sell_export = '". $db->escape($objpdtcompta->accountancy_code_sell_export)."'";
+						$sql4 .= " WHERE fk_product = ".(((int) $object->id));
+						$sql4 .= " AND entity = " . ((int) $conf->entity);
+					} else {
+						$sql4 = "UPDATE " . MAIN_DB_PREFIX . "product";
+						$sql4 .= " SET";
+						$sql4 .= " accountancy_code_buy = '". $db->escape($objpdtcompta->accountancy_code_buy)."'";
+						$sql4 .= ", accountancy_code_buy_intra = '". $db->escape($objpdtcompta->accountancy_code_buy_intra)."'";
+						$sql4 .= ", accountancy_code_buy_export = '". $db->escape($objpdtcompta->accountancy_code_buy_export)."'";
+						$sql4 .= ", accountancy_code_sell = '". $db->escape($objpdtcompta->accountancy_code_sell)."'";
+						$sql4 .= ", accountancy_code_sell_intra = '". $db->escape($objpdtcompta->accountancy_code_sell_intra)."'";
+						$sql4 .= ", accountancy_code_sell_export = '". $db->escape($objpdtcompta->accountancy_code_sell_export)."'";
+						$sql4 .= " WHERE rowid = ".(((int) $object->id));
+						$sql4 .= " AND entity = " . ((int) $conf->entity);
+					}
+
+					// dol_syslog("Cat_compta_update::".$sql4, LOG_ERR);
+
+					if (!$db->query($sql4)) {
+						$error++;
+						dol_print_error($db);
+					}
+				}
 
 				if (!empty($backtopage)) {
 					$backtopage = preg_replace('/--IDFORBACKTOPAGE--/', $object->id, $backtopage); // New method to autoselect project after a New on another form object creation
@@ -611,29 +690,85 @@ if (empty($reshook)) {
 						$categories = GETPOST('categories', 'array');
 						$object->setCategories($categories);
 
-						$categories_accounting = GETPOST('categories_accounting', 'array');
-						//$object->setCategoriesAccounting($categories_accounting);
+						$categories_accounting = GETPOST('categories_accounting', 'int');
 
-						dol_syslog("Cat_compta::".$categories_accounting, LOG_ERR);
+						if (count($categories_accounting) > 0) {
+							$sql1 = "DELETE FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link";
+							$sql1 .= " WHERE fk_product = " . ((int) $object->id);
 
-						if (count($categories_accounting)) {
-							foreach ($categories_accounting as $val) {
-								$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
-								$sql .= "fk_categorie";
-								$sql .= ", fk_product";
-								$sql .= ", entity";
-								$sql .= ") VALUES (";
-								$sql .= " " . ((int) $val);
-								$sql .= "," . ((int) $object->id);
-								$sql .= "," . ((int) $conf->entity);
-								$sql .= ")";
+							if (!$db->query($sql1)) {
+								$error++;
+								dol_print_error($db);
+							}
 
-								dol_syslog("Cat_compta::".$sql, LOG_ERR);
+							// dol_syslog("Cat_compta_delete::".$sql1, LOG_ERR);
 
-								if (!$db->query($sql)) {
-									$error++;
-									dol_print_error($db);
-								}
+							$sql2 = "INSERT INTO ".MAIN_DB_PREFIX."product_accounting_categorie_link(";
+							$sql2 .= "fk_categorie";
+							$sql2 .= ", fk_product";
+							$sql2 .= ", entity";
+							$sql2 .= ") VALUES (";
+							$sql2 .= " " . ((int) $categories_accounting);
+							$sql2 .= "," . ((int) $object->id);
+							$sql2 .= "," . ((int) $conf->entity);
+							$sql2 .= ")";
+
+							// dol_syslog("Cat_compta_insert::".$sql2, LOG_ERR);
+
+							if (!$db->query($sql2)) {
+								$error++;
+								dol_print_error($db);
+							}
+
+							$sql3 = "SELECT c.rowid";
+							$sql3 .= ", c.label";
+							$sql3 .= ", c.accountancy_code_buy";
+							$sql3 .= ", c.accountancy_code_buy_intra";
+							$sql3 .= ", c.accountancy_code_buy_export";
+							$sql3 .= ", c.accountancy_code_sell";
+							$sql3 .= ", c.accountancy_code_sell_intra";
+							$sql3 .= ", c.accountancy_code_sell_export";
+							$sql3 .= " FROM ".MAIN_DB_PREFIX."product_accounting_categorie_link as a, ".MAIN_DB_PREFIX."product_accounting_category as c";
+							$sql3 .= " WHERE a.fk_product=".((int) $object->id)." AND a.fk_categorie = c.rowid";
+							$sql3 .= " AND c.entity = " . $conf->entity;
+							$sql3 .= " ORDER BY c.label";
+
+							// dol_syslog("Cat_compta_read::".$sql3, LOG_ERR);
+
+							$resql = $db->query($sql3);
+							if ($resql) {
+								$objpdtcompta = $db->fetch_object($resql);
+							}
+
+							if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
+								$sql4 = "UPDATE " . MAIN_DB_PREFIX . "product_perentity";
+								$sql4 .= " SET";
+								$sql4 .= " accountancy_code_buy = '". $db->escape($objpdtcompta->accountancy_code_buy)."'";
+								$sql4 .= ", accountancy_code_buy_intra = '". $db->escape($objpdtcompta->accountancy_code_buy_intra)."'";
+								$sql4 .= ", accountancy_code_buy_export = '". $db->escape($objpdtcompta->accountancy_code_buy_export)."'";
+								$sql4 .= ", accountancy_code_sell = '". $db->escape($objpdtcompta->accountancy_code_sell)."'";
+								$sql4 .= ", accountancy_code_sell_intra = '". $db->escape($objpdtcompta->accountancy_code_sell_intra)."'";
+								$sql4 .= ", accountancy_code_sell_export = '". $db->escape($objpdtcompta->accountancy_code_sell_export)."'";
+								$sql4 .= " WHERE fk_product = ".(((int) $object->id));
+								$sql4 .= " AND entity = " . ((int) $conf->entity);
+							} else {
+								$sql4 = "UPDATE " . MAIN_DB_PREFIX . "product";
+								$sql4 .= " SET";
+								$sql4 .= " accountancy_code_buy = '". $db->escape($objpdtcompta->accountancy_code_buy)."'";
+								$sql4 .= ", accountancy_code_buy_intra = '". $db->escape($objpdtcompta->accountancy_code_buy_intra)."'";
+								$sql4 .= ", accountancy_code_buy_export = '". $db->escape($objpdtcompta->accountancy_code_buy_export)."'";
+								$sql4 .= ", accountancy_code_sell = '". $db->escape($objpdtcompta->accountancy_code_sell)."'";
+								$sql4 .= ", accountancy_code_sell_intra = '". $db->escape($objpdtcompta->accountancy_code_sell_intra)."'";
+								$sql4 .= ", accountancy_code_sell_export = '". $db->escape($objpdtcompta->accountancy_code_sell_export)."'";
+								$sql4 .= " WHERE rowid = ".(((int) $object->id));
+								$sql4 .= " AND entity = " . ((int) $conf->entity);
+							}
+
+							// dol_syslog("Cat_compta_update::".$sql4, LOG_ERR);
+
+							if (!$db->query($sql4)) {
+								$error++;
+								dol_print_error($db);
 							}
 						}
 
@@ -1453,14 +1588,19 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 			}
 		}
 
+		print '</table>';
+
 		// Accountancy codes
-        //if ($usercanupdateaccountancyinformation) {
+        if ($usercanupdateaccountancyinformation) {
+			print '<hr>';
+
+			print '<table class="border centpercent">';
+
             print '<!-- accountancy codes -->' . "\n";
-            print '<table class="border centpercent">';
 
 			if ($conf->categorie->enabled) {
 				// Categories
-				print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
+				print '<tr><td class="titlefieldcreate">'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
 				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, '', 'parent', 64, 0, 1);
 				// print img_picto('', 'category').$form->multiselectarray('categories_accounting', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
 				print img_picto('', 'category').$form->selectarray("categories_accounting", $cate_arbo, GETPOST('categories_accounting', 'array'), 1, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, 0, '', 'minwidth50 maxwidth100', 1);
@@ -1594,7 +1734,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
                 }
             }
             print '</table>';
-        //}
+        }
 
 		print dol_get_fiche_end();
 
@@ -1973,11 +2113,13 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 
 			print '</table>';
 
-			print '<br>';
-
-			print '<table class="border centpercent">';
-
             if ($usercanupdateaccountancyinformation) {
+				print '<hr>';
+
+				print '<table class="border centpercent">';
+
+				print '<!-- accountancy codes -->' . "\n";
+
 				// Tags-Categories
 				if ($conf->categorie->enabled) {
 					print '<tr><td>'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
@@ -2075,13 +2217,15 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
                 }
                 print '</table>';
             } else {
-                print '<input name="accountancy_code_sell" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell . '">';
-                print '<input name="accountancy_code_sell_intra" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell_intra . '">';
-                print '<input name="accountancy_code_sell_export" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell_export . '">';
-                print '<input name="accountancy_code_buy" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy . '">';
-                print '<input name="accountancy_code_buy_intra" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy_intra . '">';
-                print '<input name="accountancy_code_buy_export" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy_export . '">';
-            }
+				if (empty($conf->global->PRODUCT_DISABLE_ACCOUNTING)) {
+					print '<input name="accountancy_code_sell" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell . '">';
+					print '<input name="accountancy_code_sell_intra" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell_intra . '">';
+					print '<input name="accountancy_code_sell_export" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_sell_export . '">';
+					print '<input name="accountancy_code_buy" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy . '">';
+					print '<input name="accountancy_code_buy_intra" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy_intra . '">';
+					print '<input name="accountancy_code_buy_export" type="hidden" class="maxwidth200" value="' . $object->accountancy_code_buy_export . '">';
+				}
+			}
 
 			print dol_get_fiche_end();
 
@@ -2208,7 +2352,7 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action)) {
 				// Categories product accounting
 				if ($conf->categorie->enabled) {
 					print '<tr><td class="valignmiddle">'.$langs->trans("Categories").' '.$langs->trans("Accountancy").'</td><td>';
-					print $form->showCategories($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING, 1);
+					print $form->showCategories($object->id, Categorie::TYPE_PRODUCT_ACCOUNTING, 1, 1);
 					print "</td></tr>";
 				}
 
