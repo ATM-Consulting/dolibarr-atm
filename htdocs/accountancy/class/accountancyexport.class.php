@@ -1392,7 +1392,7 @@ class AccountancyExport
 				// FEC:EcritureLib
 				// Clean label operation to prevent problem on export with tab separator & other character
 				$line->label_operation = str_replace(array("\t", "\n", "\r"), " ", $line->label_operation);
-				$line->label_operation = str_replace(array("..."), "", $line->label_operation);
+				$line->label_operation = preg_replace("/…/", "", $line->label_operation);
 				$tab[] = dol_string_unaccent($line->label_operation);
 
 				// FEC:Debit
@@ -1541,7 +1541,7 @@ class AccountancyExport
 				// FEC:EcritureLib
 				// Clean label operation to prevent problem on export with tab separator & other character
 				$line->label_operation = str_replace(array("\t", "\n", "\r"), " ", $line->label_operation);
-				$line->label_operation = str_replace(array("..."), "", $line->label_operation);
+				$line->label_operation = preg_replace("/…/", "", $line->label_operation);
 				$tab[] = dol_string_unaccent($line->label_operation);
 
 				// FEC:Debit
