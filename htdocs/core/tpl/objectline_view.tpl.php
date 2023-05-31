@@ -413,7 +413,8 @@ select cl.qty as want, cfd.qty as got
 from llx_commandedet cl
 	 inner join llx_element_element ee on ee.sourcetype = 'commandedet' and ee.fk_source = cl.rowid and ee.targettype = 'commande_fournisseurdet'
 	 inner join llx_commande_fournisseur_dispatch cfd on cfd.fk_commandefourndet = ee.fk_target
-where cl.rowid = {$line->id};
+     inner join llx_reception r on r.rowid = cfd.fk_reception
+where cl.rowid = {$line->id} and r.fk_statut in (1, 2);
 SQL;
 	} else {
 		$sql = <<<SQL
@@ -423,7 +424,8 @@ from llx_propaldet pd
 	inner join llx_commandedet cd on cd.fk_commande = ee1.fk_target and cd.fk_product = pd.fk_product
 	inner join llx_element_element ee2 on ee2.sourcetype = 'commandedet' and ee2.fk_source = cd.rowid and ee2.targettype = 'commande_fournisseurdet'
 	inner join llx_commande_fournisseur_dispatch cfd on cfd.fk_commandefourndet = ee2.fk_target
-where pd.rowid = {$line->id};
+	inner join llx_reception r on r.rowid = cfd.fk_reception
+where pd.rowid = {$line->id} and r.fk_statut in (1, 2);
 SQL;
 	}
 
