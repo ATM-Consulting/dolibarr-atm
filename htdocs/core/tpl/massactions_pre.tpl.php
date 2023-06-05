@@ -72,6 +72,43 @@ if ($massaction == 'preaffecttag') {
 	}
 }
 
+if ($massaction == 'preaffecttagaccounting') {
+	require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+	$categ = new Categorie($db);
+	$categ_types=array();
+	$categ_type_array=$categ->getMapList();
+	foreach ($categ_type_array as $categdef) {
+		if (isset($object) && $categdef['obj_table']==$object->table_element) {
+			if (!array_key_exists($categdef['code'], $categ_types)) {
+				$categ_types[$categdef['code']] = array('code'=>$categdef['code'],'label'=>$langs->trans($categdef['obj_class']));
+			}
+		}
+		if (isset($objecttmp) && $categdef['obj_table']==$objecttmp->table_element) {
+			if (!array_key_exists($categdef['code'], $categ_types)) {
+				$categ_types[$categdef['code']] = array('code'=>$categdef['code'],'label'=>$langs->trans($categdef['obj_class']));
+			}
+		}
+	}
+
+	$formquestion = array();
+	if (!empty($categ_types)) {
+		foreach ($categ_types as $categ_type) {
+			$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT_ACCOUNTING, null, 'parent', null, null, 1);
+			$formquestion[]=array('type' => 'other',
+				'name' => 'affecttag_'.$categ_type['code'].'_accounting',
+				'label' => $langs->trans("Tag").' '.$categ_type['label'].' '.$langs->trans("Accountancy"),
+				'value' => $form->selectarray('contcats_'.$categ_type['code'].'_accounting', $cate_arbo, GETPOST('contcats_'.$categ_type['code'].'_accounting', 'array'), null, null, null, null, '60%', '', '', '', 'right '));
+		}
+		$formquestion[]=array('type' => 'other',
+			'name' => 'affecttag_type',
+			'label' => '',
+			'value' => '<input type="hidden" name="affecttag_type"  id="affecttag_type" value="'.implode(",", array_keys($categ_types)).'"/>');
+		print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmAffectTag").' '.$langs->trans("Accountancy"), $langs->trans("ConfirmAffectTagQuestion", count($toselect)), "affecttag", $formquestion, 1, 0, 200, 500, 1);
+	} else {
+		setEventMessage('CategTypeNotFound');
+	}
+}
+
 if ($massaction == 'presend') {
 	$langs->load("mails");
 
