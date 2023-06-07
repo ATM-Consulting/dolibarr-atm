@@ -1213,7 +1213,7 @@ function show_actions_todo($conf, $langs, $db, $filterobj, $objcon = '', $noprin
  *      @param  string             $sortorder      Sort order
  *      @return	string|void				           Return html part or void if noprint is 1
  */
-function show_actions_done($conf, $langs, $db, $filterobj, $objcon = '', $noprint = 0, $actioncode = '', $donetodo = 'done', $filters = array(), $sortfield = 'a.datep,a.id', $sortorder = 'DESC')
+function show_actions_done($conf, $langs, $db, $filterobj, $objcon = '', $noprint = 0, $actioncode = '', $donetodo = 'done', $filters = array(), $sortfield = 'a.datep,a.id', $sortorder = 'DESC', $module = '')
 {
     global $user, $conf;
     global $form;
@@ -1285,6 +1285,9 @@ function show_actions_done($conf, $langs, $db, $filterobj, $objcon = '', $noprin
         elseif (is_object($filterobj) && get_class($filterobj) == 'Product') $sql.= ", ".MAIN_DB_PREFIX."product as o";
         elseif (is_object($filterobj) && get_class($filterobj) == 'Ticket') $sql.= ", ".MAIN_DB_PREFIX."ticket as o";
         elseif (is_object($filterobj) && get_class($filterobj) == 'BOM') $sql.= ", ".MAIN_DB_PREFIX."bom_bom as o";
+        else if(is_object($filterobj) && is_array($filterobj->fields) && is_array($filterobj->fields['rowid']) && (! empty($filterobj->fields['ref']) && is_array($filterobj->fields['ref']) || $filterobj->fields['label'] && is_array($filterobj->fields['label'])) && $filterobj->table_element && $filterobj->element) {
+            $sql .= ', '.MAIN_DB_PREFIX.$filterobj->table_element.' as o';
+        }
 
         $sql.= " WHERE a.entity IN (".getEntity('agenda').")";
         if ($force_filter_contact === false) {
@@ -1314,6 +1317,13 @@ function show_actions_done($conf, $langs, $db, $filterobj, $objcon = '', $noprin
             {
             	$sql.= " AND a.fk_element = o.rowid AND a.elementtype = 'bom'";
             	if ($filterobj->id) $sql.= " AND a.fk_element = ".$filterobj->id;
+            }
+            else if(is_object($filterobj) && is_array($filterobj->fields) && is_array($filterobj->fields['rowid']) && (! empty($filterobj->fields['ref']) && is_array($filterobj->fields['ref']) || $filterobj->fields['label'] && is_array($filterobj->fields['label'])) && $filterobj->table_element && $filterobj->element) {
+                // Generic case
+                $sql .= " AND a.fk_element = o.rowid AND a.elementtype = '".$db->escape($filterobj->element).($module ? "@".$module : "")."'";
+                if($filterobj->id) {
+                    $sql .= ' AND a.fk_element = '.((int) $filterobj->id);
+                }
             }
         }
 
