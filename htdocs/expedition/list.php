@@ -65,6 +65,7 @@ $search_state = GETPOST("search_state");
 $search_country = GETPOST("search_country", 'int');
 $search_type_thirdparty = GETPOST("search_type_thirdparty", 'int');
 $search_billed = GETPOST("search_billed", 'int');
+$search_fk_user_author = GETPOST('search_fk_user_author', 'int');
 $search_datedelivery_start = dol_mktime(0, 0, 0, GETPOST('search_datedelivery_startmonth', 'int'), GETPOST('search_datedelivery_startday', 'int'), GETPOST('search_datedelivery_startyear', 'int'));
 $search_datedelivery_end = dol_mktime(23, 59, 59, GETPOST('search_datedelivery_endmonth', 'int'), GETPOST('search_datedelivery_endday', 'int'), GETPOST('search_datedelivery_endyear', 'int'));
 $search_datereceipt_start = dol_mktime(0, 0, 0, GETPOST('search_datereceipt_startmonth', 'int'), GETPOST('search_datereceipt_startday', 'int'), GETPOST('search_datereceipt_startyear', 'int'));
@@ -139,7 +140,8 @@ $arrayfields = array(
 	'e.fk_statut'=>array('label'=>$langs->trans("Status"), 'checked'=>1, 'position'=>1000),
 	'l.ref'=>array('label'=>$langs->trans("DeliveryRef"), 'checked'=>1, 'enabled'=>(empty($conf->delivery_note->enabled) ? 0 : 1)),
 	'l.date_delivery'=>array('label'=>$langs->trans("DateReceived"), 'checked'=>1, 'enabled'=>(empty($conf->delivery_note->enabled) ? 0 : 1)),
-	'e.billed'=>array('label'=>$langs->trans("Billed"), 'checked'=>1, 'position'=>1000, 'enabled'=>(!empty($conf->global->WORKFLOW_BILL_ON_SHIPMENT)))
+	'e.billed'=>array('label'=>$langs->trans("Billed"), 'checked'=>1, 'position'=>1000, 'enabled'=>(!empty($conf->global->WORKFLOW_BILL_ON_SHIPMENT))),
+	'e.fk_user_author' => array('label' => $langs->trans("Author"), 'checked' => 0),
 );
 
 // Extra fields
@@ -228,7 +230,7 @@ $sql = 'SELECT';
 if ($sall || $search_product_category > 0 || $search_user > 0) {
 	$sql = 'SELECT DISTINCT';
 }
-$sql .= " e.rowid, e.ref, e.ref_customer, e.date_expedition as date_expedition, e.weight, e.weight_units, e.date_delivery as delivery_date, e.fk_statut, e.billed, e.tracking_number,";
+$sql .= " e.rowid, e.ref, e.ref_customer, e.date_expedition as date_expedition, e.weight, e.weight_units, e.date_delivery as delivery_date, e.fk_statut, e.billed, e.tracking_number, e.fk_user_author,";
 $sql .= " l.date_delivery as date_reception,";
 $sql .= " s.rowid as socid, s.nom as name, s.town, s.zip, s.fk_pays, s.client, s.code_client, ";
 $sql .= " typent.code as typent_code,";
@@ -308,6 +310,9 @@ if ($search_ref_customer != '') {
 }
 if ($search_billed != '' && $search_billed >= 0) {
 	$sql .= ' AND e.billed = '.((int) $search_billed);
+}
+if ($search_fk_user_author != '' && $search_fk_user_author >= 0) {
+	$sql .= ' AND e.fk_user_author = '.((int) $search_fk_user_author);
 }
 if ($search_town) {
 	$sql .= natural_search('s.town', $search_town);
@@ -684,6 +689,12 @@ if (!empty($arrayfields['e.tms']['checked'])) {
 	print '<td class="liste_titre">';
 	print '</td>';
 }
+// User author
+if (!empty($arrayfields['e.fk_user_author']['checked'])) {
+	print '<td class="liste_titre maxwidthonsmartphone center">';
+	print $form->select_dolusers($search_fk_user_author, 'search_fk_user_author', 1);
+	print '</td>';
+}
 // Status
 if (!empty($arrayfields['e.fk_statut']['checked'])) {
 	print '<td class="liste_titre maxwidthonsmartphone right">';
@@ -754,6 +765,9 @@ if (!empty($arrayfields['e.datec']['checked'])) {
 }
 if (!empty($arrayfields['e.tms']['checked'])) {
 	print_liste_field_titre($arrayfields['e.tms']['label'], $_SERVER["PHP_SELF"], "e.tms", "", $param, '', $sortfield, $sortorder, 'center nowrap ');
+}
+if (!empty($arrayfields['e.fk_user_author']['checked'])) {
+	print_liste_field_titre($arrayfields['e.fk_user_author']['label'], $_SERVER["PHP_SELF"], "e.fk_user_author", "", $param, '', $sortfield, $sortorder, 'center ');
 }
 if (!empty($arrayfields['e.fk_statut']['checked'])) {
 	print_liste_field_titre($arrayfields['e.fk_statut']['label'], $_SERVER["PHP_SELF"], "e.fk_statut", "", $param, '', $sortfield, $sortorder, 'right ');
@@ -929,6 +943,16 @@ while ($i < min($num, $limit)) {
 		print '<td class="center nowrap">';
 		print dol_print_date($db->jdate($obj->date_update), 'dayhour', 'tzuser');
 		print '</td>';
+		if (!$i) {
+			$totalarray['nbfield']++;
+		}
+	}
+	// User author
+	if (!empty($arrayfields['e.fk_user_author']['checked'])) {
+		$user = new User($db);
+
+		print '<td class="center">' . ($user->fetch($obj->fk_user_author) > 0 ? $user->getNomUrl(1) : '') . '</td>';
+
 		if (!$i) {
 			$totalarray['nbfield']++;
 		}
