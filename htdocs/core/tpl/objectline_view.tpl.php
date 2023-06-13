@@ -437,6 +437,23 @@ SQL;
 			$progress = (intval($row->got) / intval($row->want)) * 100;
 		}
 
+		// EXCLUDE SOME LINES
+
+		// When its free line or a service progress = 100%
+		if (($line->product_type == 1) || ($line->product_type == 0 && empty($line->fk_product))) {
+			$progress = 100;
+		}
+
+		// When product has no stock enabled.
+		if (!empty($line->fk_product)) {
+			$product = new Product($object->db);
+			$product->fetch($line->fk_product);
+
+			if ($product->not_managed_in_stock == 1) {
+				$progress = 100;
+			}
+		}
+
 		print '<td><div style="display: flex; align-items: center;">' . img_picto('', 'reception') . ' <progress value="' . $progress . '" max="100">' . $progress . '%</progress></div></td>';
 	}
 }
