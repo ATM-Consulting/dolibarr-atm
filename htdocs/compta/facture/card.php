@@ -319,15 +319,23 @@ if (empty($reshook))
 
 				if (($tmp_total_ht < 0 || $tmp_total_ht_devise < 0) && empty($conf->global->FACTURE_ENABLE_NEGATIVE_LINES))
 				{
-					$langs->load("errors");
 					if ($object->type == $object::TYPE_DEPOSIT) {
+						$langs->load("errors");
 						// Using negative lines on deposit lead to headach and blocking problems when you want to consume them.
 						setEventMessages($langs->trans("ErrorLinesCantBeNegativeOnDeposits"), null, 'errors');
+						$error++;
+						$action = '';
 					} else {
-						setEventMessages($langs->trans("ErrorLinesCantBeNegativeForOneVATRate"), null, 'errors');
+						$tmpvatratetoshow = explode('_', $vatrate);
+						$tmpvatratetoshow[0] = round($tmpvatratetoshow[0], 2);
+
+						if ($tmpvatratetoshow[0] != 0) {
+							$langs->load("errors");
+							setEventMessages($langs->trans("ErrorLinesCantBeNegativeForOneVATRate", $tmpvatratetoshow[0]), null, 'errors');
+							$error++;
+							$action = '';
+						}
 					}
-					$error++;
-					$action = '';
 				}
 			}
 		}
@@ -431,15 +439,36 @@ if (empty($reshook))
 		$object->fetch($id);
 		$object->cond_reglement_code = 0; // To clean property
 		$object->cond_reglement_id = 0; // To clean property
-		$result = $object->setPaymentTerms(GETPOST('cond_reglement_id', 'int'));
-		if ($result < 0) dol_print_error($db, $object->error);
 
-		$old_date_lim_reglement = $object->date_lim_reglement;
-		$new_date_lim_reglement = $object->calculate_date_lim_reglement();
-		if ($new_date_lim_reglement > $old_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
-		if ($object->date_lim_reglement < $object->date) $object->date_lim_reglement = $object->date;
-		$result = $object->update($user);
-		if ($result < 0) dol_print_error($db, $object->error);
+		$error = 0;
+
+		$db->begin();
+
+		if (! $error) {
+			$result = $object->setPaymentTerms(GETPOST('cond_reglement_id', 'int'));
+			if ($result < 0) {
+			    $error++;
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
+		}
+
+		if (! $error) {
+			$old_date_lim_reglement = $object->date_lim_reglement;
+			$new_date_lim_reglement = $object->calculate_date_lim_reglement();
+			if ($new_date_lim_reglement > $old_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
+			if ($object->date_lim_reglement < $object->date) $object->date_lim_reglement = $object->date;
+			$result = $object->update($user);
+			if ($result < 0) {
+			    $error++;
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
+		}
+
+		if ($error) {
+			$db->rollback();
+		} else {
+			$db->commit();
+		}
 	}
 
 	elseif ($action == 'setpaymentterm' && $usercancreate)
@@ -968,6 +997,7 @@ if (empty($reshook))
 	elseif ($action == 'add' && $usercancreate)
 	{
 		if ($socid > 0) $object->socid = GETPOST('socid', 'int');
+		$selectedLines = GETPOST('toselect', 'array');
 
 		$db->begin();
 
@@ -1092,6 +1122,11 @@ if (empty($reshook))
 				}
 				$id = $object->create($user);
 
+				// NOTE: Pb with situation invoice
+				// NOTE: fields total on situation invoice are stored as cumulative values on total of lines (bad) but delta on invoice total
+				// NOTE: fields total on credit note are stored as delta both on total of lines and on invoice total (good)
+				// NOTE: fields situation_percent on situation invoice are stored as cumulative values on lines (bad)
+				// NOTE: fields situation_percent on credit note are stored as delta on lines (good)
 				if (GETPOST('invoiceAvoirWithLines', 'int') == 1 && $id > 0)
 				{
 					if (!empty($facture_source->lines))
@@ -1112,17 +1147,17 @@ if (empty($reshook))
 							}
 
 
-
-
 							if ($facture_source->type == Facture::TYPE_SITUATION)
 							{
 							    $source_fk_prev_id = $line->fk_prev_id; // temporary storing situation invoice fk_prev_id
-							    $line->fk_prev_id  = $line->id; // Credit note line need to be linked to the situation invoice it is create from
+							    $line->fk_prev_id  = $line->id; // The new line of the new credit note we are creating must be linked to the situation invoice line it is created from
 
 							    if (!empty($facture_source->tab_previous_situation_invoice))
 							    {
-							        // search the last invoice in cycle
-							        $lineIndex = count($facture_source->tab_previous_situation_invoice) - 1;
+							        // search the last standard invoice in cycle and the possible credit note between this last and facture_source
+							    	// TODO Move this out of loop of $facture_source->lines
+							    	$tab_jumped_credit_notes = array();
+							    	$lineIndex = count($facture_source->tab_previous_situation_invoice) - 1;
 							        $searchPreviousInvoice = true;
 							        while ($searchPreviousInvoice)
 							        {
@@ -1133,10 +1168,12 @@ if (empty($reshook))
 							            }
 							            else
 							            {
+							            	if ($facture_source->tab_previous_situation_invoice[$lineIndex]->type == Facture::TYPE_CREDIT_NOTE) {
+							            		$tab_jumped_credit_notes[$lineIndex] = $facture_source->tab_previous_situation_invoice[$lineIndex]->id;
+							            	}
 							                $lineIndex--; // go to previous invoice in cycle
 							            }
 							        }
-
 
 							        $maxPrevSituationPercent = 0;
 							        foreach ($facture_source->tab_previous_situation_invoice[$lineIndex]->lines as $prevLine)
@@ -1161,6 +1198,36 @@ if (empty($reshook))
 
 							        // prorata
 							        $line->situation_percent = $maxPrevSituationPercent - $line->situation_percent;
+
+							        //print 'New line based on invoice id '.$facture_source->tab_previous_situation_invoice[$lineIndex]->id.' fk_prev_id='.$source_fk_prev_id.' will be fk_prev_id='.$line->fk_prev_id.' '.$line->total_ht.' '.$line->situation_percent.'<br>';
+
+							        // If there is some credit note between last situation invoice and invoice used for credit note generation (note: credit notes are stored as delta)
+							        $maxPrevSituationPercent = 0;
+							        foreach ($tab_jumped_credit_notes as $index => $creditnoteid) {
+							        	foreach ($facture_source->tab_previous_situation_invoice[$index]->lines as $prevLine)
+							        	{
+							        		if ($prevLine->fk_prev_id == $source_fk_prev_id)
+							        		{
+							        			$maxPrevSituationPercent = $prevLine->situation_percent;
+
+							        			$line->total_ht  -= $prevLine->total_ht;
+							        			$line->total_tva -= $prevLine->total_tva;
+							        			$line->total_ttc -= $prevLine->total_ttc;
+							        			$line->total_localtax1 -= $prevLine->total_localtax1;
+							        			$line->total_localtax2 -= $prevLine->total_localtax2;
+
+							        			$line->multicurrency_subprice  -= $prevLine->multicurrency_subprice;
+							        			$line->multicurrency_total_ht  -= $prevLine->multicurrency_total_ht;
+							        			$line->multicurrency_total_tva -= $prevLine->multicurrency_total_tva;
+							        			$line->multicurrency_total_ttc -= $prevLine->multicurrency_total_ttc;
+							        		}
+							        	}
+							        }
+
+							        // prorata
+							        $line->situation_percent += $maxPrevSituationPercent;
+
+							        //print 'New line based on invoice id '.$facture_source->tab_previous_situation_invoice[$lineIndex]->id.' fk_prev_id='.$source_fk_prev_id.' will be fk_prev_id='.$line->fk_prev_id.' '.$line->total_ht.' '.$line->situation_percent.'<br>';
 							    }
 							}
 
@@ -1208,7 +1275,7 @@ if (empty($reshook))
 				}
 
 				// Add link between credit note and origin
-				if (!empty($object->fk_facture_source)) {
+				if (!empty($object->fk_facture_source) && $id > 0) {
 					$facture_source->fetch($object->fk_facture_source);
 					$facture_source->fetchObjectLinked();
 
@@ -1397,7 +1464,7 @@ if (empty($reshook))
 						if ($_POST['type'] == Facture::TYPE_DEPOSIT)
 						{
 							$typeamount = GETPOST('typedeposit', 'alpha');
-							$valuedeposit = GETPOST('valuedeposit', 'int');
+							$valuedeposit = price2num(GETPOST('valuedeposit', 'alpha'), 'MU');
 
 							$amountdeposit = array();
 							if (!empty($conf->global->MAIN_DEPOSIT_MULTI_TVA))
@@ -1520,8 +1587,11 @@ if (empty($reshook))
 
 								$fk_parent_line = 0;
 								$num = count($lines);
+
 								for ($i = 0; $i < $num; $i++)
 								{
+									if (!in_array($lines[$i]->id, $selectedLines)) continue; // Skip unselected lines
+
 									// Don't add lines with qty 0 when coming from a shipment including all order lines
 									if ($srcobject->element == 'shipping' && $conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS && $lines[$i]->qty == 0) continue;
 									// Don't add closed lines when coming from a contract (Set constant to '0,5' to exclude also inactive lines)
@@ -2686,6 +2756,7 @@ if (empty($reshook))
  * View
  */
 
+
 $form = new Form($db);
 $formother = new FormOther($db);
 $formfile = new FormFile($db);
@@ -3581,8 +3652,6 @@ if ($action == 'create')
 	print '<input type="button" class="button" value="'.$langs->trans("Cancel").'" onClick="javascript:history.go(-1)">';
 	print '</div>';
 
-	print "</form>\n";
-
 	// Show origin lines
 	if (!empty($origin) && !empty($originid) && is_object($objectsrc)) {
 		print '<br>';
@@ -3592,15 +3661,24 @@ if ($action == 'create')
 
 		print '<table class="noborder centpercent">';
 
-		$objectsrc->printOriginLinesList();
+		$objectsrc->printOriginLinesList('', $selectedLines);
 
 		print '</table>';
 	}
 
-	print '<br>';
+	print "</form>\n";
 }
 elseif ($id > 0 || !empty($ref))
 {
+	if (empty($object->id)) {
+		llxHeader();
+		$langs->load('errors');
+		echo '<div class="error">'.$langs->trans("ErrorRecordNotFound");
+		echo ' <a href="javascript:history.go(-1)">'.$langs->trans('GoBack').'</div>';
+		llxFooter();
+		exit;
+	}
+
 	/*
 	 * Show object in view mode
 	 */
@@ -5192,7 +5270,7 @@ elseif ($id > 0 || !empty($ref))
 			}
 
 			// Create a credit note
-			if (($object->type == Facture::TYPE_STANDARD || $object->type == Facture::TYPE_DEPOSIT || $object->type == Facture::TYPE_PROFORMA) && $object->statut > 0 && $usercancreate)
+			if (($object->type == Facture::TYPE_STANDARD || ($object->type == Facture::TYPE_DEPOSIT && empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS) ) || $object->type == Facture::TYPE_PROFORMA) && $object->statut > 0 && $usercancreate)
 			{
 				if (!$objectidnext)
 				{

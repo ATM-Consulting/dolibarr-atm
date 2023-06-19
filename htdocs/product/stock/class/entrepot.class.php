@@ -104,6 +104,7 @@ class Entrepot extends CommonObject
 	 */
 	public $fields=array(
 		'rowid' =>array('type'=>'integer', 'label'=>'ID', 'enabled'=>1, 'visible'=>0, 'notnull'=>1, 'position'=>10),
+		'entity' =>array('type'=>'integer', 'label'=>'Entity', 'enabled'=>1, 'visible'=>0, 'default'=>1, 'notnull'=>1, 'index'=>1, 'position'=>15),
 		'ref' =>array('type'=>'varchar(255)', 'label'=>'Ref', 'enabled'=>1, 'visible'=>1, 'showoncombobox'=>1, 'position'=>25),
 		'entity' =>array('type'=>'integer', 'label'=>'Entity', 'enabled'=>1, 'visible'=>0, 'notnull'=>1, 'position'=>30),
 		'description' =>array('type'=>'text', 'label'=>'Description', 'enabled'=>1, 'visible'=>-2, 'position'=>35),
@@ -441,6 +442,7 @@ class Entrepot extends CommonObject
 		}
 
 		$sql  = "SELECT rowid, fk_parent, ref as label, description, statut, lieu, address, zip, town, fk_pays as country_id";
+		$sql .= " , entity";
 		$sql .= " FROM ".MAIN_DB_PREFIX."entrepot";
 		if ($id)
 		{
@@ -460,6 +462,7 @@ class Entrepot extends CommonObject
 				$obj=$this->db->fetch_object($result);
 
 				$this->id             = $obj->rowid;
+				$this->entity         = $obj->entity;
 				$this->fk_parent      = $obj->fk_parent;
 				$this->ref            = $obj->label;
 				$this->label          = $obj->label;
@@ -692,7 +695,7 @@ class Entrepot extends CommonObject
 	 */
 	public function getNomUrl($withpicto = 0, $option = '', $showfullpath = 0, $notooltip = 0)
 	{
-		global $conf, $langs;
+		global $conf, $langs, $hookmanager;
 		$langs->load("stocks");
 
         if (! empty($conf->dol_no_mouse_hover)) $notooltip=1;   // Force disable tooltips
@@ -730,6 +733,16 @@ class Entrepot extends CommonObject
         if ($withpicto) $result.=img_object(($notooltip?'':$label), ($this->picto?$this->picto:'generic'), ($notooltip?(($withpicto != 2) ? 'class="paddingright"' : ''):'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip?0:1);
         if ($withpicto != 2) $result.= ($showfullpath ? $this->get_full_arbo() : (empty($this->label)?$this->libelle:$this->label));
         $result .= $linkend;
+
+        global $action;
+        $hookmanager->initHooks(array('warehousedao'));
+        $parameters = array('id'=>$this->id, 'getnomurl'=>$result, 'withpicto' => $withpicto, 'option' => $option, 'showfullpath' => $showfullpath, 'notooltip'=> $notooltip);
+        $reshook = $hookmanager->executeHooks('getNomUrl', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+        if ($reshook > 0) {
+            $result = $hookmanager->resPrint;
+        } else {
+            $result .= $hookmanager->resPrint;
+        }
 
 		return $result;
 	}

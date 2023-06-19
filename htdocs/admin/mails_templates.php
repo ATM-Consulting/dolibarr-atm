@@ -168,6 +168,7 @@ if ($conf->societe->enabled)           $elementList['thirdparty'] = $langs->tran
 if ($conf->adherent->enabled)          $elementList['member'] = $langs->trans('MailToMember');
 if ($conf->contrat->enabled)           $elementList['contract'] = $langs->trans('MailToSendContract');
 if ($conf->projet->enabled)            $elementList['project'] = $langs->trans('MailToProject');
+if ($conf->ticket->enabled)            $elementList['ticket_send'] = $langs->trans('MailToTicket');
 $elementList['user'] = $langs->trans('MailToUser');
 
 $parameters = array('elementList'=>$elementList);
@@ -256,7 +257,7 @@ if (empty($reshook))
             $sql = "INSERT INTO ".$tabname[$id]." (";
             // List of fields
             $sql .= $tabfieldinsert[$id];
-            $sql .= ",active)";
+            $sql .= ",active,enabled)";
             $sql .= " VALUES(";
 
             // List of values
@@ -288,7 +289,7 @@ if (empty($reshook))
 
                 $i++;
             }
-            $sql .= ", 1)";
+            $sql .= ", 1, 1)";
 
             dol_syslog("actionadd", LOG_DEBUG);
             $result = $db->query($sql);

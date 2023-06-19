@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2017	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@inodbox.com>
  * Copyright (C) 2007		Franky Van Liedekerke	<franky.van.liedekerke@telenet.be>
- * Copyright (C) 2010-2014	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2010-2020	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2010-2018	Philippe Grand			<philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2015  Marcos García           <marcosgdf@gmail.com>
  * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
@@ -330,9 +330,11 @@ class CommandeFournisseur extends CommonOrder
         $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as p ON c.fk_mode_reglement = p.id";
         $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_input_method as cm ON cm.rowid = c.fk_input_method";
         $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_incoterms as i ON c.fk_incoterms = i.rowid';
-        $sql .= " WHERE c.entity = ".$conf->entity;
+
+        if (empty($id)) $sql .= " WHERE c.entity IN (".getEntity('supplier_order').")";
+        else $sql .= " WHERE c.rowid=".$id;
+
         if ($ref) $sql .= " AND c.ref='".$this->db->escape($ref)."'";
-        else $sql .= " AND c.rowid=".$id;
 
         dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql = $this->db->query($sql);
@@ -892,6 +894,7 @@ class CommandeFournisseur extends CommonOrder
 
         $sql = 'UPDATE '.MAIN_DB_PREFIX.'commande_fournisseur SET billed = 1';
         $sql .= ' WHERE rowid = '.$this->id.' AND fk_statut > '.self::STATUS_DRAFT;
+
         if ($this->db->query($sql))
         {
         	if (!$error)
@@ -1270,11 +1273,15 @@ class CommandeFournisseur extends CommonOrder
 		$error = 0;
         $now = dol_now();
 
+		// $date_commande is deprecated
+		$date = ($this->date_commande ? $this->date_commande : $this->date); // in case of date is set
+		if(empty($date)) $date = $now;
+
         // Clean parameters
         if (empty($this->source)) $this->source = 0;
 
 		// Multicurrency (test on $this->multicurrency_tx because we should take the default rate only if not using origin rate)
-		if (!empty($this->multicurrency_code) && empty($this->multicurrency_tx)) list($this->fk_multicurrency, $this->multicurrency_tx) = MultiCurrency::getIdAndTxFromCode($this->db, $this->multicurrency_code);
+		if (!empty($this->multicurrency_code) && empty($this->multicurrency_tx)) list($this->fk_multicurrency, $this->multicurrency_tx) = MultiCurrency::getIdAndTxFromCode($this->db, $this->multicurrency_code, $date);
 		else $this->fk_multicurrency = MultiCurrency::getIdFromCode($this->db, $this->multicurrency_code);
 		if (empty($this->fk_multicurrency))
 		{
@@ -1881,7 +1888,6 @@ class CommandeFournisseur extends CommonOrder
 					if ($result < 0)
                     {
                         $error++;
-                        return -1;
                     }
 					// End call triggers
                 }
@@ -1989,6 +1995,7 @@ class CommandeFournisseur extends CommonOrder
             {
             	$this->errors[] = 'ErrorWhenRunningTrigger';
             	dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
+            	$this->db->rollback();
             	return -1;
             }
             // End call triggers
@@ -2055,6 +2062,9 @@ class CommandeFournisseur extends CommonOrder
 
         if (!$error)
         {
+        	// Delete record into ECM index (Note that delete is also done when deleting files with the dol_delete_dir_recursive
+        	$this->deleteEcmFiles();
+
         	// We remove directory
         	$ref = dol_sanitizeFileName($this->ref);
         	if ($conf->fournisseur->commande->dir_output)
@@ -3163,6 +3173,7 @@ class CommandeFournisseur extends CommonOrder
     		{
     			if (is_array($supplierorderdispatch->lines) && count($supplierorderdispatch->lines) > 0)
     			{
+					require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
     				$date_liv = dol_now();
 
     				// Build array with quantity deliverd by product
@@ -3170,7 +3181,11 @@ class CommandeFournisseur extends CommonOrder
     					$qtydelivered[$line->fk_product] += $line->qty;
     				}
     				foreach ($this->lines as $line) {
-    					$qtywished[$line->fk_product] += $line->qty;
+						if ($line->product_type == Product::TYPE_PRODUCT ||
+							($line->product_type == Product::TYPE_SERVICE && !empty($conf->global->STOCK_SUPPORTS_SERVICES))
+						) {
+							$qtywished[$line->fk_product] += $line->qty;
+						}
     				}
     				//Compare array
     				$diff_array = array_diff_assoc($qtydelivered, $qtywished); // Warning: $diff_array is done only on common keys.

@@ -4,7 +4,7 @@
  * Copyright (C) 2015 		Alexandre Spangaro  	<aspangaro@open-dsi.fr>
  * Copyright (C) 2018       Nicolas ZABOURI         <info@inovea-conseil.com>
  * Copyright (c) 2018       Frédéric France         <frederic.france@netlogic.fr>
- * Copyright (C) 2016-2018 	Ferran Marcet       	<fmarcet@2byte.es>
+ * Copyright (C) 2016-2020 	Ferran Marcet       	<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -600,6 +600,8 @@ class ExpenseReport extends CommonObject
                     $this->user_valid_infos = dolGetFirstLastname($user_valid->firstname, $user_valid->lastname);
                 }
 
+				$this->fetch_optionals();
+
                 $this->lines = array();
 
                 $result = $this->fetch_lines();
@@ -1104,30 +1106,47 @@ class ExpenseReport extends CommonObject
 
         if (!$rowid) $rowid = $this->id;
 
+        $error = 0;
+
+        // Delete lines
         $sql = 'DELETE FROM '.MAIN_DB_PREFIX.$this->table_element_line.' WHERE '.$this->fk_element.' = '.$rowid;
-        if ($this->db->query($sql))
+        if (!$error && !$this->db->query($sql))
         {
+        	$this->error = $this->db->error()." sql=".$sql;
+        	dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
+        	$error++;
+        }
+
+        // Delete llx_ecm_files
+        if (!$error) {
+        	$sql = 'DELETE FROM '.MAIN_DB_PREFIX."ecm_files WHERE src_object_type = '".$this->db->escape($this->table_element.(empty($this->module) ? '' : '@'.$this->module))."' AND src_object_id = ".$this->id;
+        	$resql = $this->db->query($sql);
+        	if (!$resql)
+        	{
+        		$this->error = $this->db->lasterror();
+        		$this->errors[] = $this->error;
+        		$error++;
+        	}
+        }
+
+        // Delete main record
+        if (!$error) {
             $sql = 'DELETE FROM '.MAIN_DB_PREFIX.$this->table_element.' WHERE rowid = '.$rowid;
             $resql = $this->db->query($sql);
-            if ($resql)
-            {
-                $this->db->commit();
-                return 1;
-            }
-            else
+            if (!$resql)
             {
                 $this->error = $this->db->error()." sql=".$sql;
                 dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
-                $this->db->rollback();
-                return -6;
             }
         }
-        else
-        {
-            $this->error = $this->db->error()." sql=".$sql;
-            dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
-            $this->db->rollback();
-            return -4;
+
+        // Commit or rollback
+        if ($error) {
+        	$this->db->rollback();
+        	return -1;
+        } else {
+        	$this->db->commit();
+        	return 1;
         }
     }
 
@@ -2217,7 +2236,7 @@ class ExpenseReport extends CommonObject
         $sql = "SELECT DISTINCT ur.fk_user";
         $sql .= " FROM ".MAIN_DB_PREFIX."user_rights as ur, ".MAIN_DB_PREFIX."rights_def as rd";
         $sql .= " WHERE ur.fk_id = rd.id and rd.module = 'expensereport' AND rd.perms = 'approve'"; // Permission 'Approve';
-        $sql .= "UNION";
+        $sql .= " UNION";
         $sql .= " SELECT DISTINCT ugu.fk_user";
         $sql .= " FROM ".MAIN_DB_PREFIX."usergroup_user as ugu, ".MAIN_DB_PREFIX."usergroup_rights as ur, ".MAIN_DB_PREFIX."rights_def as rd";
         $sql .= " WHERE ugu.fk_usergroup = ur.fk_usergroup AND ur.fk_id = rd.id and rd.module = 'expensereport' AND rd.perms = 'approve'"; // Permission 'Approve';
@@ -2318,7 +2337,7 @@ class ExpenseReport extends CommonObject
     public function load_state_board()
     {
         // phpcs:enable
-        global $conf;
+        global $conf, $user;
 
         $this->nb = array();
 
@@ -2326,6 +2345,12 @@ class ExpenseReport extends CommonObject
         $sql .= " FROM ".MAIN_DB_PREFIX."expensereport as ex";
         $sql .= " WHERE ex.fk_statut > 0";
         $sql .= " AND ex.entity IN (".getEntity('expensereport').")";
+		if (empty($user->rights->expensereport->readall))
+		{
+			$userchildids = $user->getAllChildIds(1);
+			$sql .= " AND (ex.fk_user_author IN (".join(',', $userchildids).")";
+			$sql .= " OR ex.fk_user_validator IN (".join(',', $userchildids)."))";
+		}
 
         $resql = $this->db->query($sql);
         if ($resql) {
@@ -2360,15 +2385,17 @@ class ExpenseReport extends CommonObject
 
         $now = dol_now();
 
-        $userchildids = $user->getAllChildIds(1);
-
         $sql = "SELECT ex.rowid, ex.date_valid";
         $sql .= " FROM ".MAIN_DB_PREFIX."expensereport as ex";
         if ($option == 'toapprove') $sql .= " WHERE ex.fk_statut = 2";
         else $sql .= " WHERE ex.fk_statut = 5";
         $sql .= " AND ex.entity IN (".getEntity('expensereport').")";
-        $sql .= " AND (ex.fk_user_author IN (".join(',', $userchildids).")";
-        $sql .= " OR ex.fk_user_validator IN (".join(',', $userchildids)."))";
+        if (empty($user->rights->expensereport->readall))
+        {
+			$userchildids = $user->getAllChildIds(1);
+			$sql .= " AND (ex.fk_user_author IN (".join(',', $userchildids).")";
+			$sql .= " OR ex.fk_user_validator IN (".join(',', $userchildids)."))";
+		}
 
         $resql = $this->db->query($sql);
         if ($resql)

@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@inodbox.com>
- * Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2020 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012-2013 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2011-2019 Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2015 Marcos García        <marcosgdf@gmail.com>
@@ -438,10 +438,14 @@ abstract class CommonObject
 
 	public $next_prev_filter;
 
-
+	/**
+	 * @var array    List of child tables. To know object to delete on cascade.
+	 *               if name like with @ClassName:FilePathClass:ParentFkFieldName' it will
+	 *               call method deleteByParentField(parentId,ParentFkFieldName) to fetch and delete child object
+	 */
+	protected $childtablesoncascade = array();
 
 	// No constructor as it is an abstract class
-
 	/**
 	 * Check an object id/ref exists
 	 * If you don't need/want to instantiate object and just need to know if object exists, use this method instead of fetch
@@ -3045,7 +3049,12 @@ abstract class CommonObject
 					//print 'Line '.$i.' rowid='.$obj->rowid.' vat_rate='.$obj->vatrate.' total_ht='.$obj->total_ht.' total_tva='.$obj->total_tva.' total_ttc='.$obj->total_ttc.' total_ht_by_vats='.$total_ht_by_vats[$obj->vatrate].' total_tva_by_vats='.$total_tva_by_vats[$obj->vatrate].' (new calculation = '.$tmpvat.') total_ttc_by_vats='.$total_ttc_by_vats[$obj->vatrate].($diff?" => DIFF":"")."<br>\n";
 					if ($diff)
 					{
-						if (abs($diff) > 0.1) { dol_syslog('A rounding difference was detected into TOTAL but is too high to be corrected', LOG_WARNING); exit; }
+						if (abs($diff) > 0.1) {
+							$errmsg = 'A rounding difference was detected into TOTAL but is too high to be corrected. Some data in your line may be corrupted. Try to edit each line manually.';
+							dol_syslog($errmsg, LOG_WARNING);
+							dol_print_error('', $errmsg);
+							exit;
+						}
 						$sqlfix = "UPDATE ".MAIN_DB_PREFIX.$this->table_element_line." SET ".$fieldtva." = ".($obj->total_tva - $diff).", total_ttc = ".($obj->total_ttc - $diff)." WHERE rowid = ".$obj->rowid;
 						dol_syslog('We found a difference of '.$diff.' for line rowid = '.$obj->rowid.". We fix the total_vat and total_ttc of line by running sqlfix = ".$sqlfix);
 								$resqlfix = $this->db->query($sqlfix);
@@ -5229,6 +5238,7 @@ abstract class CommonObject
 			   		$mandatorypb = false;
 			   		if ($attributeType == 'link' && $this->array_options[$key] == '-1') $mandatorypb = true;
 			   		if ($this->array_options[$key] === '') $mandatorypb = true;
+					if ($attributeType == 'sellist' && $this->array_options[$key] == '0') $mandatorypb = true;
 			   		if ($mandatorypb)
 			   		{
 			   		    dol_syslog("Mandatory extra field ".$key." is empty");
@@ -6839,6 +6849,9 @@ abstract class CommonObject
 								var parent = $(this).find("option[parent]:first").attr("parent");
 								var infos = parent.split(":");
 								var parent_list = infos[0];
+								showOptions(child_list, parent_list);
+
+								/* Activate the handler to call showOptions on each future change */
 								$("select[name=\""+parent_list+"\"]").change(function() {
 									showOptions(child_list, parent_list);
 								});
@@ -7534,18 +7547,17 @@ abstract class CommonObject
 		$now = dol_now();
 
 		$fieldvalues = $this->setSaveQuery();
-
 		if (array_key_exists('date_creation', $fieldvalues) && empty($fieldvalues['date_creation'])) $fieldvalues['date_creation'] = $this->db->idate($now);
 		if (array_key_exists('fk_user_creat', $fieldvalues) && !($fieldvalues['fk_user_creat'] > 0)) $fieldvalues['fk_user_creat'] = $user->id;
 		unset($fieldvalues['rowid']); // The field 'rowid' is reserved field name for autoincrement field so we don't need it into insert.
 		if (array_key_exists('ref', $fieldvalues)) $fieldvalues['ref'] = dol_string_nospecial($fieldvalues['ref']); // If field is a ref, we sanitize data
 
 		$keys = array();
-		$values = array();
+		$values = array();	// Array to store string forged for SQL syntax
 		foreach ($fieldvalues as $k => $v) {
 			$keys[$k] = $k;
 			$value = $this->fields[$k];
-			$values[$k] = $this->quote($v, $value);
+			$values[$k] = $this->quote($v, $value);			// May return string 'NULL' if $value is null
 		}
 
 		// Clean and check mandatory
@@ -7555,8 +7567,7 @@ abstract class CommonObject
 			if (preg_match('/^integer:/i', $this->fields[$key]['type']) && $values[$key] == '-1') $values[$key] = '';
 			if (!empty($this->fields[$key]['foreignkey']) && $values[$key] == '-1') $values[$key] = '';
 
-			//var_dump($key.'-'.$values[$key].'-'.($this->fields[$key]['notnull'] == 1));
-			if (isset($this->fields[$key]['notnull']) && $this->fields[$key]['notnull'] == 1 && !isset($values[$key]) && is_null($this->fields[$key]['default']))
+			if (isset($this->fields[$key]['notnull']) && $this->fields[$key]['notnull'] == 1 && (!isset($values[$key]) || $values[$key] === 'NULL') && is_null($this->fields[$key]['default']))
 			{
 				$error++;
 				$this->errors[] = $langs->trans("ErrorFieldRequired", $this->fields[$key]['label']);
@@ -7888,18 +7899,43 @@ abstract class CommonObject
 		}
 
 		// Delete cascade first
-		if (!empty($this->childtablesoncascade)) {
+		if (is_array($this->childtablesoncascade) && !empty($this->childtablesoncascade)) {
             foreach ($this->childtablesoncascade as $table)
             {
-                $sql = 'DELETE FROM '.MAIN_DB_PREFIX.$table.' WHERE '.$this->fk_element.' = '.$this->id;
-                $resql = $this->db->query($sql);
-                if (!$resql)
-                {
-                    $this->error = $this->db->lasterror();
-                    $this->errors[] = $this->error;
-                    $this->db->rollback();
-                    return -1;
-                }
+	            $deleteFromObject = explode(':', $table);
+	            if (count($deleteFromObject)>=2) {
+		            $className = str_replace('@', '', $deleteFromObject[0]);
+		            $filePath = $deleteFromObject[1];
+		            $columnName = $deleteFromObject[2];
+		            if (dol_include_once($filePath)) {
+			            $childObject = new $className($this->db);
+			            if (method_exists($childObject, 'deleteByParentField')) {
+				            $result = $childObject->deleteByParentField($this->id, $columnName);
+				            if ($result < 0) {
+								$error++;
+					            $this->errors[] = $childObject->error;
+					            break;
+				            }
+			            } else {
+							$error++;
+							$this->errors[] = "You defined a cascade delete on an object $childObject but there is no method deleteByParentField for it";
+							break;
+						}
+		            } else {
+			            $error++;
+						$this->errors[] = 'Cannot include child class file ' .$filePath;
+			            break;
+		            }
+	            } else {
+		            $sql = 'DELETE FROM ' . MAIN_DB_PREFIX . $table . ' WHERE ' . $this->fk_element . ' = ' . $this->id;
+		            $resql = $this->db->query($sql);
+		            if (!$resql) {
+						$error++;
+			            $this->error = $this->db->lasterror();
+			            $this->errors[] = $this->error;
+						break;
+		            }
+	            }
             }
         }
 
@@ -7909,6 +7945,18 @@ abstract class CommonObject
 				$result = $this->call_trigger(strtoupper(get_class($this)).'_DELETE', $user);
 				if ($result < 0) { $error++; } // Do also here what you must do to rollback action if trigger fail
 				// End call triggers
+			}
+		}
+
+		// Delete llx_ecm_files
+		if (!$error) {
+			$sql = 'DELETE FROM '.MAIN_DB_PREFIX."ecm_files WHERE src_object_type = '".$this->db->escape($this->table_element.(empty($this->module) ? '' : '@'.$this->module))."' AND src_object_id = ".$this->id;
+			$resql = $this->db->query($sql);
+			if (!$resql)
+			{
+				$this->error = $this->db->lasterror();
+				$this->errors[] = $this->error;
+				$error++;
 			}
 		}
 
@@ -7944,6 +7992,66 @@ abstract class CommonObject
 			$this->db->commit();
 			return 1;
 		}
+	}
+
+	/**
+	 * Delete all child object from a parent ID
+	 *
+	 * @param		int		$parentId      Parent Id
+	 * @param		string	$parentField   Name of Foreign key parent column
+	 * @return		int						<0 if KO, >0 if OK
+	 * @throws Exception
+	 */
+	public function deleteByParentField($parentId = 0, $parentField = '')
+	{
+		global $user;
+
+		$error = 0;
+		$deleted = 0;
+
+		if (!empty($parentId) && !empty($parentField)) {
+			$this->db->begin();
+
+			$sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $this->table_element;
+			$sql .= ' WHERE '.$parentField.' = ' . (int) $parentId;
+
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				$this->errors[] = $this->db->lasterror();
+				$error++;
+			} else {
+				while ($obj = $this->db->fetch_object($resql)) {
+					$result = $this->fetch($obj->rowid);
+					if ($result < 0) {
+						$error++;
+						$this->errors[] = $this->error;
+					} else {
+						if (get_class($this) == 'Contact') { // TODO special code because delete() for contact has not been standardized like other delete.
+							$result = $this->delete();
+						} else {
+							$result = $this->delete($user);
+						}
+						if ($result < 0) {
+							$error++;
+							$this->errors[] = $this->error;
+						} else {
+							$deleted++;
+						}
+					}
+				}
+			}
+
+			if (empty($error)) {
+				$this->db->commit();
+				return $deleted;
+			} else {
+				$this->error = implode(', ', $this->errors);
+				$this->db->rollback();
+				return $error * -1;
+			}
+		}
+
+		return $deleted;
 	}
 
 	/**
@@ -8157,5 +8265,50 @@ abstract class CommonObject
 
 		$this->db->commit();
 		return 1;
+	}
+
+	/**
+	 * Delete related files of object in database
+	 *
+	 * @return bool
+	 */
+	public function deleteEcmFiles()
+	{
+		global $conf;
+
+		$this->db->begin();
+
+		switch ($this->element){
+			case 'propal':
+				$element = 'propale';
+				break;
+			case 'product':
+				$element = 'produit';
+				break;
+			case 'order_supplier':
+				$element ='fournisseur/commande';
+				break;
+			case 'invoice_supplier':
+				$element = 'fournisseur/facture/' . get_exdir($this->id, 2, 0, 1, $this, 'invoice_supplier');
+				break;
+			case 'shipping':
+				$element = 'expedition/sending';
+				break;
+			default:
+				$element = $this->element;
+		}
+
+		$sql = "DELETE FROM ".MAIN_DB_PREFIX."ecm_files";
+		$sql.= " WHERE filename LIKE '".$this->db->escape($this->ref)."%'";
+		$sql.= " AND filepath = '".$element."/".$this->db->escape($this->ref)."' AND entity = ".$conf->entity;
+
+		if (!$this->db->query($sql)) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return false;
+		}
+
+		$this->db->commit();
+		return true;
 	}
 }

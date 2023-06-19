@@ -48,7 +48,7 @@ $hookmanager->initHooks(array('stockreplenishlist'));
 
 //checks if a product has been ordered
 
-$action = GETPOST('action', 'alpha');
+$action = GETPOST('action', 'aZ09');
 $sref = GETPOST('sref', 'alpha');
 $snom = GETPOST('snom', 'alpha');
 $sall = trim((GETPOST('search_all', 'alphanohtml') != '') ?GETPOST('search_all', 'alphanohtml') : GETPOST('sall', 'alphanohtml'));
@@ -211,7 +211,9 @@ if ($action == 'order' && isset($_POST['valid']))
             if ($resql && $db->num_rows($resql) > 0) {
                 $obj = $db->fetch_object($resql);
                 $order->fetch($obj->rowid);
+				$order->fetch_thirdparty();
                 foreach ($supplier['lines'] as $line) {
+                	if(empty($line->remise_percent)) $line->remise_percent = $order->thirdparty->remise_supplier_percent;
                     $result = $order->addline(
                         $line->desc,
                         $line->subprice,
@@ -248,6 +250,7 @@ if ($action == 'order' && isset($_POST['valid']))
                 //trick to know which orders have been generated this way
                 $order->source = 42;
                 foreach ($supplier['lines'] as $line) {
+					if(empty($line->remise_percent)) $line->remise_percent = $order->thirdparty->remise_supplier_percent;
                     $order->lines[] = $line;
                 }
                 $order->cond_reglement_id = $order->thirdparty->cond_reglement_supplier_id;
@@ -305,7 +308,7 @@ if (!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entre
 
 
 $sql = 'SELECT p.rowid, p.ref, p.label, p.description, p.price,';
-$sql .= ' p.price_ttc, p.price_base_type,p.fk_product_type,';
+$sql .= ' p.price_ttc, p.price_base_type, p.fk_product_type,';
 $sql .= ' p.tms as datem, p.duration, p.tobuy,';
 $sql .= ' p.desiredstock, p.seuil_stock_alerte,';
 if (!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entrepot > 0) {
@@ -323,11 +326,8 @@ $sql .= $hookmanager->resPrint;
 $sql .= ' FROM '.MAIN_DB_PREFIX.'product as p';
 $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_stock as s ON p.rowid = s.fk_product';
 $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'entrepot AS ent ON s.fk_entrepot = ent.rowid AND ent.entity IN('.getEntity('stock').')';
-if ($fk_supplier > 0) {
-	$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'product_fournisseur_price pfp ON (pfp.fk_product = p.rowid AND pfp.fk_soc = '.$fk_supplier.')';
-}
 if (!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entrepot > 0) {
-	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_warehouse_properties AS pse ON (p.rowid = pse.fk_product AND pse.fk_entrepot = '.$fk_entrepot.')';
+	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_warehouse_properties AS pse ON (p.rowid = pse.fk_product AND pse.fk_entrepot = '.((int) $fk_entrepot).')';
 }
 
 // Add fields from hooks
@@ -349,6 +349,15 @@ if ($sref) $sql .= natural_search('p.ref', $sref);
 if ($snom) $sql .= natural_search('p.label', $snom);
 $sql .= ' AND p.tobuy = 1';
 if (!empty($canvas)) $sql .= ' AND p.canvas = "'.$db->escape($canvas).'"';
+if ($fk_supplier > 0) {
+	$sql .= ' AND EXISTS (SELECT pfp.rowid FROM '.MAIN_DB_PREFIX.'product_fournisseur_price as pfp WHERE pfp.fk_product = p.rowid AND pfp.fk_soc = '.((int) $fk_supplier).' AND pfp.entity IN ('.getEntity('product_fournisseur_price').'))';
+}
+
+// Add where from hooks
+$parameters = array();
+$reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters); // Note that $action and $object may have been modified by hook
+$sql .= $hookmanager->resPrint;
+
 $sql .= ' GROUP BY p.rowid, p.ref, p.label, p.description, p.price';
 $sql .= ', p.price_ttc, p.price_base_type,p.fk_product_type, p.tms';
 $sql .= ', p.duration, p.tobuy';
@@ -376,8 +385,11 @@ if ($usevirtualstock)
 		$sqlExpeditionsCli = "(SELECT ".$db->ifsql("SUM(ed2.qty) IS NULL", "0", "SUM(ed2.qty)")." as qty";	// We need the ifsql because if result is 0 for product p.rowid, we must return 0 and not NULL
 		$sqlExpeditionsCli .= " FROM ".MAIN_DB_PREFIX."expedition as e2,";
 		$sqlExpeditionsCli .= " ".MAIN_DB_PREFIX."expeditiondet as ed2,";
+                $sqlExpeditionsCli .= " ".MAIN_DB_PREFIX."commande as c2,";
 		$sqlExpeditionsCli .= " ".MAIN_DB_PREFIX."commandedet as cd2";
 		$sqlExpeditionsCli .= " WHERE ed2.fk_expedition = e2.rowid AND cd2.rowid = ed2.fk_origin_line AND e2.entity IN (".getEntity('expedition').")";
+                $sqlExpeditionsCli .= " AND cd2.fk_commande = c2.rowid";
+                $sqlExpeditionsCli .= " AND c2.fk_statut IN (1,2)";
 		$sqlExpeditionsCli .= " AND cd2.fk_product = p.rowid";
 		$sqlExpeditionsCli .= " AND e2.fk_statut IN (1,2))";
 	} else {
@@ -452,11 +464,6 @@ if ($usevirtualstock)
 		$alertchecked = 'checked';
 	}
 }
-
-// Add where from hooks
-$parameters = array();
-$reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters); // Note that $action and $object may have been modified by hook
-$sql .= $hookmanager->resPrint;
 
 $sql .= $db->order($sortfield, $sortorder);
 $sql .= $db->plimit($limit + 1, $offset);
@@ -756,7 +763,9 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		print '<td class="right">'.$alertstock.'</td>';
 
 		// Current stock (all warehouses)
-		print '<td class="right">'.$warning.$stock.'</td>';
+		print '<td class="right">'.$warning.$stock;
+		print '<!-- stock returned by main sql is '.$objp->stock_physique.' -->';
+		print '</td>';
 
 		// Already ordered
 		print '<td class="right"><a href="replenishorders.php?sproduct='.$prod->id.'">'.$ordered.'</a> '.$picto.'</td>';

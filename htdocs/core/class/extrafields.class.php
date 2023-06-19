@@ -1273,7 +1273,7 @@ class ExtraFields
                     dol_syslog(get_class($this).'::showInputField type=sellist', LOG_DEBUG);
                     $resql = $this->db->query($sql);
                     if ($resql) {
-                        $out .= '<option value="0">&nbsp;</option>';
+						$out .= '<option value="0">&nbsp;</option>';
                         $num = $this->db->num_rows($resql);
                         $i = 0;
                         while ($i < $num) {
@@ -1327,7 +1327,7 @@ class ExtraFields
                 } else {
 					require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
                     $data = $form->select_all_categories(Categorie::$MAP_ID_TO_CODE[$InfoFieldList[5]], '', 'parent', 64, $InfoFieldList[6], 1, 1);
-                    $out .= '<option value="0">&nbsp;</option>';
+					$out .= '<option value="0">&nbsp;</option>';
                     foreach ($data as $data_key => $data_value) {
                         $out .= '<option value="'.$data_key.'"';
                         $out .= ($value == $data_key ? ' selected' : '');
@@ -1339,7 +1339,10 @@ class ExtraFields
 		}
 		elseif ($type == 'checkbox')
 		{
-			$value_arr = explode(',', $value);
+			$value_arr = $value;
+			if (!is_array($value)) {
+				$value_arr = explode(',', $value);
+			}
 			$out = $form->multiselectarray($keyprefix.$key.$keysuffix, (empty($param['options']) ?null:$param['options']), $value_arr, '', 0, '', 0, '100%');
 		}
 		elseif ($type == 'radio')
@@ -1686,8 +1689,13 @@ class ExtraFields
 		}
 		elseif ($type == 'select')
 		{
-			if ($langfile && $param['options'][$value]) $value = $langs->trans($param['options'][$value]);
-			else $value = $param['options'][$value];
+			$valstr = $param['options'][$value];
+			if (($pos = strpos($valstr, "|")) !== false)
+			{
+				$valstr = substr($valstr, 0, $pos);
+			}
+			if ($langfile && $valstr) $value = $langs->trans($valstr);
+			else $value = $valstr;
 		}
 		elseif ($type == 'sellist')
 		{
@@ -2055,9 +2063,12 @@ class ExtraFields
 
 				if ($this->attributes[$object->table_element]['required'][$key])	// Value is required
 				{
-					// Check if empty without using GETPOST, value can be alpha, int, array, etc...
+					// check if functionally empty without using GETPOST (depending on the type of extrafield, a
+					// technically non-empty value may be treated as empty functionally).
+					// value can be alpha, int, array, etc...
 				    if ((!is_array($_POST["options_".$key]) && empty($_POST["options_".$key]) && $this->attributes[$object->table_element]['type'][$key] != 'select' && $_POST["options_".$key] != '0')
 				        || (!is_array($_POST["options_".$key]) && empty($_POST["options_".$key]) && $this->attributes[$object->table_element]['type'][$key] == 'select')
+				        || (!is_array($_POST["options_".$key]) && isset($_POST["options_".$key]) && $this->attributes[$object->table_element]['type'][$key] == 'sellist' && $_POST['options_' . $key] == '0')
 						|| (is_array($_POST["options_".$key]) && empty($_POST["options_".$key])))
 					{
 						//print 'ccc'.$value.'-'.$this->attributes[$object->table_element]['required'][$key];

@@ -1402,7 +1402,7 @@ class Adherent extends CommonObject
 					$this->first_subscription_amount = $obj->subscription;
 				}
 				$this->last_subscription_date = $this->db->jdate($obj->datec);
-				$this->last_subscription_date_start = $this->db->jdate($obj->datef);
+				$this->last_subscription_date_start = $this->db->jdate($obj->dateh);
 				$this->last_subscription_date_end = $this->db->jdate($obj->datef);
 				$this->last_subscription_amount = $obj->subscription;
 
@@ -2282,7 +2282,7 @@ class Adherent extends CommonObject
 		$sql.= " WHERE a.fk_adherent_type = t.rowid";
 		$sql.= " AND a.statut = 1";
 		$sql.= " AND a.entity IN (".getEntity('adherent').")";
-		$sql.= " AND ((a.datefin IS NULL or a.datefin < '".$this->db->idate($now)."') AND t.subscription = 1)";
+		$sql.= " AND ((a.datefin IS NULL or a.datefin < '".$this->db->idate($now)."') AND t.subscription = '1')";
 
 		$resql=$this->db->query($sql);
 		if ($resql)

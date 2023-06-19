@@ -777,7 +777,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
             elseif (in_array($keycode, array('joinfile', 'private', 'position', 'scale'))) {
             	$sql .= (int) GETPOST($keycode, 'int');
             }
-            else {
+			else {
             	$sql .= "'".$db->escape(GETPOST($keycode, 'nohtml'))."'";
             }
 

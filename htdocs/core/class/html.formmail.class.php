@@ -332,7 +332,7 @@ class FormMail extends Form
         $langs->loadLangs(array('other', 'mails'));
 
 		// Clear temp files. Must be done at beginning, before call of triggers
-		if (GETPOST('mode', 'alpha') == 'init' || (GETPOST('modelmailselected', 'alpha') && GETPOST('modelmailselected', 'alpha') != '-1'))
+		if (GETPOST('mode', 'alpha') == 'init' || (GETPOST('modelselected') && GETPOST('modelmailselected', 'alpha') && GETPOST('modelmailselected', 'alpha') != '-1'))
 		{
 			$this->clear_attached_files();
 		}
@@ -455,9 +455,11 @@ class FormMail extends Form
 			// Zone to select email template
 			if (count($modelmail_array) > 0)
 			{
+				$model_mail_selected_id = GETPOSTISSET('modelmailselected') ? GETPOST('modelmailselected', 'int') : $arraydefaultmessage->id;
+
 				// If list of template is filled
 				$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
-				$out .= '<span class="opacitymedium">'.$langs->trans('SelectMailModel').':</span> '.$this->selectarray('modelmailselected', $modelmail_array, 0, 1, 0, 0, '', 0, 0, 0, '', 'minwidth100');
+				$out .= '<span class="opacitymedium">'.$langs->trans('SelectMailModel').':</span> '.$this->selectarray('modelmailselected', $modelmail_array, $model_mail_selected_id, 1, 0, 0, '', 0, 0, 0, '', 'minwidth100');
 				if ($user->admin) $out .= info_admin($langs->trans("YouCanChangeValuesForThisListFrom", $langs->transnoentitiesnoconv('Setup').' - '.$langs->transnoentitiesnoconv('EMails')), 1);
 				$out .= ' &nbsp; ';
 				$out .= '<input class="button" type="submit" value="'.$langs->trans('Apply').'" name="modelselected" id="modelselected">';
@@ -1248,7 +1250,7 @@ class FormMail extends Form
 				elseif ($type_template == 'fichinter_send') { $defaultmessage = $outputlangs->transnoentities("PredefinedMailContentSendFichInter"); }
 				elseif ($type_template == 'thirdparty') { $defaultmessage = $outputlangs->transnoentities("PredefinedMailContentThirdparty"); }
 				elseif ($type_template == 'user') { $defaultmessage = $outputlangs->transnoentities("PredefinedMailContentUser"); }
-				elseif (!empty($type_template)) { $defaultmessage = $outputlangs->transnoentities("PredefinedMailContent".ucfirst($type_template)); }
+				elseif (!empty($type_template)) { $defaultmessage = $outputlangs->transnoentities("PredefinedMailContentGeneric"); }
 
 				$ret->label = 'default';
 				$ret->lang = $outputlangs->defaultlang;

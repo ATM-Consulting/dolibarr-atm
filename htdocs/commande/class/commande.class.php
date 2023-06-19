@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2014 Regis Houssin        <regis.houssin@inodbox.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2010-2016 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2020 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Jean Heimburger      <jean@tiaris.info>
  * Copyright (C) 2012-2014 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2012      Cedric Salvador      <csalvador@gpcsolutions.fr>
@@ -1014,7 +1014,7 @@ class Commande extends CommonOrder
 					// Complete vat rate with code
 					$vatrate = $line->tva_tx;
 					if ($line->vat_src_code && !preg_match('/\(.*\)/', $vatrate)) $vatrate .= ' ('.$line->vat_src_code.')';
-
+					$origin = (!empty($line->origin) ? $line->origin : $this->element);
                     $result = $this->addline(
 						$line->desc,
 						$line->subprice,
@@ -1039,7 +1039,7 @@ class Commande extends CommonOrder
 						$line->label,
 						$line->array_options,
 						$line->fk_unit,
-						$this->element,
+	                    $origin,
 						$line->id
 					);
 					if ($result < 0)
@@ -2254,6 +2254,7 @@ class Commande extends CommonOrder
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'expedition as e';
 		$sql .= ', '.MAIN_DB_PREFIX.'element_element as el';
 		$sql .= ' WHERE el.fk_source = '.$this->id;
+		$sql .= " AND el.sourcetype = 'commande'";
 		$sql .= " AND el.fk_target = e.rowid";
 		$sql .= " AND el.targettype = 'shipping'";
 
@@ -3289,6 +3290,7 @@ class Commande extends CommonOrder
 		if (isset($this->note_public)) $this->note_public = trim($this->note_public);
 		if (isset($this->modelpdf)) $this->modelpdf = trim($this->modelpdf);
 		if (isset($this->import_key)) $this->import_key = trim($this->import_key);
+		$delivery_date = empty($this->delivery_date) ? $this->date_livraison : $this->delivery_date;
 
 		// Check parameters
 		// Put here code to add control on parameters values
@@ -3313,6 +3315,8 @@ class Commande extends CommonOrder
 		$sql .= " fk_projet=".(isset($this->fk_project) ? $this->fk_project : "null").",";
 		$sql .= " fk_cond_reglement=".(isset($this->cond_reglement_id) ? $this->cond_reglement_id : "null").",";
 		$sql .= " fk_mode_reglement=".(isset($this->mode_reglement_id) ? $this->mode_reglement_id : "null").",";
+		$sql .= " date_livraison=".(strval($this->delivery_date) != '' ? "'".$this->db->idate($this->delivery_date)."'" : 'null').",";
+		$sql .= " fk_shipping_method=".(isset($this->shipping_method_id) ? $this->shipping_method_id : "null").",";
 		$sql .= " fk_account=".($this->fk_account > 0 ? $this->fk_account : "null").",";
 		$sql .= " note_private=".(isset($this->note_private) ? "'".$this->db->escape($this->note_private)."'" : "null").",";
 		$sql .= " note_public=".(isset($this->note_public) ? "'".$this->db->escape($this->note_public)."'" : "null").",";
@@ -3461,6 +3465,9 @@ class Commande extends CommonOrder
 
 		if (! $error)
 		{
+			// Delete record into ECM index (Note that delete is also done when deleting files with the dol_delete_dir_recursive
+			$this->deleteEcmFiles();
+
 			// Remove directory with files
 			$comref = dol_sanitizeFileName($this->ref);
 			if ($conf->commande->multidir_output[$this->entity] && !empty($this->ref))

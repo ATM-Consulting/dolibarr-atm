@@ -403,6 +403,7 @@ if (empty($reshook))
             //$object->twitter		= GETPOST("twitter", 'alpha');
             //$object->facebook		= GETPOST("facebook", 'alpha');
             //$object->linkedin		= GETPOST("linkedin", 'alpha');
+			$object->socialnetworks = array();
             if (!empty($conf->socialnetworks->enabled)) {
                 foreach ($socialnetworks as $key => $value) {
                     if (GETPOSTISSET($key) && GETPOST($key, 'alphanohtml') != '') {
@@ -1251,6 +1252,11 @@ else
 
             print "</form>";
         }
+    }
+
+    // Select mail models is same action as presend
+    if (GETPOST('modelselected', 'alpha')) {
+        $action = 'presend';
     }
 
     if (!empty($id) && $action != 'edit' && $action != 'create')
