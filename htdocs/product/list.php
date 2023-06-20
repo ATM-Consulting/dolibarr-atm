@@ -397,7 +397,9 @@ $sql = 'SELECT DISTINCT p.rowid, p.ref, p.label, p.fk_product_type, p.barcode, p
 $sql .= ' p.fk_product_type, p.duration, p.finished, p.tosell, p.tobuy, p.seuil_stock_alerte, p.desiredstock,';
 $sql .= ' p.tobatch,';
 if (empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
-	$sql .= " p.accountancy_code_sell, p.accountancy_code_sell_intra, p.accountancy_code_sell_export, pfp.supplier_reputation, p.accountancy_code_buy, p.accountancy_code_buy_intra, p.accountancy_code_buy_export,";
+	/*** SPECIFIQUE METIFFIOT : retirer le select de pfp.supplier_reputation car ça généré des doublons***/
+	$sql .= " p.accountancy_code_sell, p.accountancy_code_sell_intra, p.accountancy_code_sell_export, p.accountancy_code_buy, p.accountancy_code_buy_intra, p.accountancy_code_buy_export,";
+	/*** SPECIFIQUE METIFFIOT ***/
 } else {
 	$sql .= " ppe.accountancy_code_sell, ppe.accountancy_code_sell_intra, ppe.accountancy_code_sell_export, ppe.accountancy_code_buy, ppe.accountancy_code_buy_intra, ppe.accountancy_code_buy_export,";
 }
@@ -445,6 +447,9 @@ if (!empty($conf->global->PRODUCT_USE_UNITS)) {
 
 
 $sql .= ' WHERE p.entity IN ('.getEntity('product').')';
+/*** SPECIFIQUE METIFFIOT : éviter qu'il y ai l'affichage de produits en doublons***/
+$sql .= 'AND pfp.unitprice = (SELECT MIN(pfp2.unitprice) FROM '.MAIN_DB_PREFIX.'product_fournisseur_price pfp2 WHERE pfp2.fk_product = p.rowid)';/*** SPECIFIQUE METIFFIOT ***/
+/*** SPECIFIQUE METIFFIOT ***/
 if ($sall) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $sall);
 }
@@ -1651,7 +1656,7 @@ if ($resql) {
 		if (!empty($arrayfields['p.minbuyprice']['checked'])) {
 			print  '<td class="right nowraponall">';
 			if ($obj->tobuy && $obj->minsellprice != '') {
-				//print price($obj->minsellprice).' '.$langs->trans("HT");
+//				print price($obj->minsellprice).' '.$langs->trans("HT");
 				if ($product_fourn->find_min_price_product_fournisseur($obj->rowid) > 0) {
 					if ($product_fourn->product_fourn_price_id > 0) {
 						if ((!empty($conf->fournisseur->enabled) && !empty($user->rights->fournisseur->lire) && empty($conf->global->MAIN_USE_NEW_SUPPLIERMOD)) || (!empty($conf->supplier_order->enabled) && !empty($user->rights->supplier_order->lire)) || (!empty($conf->supplier_invoice->enabled) && !empty($user->rights->supplier_invoice->lire))) {
@@ -1659,8 +1664,8 @@ if ($resql) {
                             print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
 
                             $sql = '
-								SELECT conditionnement 
-								FROM ' . MAIN_DB_PREFIX . 'product_fournisseur_price 
+								SELECT conditionnement
+								FROM ' . MAIN_DB_PREFIX . 'product_fournisseur_price
 								WHERE rowid = ' . $product_fourn->product_fourn_price_id . '
 							';
 

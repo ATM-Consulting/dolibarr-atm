@@ -1,0 +1,2 @@
+- Lorsqu'une commande contient une ligne "libre", empêcher l'utilisateur de la valider
+- Sur la liste des produits, certains étaient affichés plusieurs fois
