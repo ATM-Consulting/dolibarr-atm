@@ -1554,9 +1554,12 @@ if ($resql) {
 	if (!empty($arrayfields['cf.tms']['checked'])) {
 		print_liste_field_titre($arrayfields['cf.tms']['label'], $_SERVER["PHP_SELF"], "cf.tms", "", $param, '', $sortfield, $sortorder, 'center nowrap ');
 	}
+	/*
+	 * DA023532 : Suppression de la colonne marge
 	if(!empty($conf->margin->enabled)){
 		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
 	}
+	*/
 	if (!empty($arrayfields['cf.fk_statut']['checked'])) {
 		print_liste_field_titre($arrayfields['cf.fk_statut']['label'], $_SERVER["PHP_SELF"], "cf.fk_statut", "", $param, '', $sortfield, $sortorder, 'right ');
 	}
@@ -1824,12 +1827,17 @@ if ($resql) {
 				$totalarray['nbfield']++;
 			}
 		}
+
+		/*
+		 * DA023532 : Suppression de la colonne marge
+
 		//Marge
 		$commande = new Commande($db);
 		$commande->fetch($objp->rowid);
 		$formmargin = new FormMargin($db);
 		$marginInfo = $formmargin->getMarginInfosArray($commande);
 		print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+		 */
 
 		// Amount VAT
 		if (!empty($arrayfields['cf.multicurrency_total_tva']['checked'])) {
