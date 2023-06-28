@@ -2259,7 +2259,7 @@ function dol_most_recent_file($dir, $regexfilter = '', $excludefilter = array('(
  */
 function dol_check_secure_access_document($modulepart, $original_file, $entity, $fuser = '', $refname = '', $mode = 'read')
 {
-	global $conf, $db, $user;
+	global $conf, $db, $user, $hookmanager, $object;
 	global $dolibarr_main_data_root, $dolibarr_main_document_root_alt;
 
 	if (!is_object($fuser)) {
@@ -2946,6 +2946,28 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 			eval('$sqlprotectagainstexternals = "'.$conf->global->$sqlProtectConstName.'";');
 		}
 	}
+
+	$parameters = array(
+		'modulepart' => $modulepart,
+		'original_file' => $original_file,
+		'entity' => $entity,
+		'fuser' => $fuser,
+		'refname' => '',
+		'mode' => $mode
+	);
+	$reshook = $hookmanager->executeHooks('checkSecureAccess', $parameters, $object);
+	if ($reshook > 0) {
+		if (!empty($hookmanager->resArray['original_file'])) {
+			$original_file = $hookmanager->resArray['original_file'];
+		}
+		if (!empty($hookmanager->resArray['accessallowed'])) {
+			$accessallowed = $hookmanager->resArray['accessallowed'];
+		}
+		if (!empty($hookmanager->resArray['sqlprotectagainstexternals'])) {
+			$sqlprotectagainstexternals = $hookmanager->resArray['sqlprotectagainstexternals'];
+		}
+	}
+
 
 	$ret = array(
 		'accessallowed' => $accessallowed,
