@@ -605,6 +605,8 @@ if ($massaction == 'confirm_createbills')   // Create bills from orders
 
 	$db->begin();
 
+	$nbOrders = is_array($orders) ? count($orders) : 1;
+
 	foreach ($orders as $id_order)
 	{
 		$cmd = new Commande($db);
@@ -726,7 +728,7 @@ if ($massaction == 'confirm_createbills')   // Create bills from orders
 							$lines[$i]->fetch_optionals();
 							$array_options = $lines[$i]->array_options;
 						}
-
+						$rankedLine = ($nbOrders > 1) ? -1 : $lines[$i]->rang;
 						$result = $objecttmp->addline(
 							$desc,
 							$lines[$i]->subprice,
@@ -744,7 +746,7 @@ if ($massaction == 'confirm_createbills')   // Create bills from orders
 							'HT',
 							0,
 							$product_type,
-							$lines[$i]->rang,
+							$rankedLine,
 							$lines[$i]->special_code,
 							$objecttmp->origin,
 							$lines[$i]->rowid,
@@ -1232,6 +1234,12 @@ if (!$error && ($massaction == 'delete' || ($action == 'delete' && $confirm == '
 				continue;
 			}
 
+			if ($objectclass == 'Holiday' && ! in_array($objecttmp->statut, array(Holiday::STATUS_DRAFT, Holiday::STATUS_CANCELED, Holiday::STATUS_REFUSED))) {
+				$nbignored++;
+				setEventMessage($langs->trans('ErrorLeaveRequestMustBeDraftCanceledOrRefusedToBeDeleted', $objecttmp->ref));
+				continue;
+			}
+
 			if ($objectclass == "Task" && $objecttmp->hasChildren() > 0)
 			{
 				$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task SET fk_task_parent = 0 WHERE fk_task_parent = ".$objecttmp->id;
@@ -1268,7 +1276,8 @@ if (!$error && ($massaction == 'delete' || ($action == 'delete' && $confirm == '
 	if (!$error)
 	{
 		if ($nbok > 1) setEventMessages($langs->trans("RecordsDeleted", $nbok), null, 'mesgs');
-		else setEventMessages($langs->trans("RecordDeleted", $nbok), null, 'mesgs');
+		elseif ($nbok > 0) setEventMessages($langs->trans("RecordDeleted", $nbok), null, 'mesgs');
+		else setEventMessages($langs->trans("NoRecordDeleted"), null, 'mesgs');
 		$db->commit();
 	} else {
 		$db->rollback();

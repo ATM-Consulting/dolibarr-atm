@@ -157,7 +157,6 @@ if ($action == 'other')
 			$resql_new = $db->query($sql_new);
 		}
 	}
-
 	$value = GETPOST('activate_useProdSupplierPackaging', 'alpha');
 	$res = dolibarr_set_const($db, "PRODUCT_USE_SUPPLIER_PACKAGING", $value, 'chaine', 0, '', $conf->entity);
 	if ($value) {
@@ -689,7 +688,6 @@ if (!empty($conf->fournisseur->enabled) && empty($conf->global->MAIN_USE_NEW_SUP
 	print '</td>';
 	print '</tr>';
 }
-
 print '<tr class="oddeven">';
 print '<td>'.$langs->trans("GlobalSearchOnExtrafield").'</td>';
 print '<td width="60" align="right">';

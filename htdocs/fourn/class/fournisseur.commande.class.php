@@ -10,7 +10,7 @@
  * Copyright (C) 2013       Cédric Salvador         <csalvador@gpcsolutions.fr>
  * Copyright (C) 2018       Nicolas ZABOURI			<info@inovea-conseil.com>
  * Copyright (C) 2018-2020  Frédéric France         <frederic.france@netlogic.fr>
- * Copyright (C) 2018       Ferran Marcet         	<fmarcet@2byte.es>
+ * Copyright (C) 2018-2021  Ferran Marcet         	<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -455,15 +455,19 @@ class CommandeFournisseur extends CommonOrder
 		$sql .= " l.date_start, l.date_end,";
 		$sql .= ' l.fk_multicurrency, l.multicurrency_code, l.multicurrency_subprice, l.multicurrency_total_ht, l.multicurrency_total_tva, l.multicurrency_total_ttc';
 		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
-			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging";
+			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging, MAX(pfp.quantity) as max_qty";
 		}
 		$sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet	as l";
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON l.fk_product = p.rowid';
 		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON l.fk_product = pfp.fk_product and l.ref = pfp.ref_fourn AND pfp.fk_soc = ".$this->socid;
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON pfp.entity IN (".getEntity('product_fournisseur_price').") AND l.fk_product = pfp.fk_product and l.ref = pfp.ref_fourn AND pfp.fk_soc = ".((int) $this->socid);
 		}
 		$sql .= " WHERE l.fk_commande = ".$this->id;
 		if ($only_product) $sql .= ' AND p.fk_product_type = 0';
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql.= " AND l.qty >= pfp.quantity ";
+			$sql.= " GROUP BY l.rowid HAVING max_qty = MAX(pfp.quantity) ";
+		}
 		$sql .= " ORDER BY l.rang, l.rowid";
 		//print $sql;
 
@@ -2822,11 +2826,11 @@ class CommandeFournisseur extends CommonOrder
 				if ($obj->fk_user_approve)  $this->user_approve_id = $obj->fk_user_approve;
 				if ($obj->fk_user_approve2) $this->user_approve_id2 = $obj->fk_user_approve2;
 
-				$this->date_creation     = $this->db->idate($obj->datec);
-				$this->date_modification = $this->db->idate($obj->datem);
-				$this->date_approve      = $this->db->idate($obj->datea);
-				$this->date_approve2     = $this->db->idate($obj->datea2);
-				$this->date_validation   = $this->db->idate($obj->date_validation);
+				$this->date_creation     = $this->db->jdate($obj->datec);
+				$this->date_modification = $this->db->jdate($obj->datem);
+				$this->date_approve      = $this->db->jdate($obj->datea);
+				$this->date_approve2     = $this->db->jdate($obj->datea2);
+				$this->date_validation   = $this->db->jdate($obj->date_validation);
 			}
 			$this->db->free($result);
 		} else {
@@ -3403,20 +3407,23 @@ class CommandeFournisseurLigne extends CommonOrderLine
 		$sql .= ' p.ref as product_ref, p.label as product_label, p.description as product_desc,';
 		$sql .= ' cd.date_start, cd.date_end, cd.fk_unit,';
 		$sql .= ' cd.multicurrency_subprice, cd.multicurrency_total_ht, cd.multicurrency_total_tva, cd.multicurrency_total_ttc';
-		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
-			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging";
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql .= ", pfp.rowid as fk_pfp, pfp.packaging, MAX(pfp.quantity) as max_qty";
+		}
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'commande_fournisseurdet as cd';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON cd.fk_product = p.rowid';
-		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING))
-			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON cd.fk_product = pfp.fk_product and cd.ref = pfp.ref_fourn";
-		$sql .= ' WHERE cd.rowid = '.$rowid;
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON pfp.entity IN (".getEntity('product_fournisseur_price').") AND cd.fk_product = pfp.fk_product and cd.ref = pfp.ref_fourn";
+		}
+		$sql .= ' WHERE cd.rowid = '.((int) $rowid);
+		if (!empty($conf->global->PRODUCT_USE_SUPPLIER_PACKAGING)) {
+			$sql .= " AND cd.qty >= pfp.quantity GROUP BY cd.rowid HAVING max_qty = MAX(pfp.quantity)";
+		}
 		$result = $this->db->query($sql);
-		if ($result)
-		{
+		if ($result) {
 			$objp = $this->db->fetch_object($result);
 
-			if (!empty($objp))
-			{
+			if (!empty($objp)) {
 				$this->rowid = $objp->rowid;
 				$this->id               = $objp->rowid;
 				$this->fk_commande      = $objp->fk_commande;

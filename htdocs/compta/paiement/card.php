@@ -48,7 +48,7 @@ $object = new Paiement($db);
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
 
-$result = restrictedArea($user, $object->element, $object->id, 'paiement', '');
+$result = restrictedArea($user, $object->element, $object->id, 'paiement');
 
 // Security check
 if ($user->socid) $socid = $user->socid;
@@ -432,11 +432,13 @@ if ($resql)
 			print '<td class="right">'.$invoice->getLibStatut(5, $alreadypayed).'</td>';
 
 			print "</tr>\n";
-			if ($objp->paye == 1)	// If at least one invoice is paid, disable delete
-			{
+
+			// If at least one invoice is paid, disable delete. INVOICE_CAN_DELETE_PAYMENT_EVEN_IF_INVOICE_CLOSED Can be use for maintenance purpose. Never use this in production
+			if ($objp->paye == 1 && empty($conf->global->INVOICE_CAN_DELETE_PAYMENT_EVEN_IF_INVOICE_CLOSED)) {
 				$disable_delete = 1;
 				$title_button = dol_escape_htmltag($langs->transnoentitiesnoconv("CantRemovePaymentWithOneInvoicePaid"));
 			}
+
 			$total = $total + $objp->amount;
 			$i++;
 		}
