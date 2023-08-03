@@ -217,6 +217,7 @@ class FactureFournisseurRec extends CommonInvoice
 
     public const STATUS_NOTSUSPENDED = 0;
     public const STATUS_SUSPENDED = 1;
+	public const TRIGGER_PREFIX = 'SUPPLIERBILLREC';
 
 
 
@@ -528,7 +529,7 @@ class FactureFournisseurRec extends CommonInvoice
 
             if (!$error && !$notrigger) {
                 // Call trigger
-                $result = $this->call_trigger('BILLREC_UPDATE', $user);
+                $result = $this->call_trigger('SUPPLIERBILLREC_MODIFY', $user);
                 if ($result < 0) {
                     $this->db->rollback();
                     return -2;
@@ -824,6 +825,15 @@ class FactureFournisseurRec extends CommonInvoice
             $error = -2;
         }
 
+		if (!$error && !$notrigger) {
+			// Call trigger
+			$result = $this->call_trigger('SUPPLIERBILLREC_DELETE', $user);
+			if ($result < 0) {
+				$this->db->rollback();
+				return -2;
+			}
+			// End call triggers
+		}
         if (!$error) {
             $this->db->commit();
             return 1;

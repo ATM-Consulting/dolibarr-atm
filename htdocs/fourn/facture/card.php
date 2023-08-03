@@ -804,7 +804,7 @@ if (empty($reshook))
                 $object->label = GETPOST('label');
                 $object->note_public = trim(GETPOST('note_public', 'restricthtml'));
                 $object->note_private = trim(GETPOST('note_private', 'restricthtml'));
-                $object->ref_client = GETPOST('ref_client');
+                $object->ref_supplier = GETPOST('ref_supplier', 'alphanohtml');
                 $object->model_pdf = GETPOST('model');
                 $object->fk_project = GETPOST('projectid', 'int');
                 $object->cond_reglement_id = (GETPOST('type') == 3 ? 1 : GETPOST('cond_reglement_id'));
@@ -831,7 +831,7 @@ if (empty($reshook))
         // FIN BACKPORT - 10/01/2022
 
 		// Standard or deposit
-		if ($_POST['type'] == FactureFournisseur::TYPE_STANDARD || $_POST['type'] == FactureFournisseur::TYPE_DEPOSIT  && GETPOST('fac_rec') <= 0)
+		elseif (($_POST['type'] == FactureFournisseur::TYPE_STANDARD || $_POST['type'] == FactureFournisseur::TYPE_DEPOSIT)  && GETPOST('fac_rec') <= 0)
 		{
 			if (GETPOST('socid', 'int')<1)
 			{
@@ -2625,6 +2625,19 @@ else
                 print '. '.$langs->trans("CreditNoteConvertedIntoDiscount", $object->getLibType(1), $discount->getNomUrl(1, 'discount')).'<br>';
             }
         }
+
+		if ($object->fk_fac_rec_source > 0) {
+			$tmptemplate = new FactureFournisseurRec($db);
+			$result = $tmptemplate->fetch($object->fk_fac_rec_source);
+			if ($result > 0) {
+				print ' <span class="opacitymediumbycolor paddingleft">';
+				$link = '<a href="'.DOL_URL_ROOT.'/fourn/facture/card-rec.php?facid='.$tmptemplate->id.'">'.dol_escape_htmltag($tmptemplate->titre).'</a>';
+				$s = $langs->transnoentities("GeneratedFromSupplierTemplate", $link);
+
+				print $s;
+				print '</span>';
+			}
+		}
         print '</td></tr>';
 
 
