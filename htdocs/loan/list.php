@@ -119,6 +119,8 @@ if ($resql)
         $newcardbutton.= dolGetButtonTitle($langs->trans('NewLoan'), '', 'fa fa-plus-circle', DOL_URL_ROOT.'/loan/card.php?action=create');
 	}
 
+	// FIXME: il manque encore les nouveaux champs (périodicité, terme échoir/échu, valeur résiduelle)
+
 	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">'."\n";
 	if ($optioncss != '') print '<input type="hidden" name="optioncss" value="'.$optioncss.'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';

@@ -5991,6 +5991,7 @@ class Form
 
 				$out.='<option value="'.$key.'"';
 				$out.=$style.$disabled;
+				$id = (string) $id; // BACKPORT FROM V17 if $id = 0, then $id = '0'
 				if ($id != '' && $id == $key && ! $disabled) $out.=' selected';		// To preselect a value
 				if ($nohtmlescape) $out.=' data-html="'.dol_escape_htmltag($selectOptionValue).'"';
 				if (is_array($tmpvalue))
