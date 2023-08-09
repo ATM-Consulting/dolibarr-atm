@@ -483,11 +483,13 @@ function checkUserAccessToObject($user, $featuresarray, $objectid = 0, $tableand
 					}
 					else
 					{
-						$sql.= ",".MAIN_DB_PREFIX."usergroup_user as ug";
-						$sql.= " WHERE dbt.".$dbt_select." IN (".$objectid.")";
-						$sql.= " AND ((ug.fk_user = dbt.rowid";
-						$sql.= " AND ug.entity IN (".getEntity('usergroup')."))";
-						$sql.= " OR dbt.entity = 0)"; // Show always superadmin
+//						$sql.= ",".MAIN_DB_PREFIX."usergroup_user as ug";
+//						$sql.= " WHERE dbt.".$dbt_select." IN (".$objectid.")";
+//						$sql.= " AND ((ug.fk_user = dbt.rowid";
+//						$sql.= " AND ug.entity IN (".getEntity('usergroup')."))";
+//						$sql.= " OR dbt.entity = 0)"; // Show always superadmin
+                        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'usergroup_user as ug ON (ug.fk_user = dbt.rowid AND ug.entity IN ('.getEntity('usergroup').') OR dbt.entity = 0)';
+                        $sql .= ' WHERE dbt.'.$dbt_select.' IN ('.$objectid.')';
 					}
 				}
 				else {
