@@ -195,7 +195,12 @@ function getEntityUser($username) {
 
     if($u->id > 0) {
         // On récupère la première entité du 1er groupe dans lequel se trouve l'utilisateur
-        $sql = 'SELECT fk_usergroup, entity FROM '.MAIN_DB_PREFIX.'usergroup_user WHERE fk_user = '.$u->id.' ORDER BY entity';
+        $sql = 'SELECT fk_usergroup, entity';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.'usergroup_user';
+        $sql .= ' WHERE fk_user = '.$u->id;
+        $sql .= ' AND fk_usergroup <> 885'; // EDIT: On ignore le groupe 885 (_OK_VUE_MULTIENTITE) car celui-ci sert uniquement pour corriger l'affichage des utilisateurs et ne sert donc pas à la connexion
+        $sql .= ' ORDER BY entity';
+
         $resql = $db->query($sql);
         $res = $db->fetch_object($resql);
         $entity = $res->entity;
