@@ -1348,7 +1348,7 @@ while ($i < min($num, $limit)) {
 		if ($obj->socid) {
 			$objsoc = new Societe($db);
 			$objsoc->fetch($obj->socid);
-			print $objsoc->getNomUrl(1, 'customer', 100, 0, 1, empty($arrayfields['s.name_alias']['checked']) ? 0 : 1);
+			print $objsoc->getNomUrl(1, '', 100, 0, 1, empty($arrayfields['s.name_alias']['checked']) ? 0 : 1);
 		} else {
 			print '&nbsp;';
 		}
