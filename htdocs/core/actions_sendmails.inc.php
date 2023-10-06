@@ -42,10 +42,9 @@ if (GETPOST('addfile', 'alpha')) {
 	$vardir = $conf->user->dir_output."/".$user->id;
 	$upload_dir_tmp = $vardir.'/temp'; // TODO Add $keytoavoidconflict in upload_dir path
 
-	dol_add_file_process($upload_dir_tmp, 1, 0, 'addedfile', '', null, $trackid, 0);
+	$res = dol_add_file_process($upload_dir_tmp, 1, 0, 'addedfile', '', null, $trackid, 0);
 	$action = 'presend';
 }
-
 /*
  * Remove file in email form
  */
@@ -183,7 +182,6 @@ if (($action == 'send' || $action == 'relance') && !GETPOST('addfile') && !GETPO
 				$receiver = array($receiver);
 			}
 		}
-
 		$tmparray = array();
 		if (trim($_POST['sendto'])) {
 			// Recipients are provided into free text field
@@ -236,7 +234,8 @@ if (($action == 'send' || $action == 'relance') && !GETPOST('addfile') && !GETPO
 		if (trim($_POST['sendtocc'])) {
 			$tmparray[] = trim(GETPOST('sendtocc', 'alphawithlgt'));
 		}
-		if (count($receivercc) > 0) {
+
+        if (count($receivercc) > 0) {
 			foreach ($receivercc as $key => $val) {
 				if ($val == 'thirdparty') {	// Key selected means current thirdparty (may be usd for current member or current user too)
 					// Recipient was provided from combo list
@@ -251,7 +250,8 @@ if (($action == 'send' || $action == 'relance') && !GETPOST('addfile') && !GETPO
 				}
 			}
 		}
-		if (!empty($conf->global->MAIN_MAIL_ENABLED_USER_DEST_SELECT)) {
+
+        if (!empty($conf->global->MAIN_MAIL_ENABLED_USER_DEST_SELECT)) {
 			$receiverccuser = GETPOST('receiverccuser', 'alphawithlgt');
 
 			if (is_array($receiverccuser) && count($receiverccuser) > 0) {
@@ -359,7 +359,8 @@ if (($action == 'send' || $action == 'relance') && !GETPOST('addfile') && !GETPO
 				$message = $object->makeSubstitution($message);
 			}
 
-			// Send mail (substitutionarray must be done just before this)
+
+            // Send mail (substitutionarray must be done just before this)
 			if (empty($sendcontext)) {
 				$sendcontext = 'standard';
 			}

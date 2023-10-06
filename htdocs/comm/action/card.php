@@ -310,7 +310,7 @@ if (empty($reshook) && $action == 'add') {
 		if (GETPOST("elementtype", 'alpha')) {
 			$modulecodetouseforpermissioncheck = GETPOST("elementtype", 'alpha');
 
-			$hasPermissionOnLinkedObject = 0;
+			$hasPermissionOnLinkedObject = 1;
 			if ($user->hasRight($modulecodetouseforpermissioncheck, 'read')) {
 				$hasPermissionOnLinkedObject = 1;
 			}
@@ -1495,7 +1495,7 @@ if ($action == 'create') {
 	if (!empty($origin) && !empty($originid)) {
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
-		$hasPermissionOnLinkedObject = 0;
+		$hasPermissionOnLinkedObject = 1;
 		if ($user->hasRight($origin, 'read')) {
 			$hasPermissionOnLinkedObject = 1;
 		}

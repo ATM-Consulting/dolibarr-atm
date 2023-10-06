@@ -2245,7 +2245,12 @@ function dolGetElementUrl($objectid, $objecttype, $withpicto = 0, $option = '')
 		$classpath = 'comm/mailing/class';
 		$classfile = 'mailing';
 		$classname = 'Mailing';
-	}
+	} elseif ($objecttype == 'fin_dossier') {
+        $module = 'financement';
+        $classpath = 'financement/class';
+        $classfile = 'fakedossier';
+        $classname = 'FakeDossier';
+    }
 
 	if (isModEnabled($module)) {
 		$res = dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');

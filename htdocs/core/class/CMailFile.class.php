@@ -687,7 +687,6 @@ class CMailFile
 				}
 				return false;
 			}
-
 			// Check number of recipient is lower or equal than MAIL_MAX_NB_OF_RECIPIENTS_IN_SAME_EMAIL
 			if (empty($conf->global->MAIL_MAX_NB_OF_RECIPIENTS_TO_IN_SAME_EMAIL)) {
 				$conf->global->MAIL_MAX_NB_OF_RECIPIENTS_TO_IN_SAME_EMAIL = 10;

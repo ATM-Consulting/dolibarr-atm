@@ -85,7 +85,6 @@ class InterfaceActionsAuto extends DolibarrTriggers
 		}
 
 		$key = 'MAIN_AGENDA_ACTIONAUTO_'.$action;
-		//var_dump($action.' - '.$conf->global->$key);exit;
 
 		// Do not log events not enabled for this action
 		// GUI allow to set this option only if entry exists into table llx_c_action_trigger
@@ -927,6 +926,7 @@ class InterfaceActionsAuto extends DolibarrTriggers
 			}
 			$object->sendtoid = 0;
 		} else {
+
 			// TODO Merge all previous cases into this generic one
 			// $action = PASSWORD, BILL_DELETE, TICKET_CREATE, TICKET_MODIFY, TICKET_DELETE, CONTACT_SENTBYMAIL, RECRUITMENTCANDIDATURE_MODIFY, ...
 			// Can also be a value defined by an external module like SENTBYSMS, COMPANY_SENTBYSMS, MEMBER_SENTBYSMS, ...
@@ -1107,7 +1107,6 @@ class InterfaceActionsAuto extends DolibarrTriggers
 				$actioncomm->socpeopleassigned[$val] = $val;
 			}
 		}
-
 		$ret = $actioncomm->create($user); // User creating action
 
 		if ($ret > 0 && !empty($conf->global->MAIN_COPY_FILE_IN_EVENT_AUTO)) {

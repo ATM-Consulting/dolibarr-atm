@@ -517,9 +517,10 @@ class FormMail extends Form
 			} elseif (!empty($this->param['models']) && in_array($this->param['models'], array(
 					'propal_send', 'order_send', 'facture_send',
 					'shipping_send', 'fichinter_send', 'supplier_proposal_send', 'order_supplier_send',
-					'invoice_supplier_send', 'thirdparty', 'contract', 'user', 'recruitmentcandidature_send', 'all'
+					'invoice_supplier_send', 'thirdparty', 'contract', 'user', 'recruitmentcandidature_send', 'all', 'finDossier', 'fin_dossier'
 				))) {
-				// If list of template is empty
+
+                // If list of template is empty
 				$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
 				$out .= '<span class="opacitymedium">'.$langs->trans('SelectMailModel').':</span> ';
 				$out .= '<select name="modelmailselected" disabled="disabled"><option value="none">'.$langs->trans("NoTemplateDefined").'</option></select>'; // Do not put 'disabled' on 'option' tag, it is already on 'select' and it makes chrome crazy.
@@ -1477,7 +1478,7 @@ class FormMail extends Form
 		}
 		//if (is_object($outputlangs)) $sql.= " AND (lang = '".$this->db->escape($outputlangs->defaultlang)."' OR lang IS NULL OR lang = '')";	// Return all languages
 		$sql .= $this->db->order("position,lang,label", "ASC");
-		//print $sql;
+//		print $sql;
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
