@@ -2364,16 +2364,15 @@ function get_left_menu_hrm($mainmenu, &$newmenu, $usemenuhider = 1, $leftmenu = 
 			$newmenu->add("/expensereport/stats/index.php?leftmenu=expensereport&amp;mainmenu=hrm", $langs->trans("Statistics"), 1, $user->hasRight('expensereport',  'lire'));
 		}
 
-		if (isModEnabled('projet')) {
-			if (empty($conf->global->PROJECT_HIDE_TASKS)) {
-				$langs->load("projects");
+        $langs->load("projects");
 
-				$search_project_user = GETPOST('search_project_user', 'int');
+        $search_project_user = GETPOST('search_project_user', 'int');
 
-				$newmenu->add("/projet/activity/perweek.php?leftmenu=tasks".($search_project_user ? '&search_project_user='.$search_project_user : ''), $langs->trans("NewTimeSpent"), 0, $user->hasRight('projet',  'lire'), '', $mainmenu, 'timespent', 0, '', '', '', img_picto('', 'timespent', 'class="paddingright pictofixedwidth"'));
-			}
-		}
-	}
+        $newmenu->add("/projet/activity/perweek.php?leftmenu=tasks".($search_project_user ? '&search_project_user='.$search_project_user : ''), $langs->trans("NewTimeSpent"), 0, $user->hasRight('projet', 'lire'), '', $mainmenu, 'timespent', 0, '', '', '', img_picto('', 'timespent', 'class="paddingright pictofixedwidth"'));
+
+        $newmenu->add("/hrm/timespent_list.php?leftmenu=timespent", $langs->trans("TimeSpentList"), 1, $user->hasRight('projet',  'lire'), '', $mainmenu, 'timespentlist', 0, '', '', '', '');
+
+    }
 }
 
 
