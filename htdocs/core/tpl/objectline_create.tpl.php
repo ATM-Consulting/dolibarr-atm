@@ -997,7 +997,7 @@ if (!empty($usemargins) && $user->rights->margins->creer) {
 			if (typeof default_vat_code === 'undefined') { default_vat_code = jQuery('#idprodfournprice').attr('data-default-vat-code');}	// When select is done from HTML input with ajax autocomplete
 
 			var stringforvatrateselection = tva_tx;
-			if (typeof default_vat_code != 'undefined' && default_vat_code != null) {
+			if (typeof default_vat_code != 'undefined' && default_vat_code != null && default_vat_code.length > 0) {
 				stringforvatrateselection = stringforvatrateselection+' ('+default_vat_code+')';
 			}
 
