@@ -1050,7 +1050,7 @@ class Facture extends CommonInvoice
 						$buyprice,
 						$_facrec->lines[$i]->label,
 						empty($_facrec->lines[$i]->array_options) ?null:$_facrec->lines[$i]->array_options,
-						$_facrec->lines[$i]->situation_percent,
+						100,	// situation percent is undefined on recurring invoice lines
 						'',
 						$_facrec->lines[$i]->fk_unit,
 						$_facrec->lines[$i]->multicurrency_subprice,
@@ -1157,6 +1157,7 @@ class Facture extends CommonInvoice
 
 		$facture->origin            = $this->origin;
 		$facture->origin_id         = $this->origin_id;
+		$facture->fk_account         = $this->fk_account;
 
 		$facture->lines = $this->lines; // Array of lines of invoice
 		$facture->situation_counter = $this->situation_counter;
@@ -4063,7 +4064,7 @@ class Facture extends CommonInvoice
 				}
 
 				// Mise a jour info denormalisees au niveau facture
-				$this->update_price(1);
+				$this->update_price(1, 'auto');
 				$this->db->commit();
 				return $result;
 			} else {
@@ -5550,8 +5551,9 @@ class Facture extends CommonInvoice
 								}
 								if (empty($to) && !empty($recipient->email)) {
 									$to[] = $recipient->email;
-								} else {
-									$errormesg = "Failed to send remind to thirdparty id=".$tmpinvoice->socid.". No email defined for user.";
+								}
+								if (empty($to)) {
+									$errormesg = "Failed to send remind to thirdparty id=".$tmpinvoice->socid.". No email defined for invoice or customer.";
 									$error++;
 								}
 							} else {
