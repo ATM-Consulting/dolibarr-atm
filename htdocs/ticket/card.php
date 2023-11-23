@@ -303,6 +303,8 @@ if (GETPOST('update', 'alpha') && GETPOST('id', 'int') && $user->rights->ticket-
 }
 
 // Mark as Read
+if( $user->id==$object->fk_user_assign && $object->date_read == "")
+    $action="mark_ticket_read";
 if ($action == "mark_ticket_read" && $user->rights->ticket->write) {
     $object->fetch('', '', GETPOST("track_id", 'alpha'));
 
@@ -533,15 +535,25 @@ elseif ($action == 'confirm_set_status' && $user->rights->ticket->write && !GETP
     if ($object->fetch(GETPOST('id', 'int'), GETPOST('track_id', 'alpha')) >= 0) {
         $new_status = GETPOST('new_status', 'int');
         $old_status = $object->fk_statut;
-        $res = $object->setStatut($new_status);
-        if ($res) {
-            // Log action in ticket logs table
-            $log_action = $langs->trans('TicketLogStatusChanged', $langs->transnoentities($object->statuts_short[$old_status]), $langs->transnoentities($object->statuts_short[$new_status]));
+        $usertoassign = GETPOST('fk_user_assign', 'int');
 
-            $url = 'card.php?action=view&track_id='.$object->track_id;
-            header("Location: ".$url);
-            exit();
+        if (! ($usertoassign > 0)) {
+            $error++;
+            setEventMessages($langs->trans("ErrorFieldRequired"), $langs->transnoentities("AssignedTo"), 'errors');
+            $action = 'view';
         }
+        if (!$error){
+            $res = $object->setStatut($new_status);
+            if ($res) {
+                // Log action in ticket logs table
+                $log_action = $langs->trans('TicketLogStatusChanged', $langs->transnoentities($object->statuts_short[$old_status]), $langs->transnoentities($object->statuts_short[$new_status]));
+
+                $url = 'card.php?action=view&track_id='.$object->track_id;
+                header("Location: ".$url);
+                exit();
+            }
+        }
+            
     }
 }
 
@@ -854,15 +866,15 @@ if (empty($action) || $action == 'view' || $action == 'addlink' || $action == 'd
         // Creation date
         print '<tr><td>'.$langs->trans("DateCreation").'</td><td>';
         print dol_print_date($object->datec, 'dayhour');
-        print ' - '.$langs->trans("TimeElapsedSince").': '.'<i>'.convertSecondToTime(roundUpToNextMultiple($now - $object->datec, 60)).'</i>';
+        print '<span class="opacitymedium"> - '.$langs->trans("TimeElapsedSince").': '.'<i>'.convertSecondToTime(roundUpToNextMultiple($now - $object->datec, 60)).'</i></span>';
         print '</td></tr>';
 
         // Read date
         print '<tr><td>'.$langs->trans("TicketReadOn").'</td><td>';
         if (!empty($object->date_read)) {
         	print dol_print_date($object->date_read, 'dayhour');
-        	print ' - '.$langs->trans("TicketTimeToRead").': <i>'.convertSecondToTime(roundUpToNextMultiple($object->date_read - $object->datec, 60)).'</i>';
-        	print ' - '.$langs->trans("TimeElapsedSince").': '.'<i>'.convertSecondToTime(roundUpToNextMultiple($now - $object->date_read, 60)).'</i>';
+        	print '<span class="opacitymedium"> - '.$langs->trans("TicketTimeToRead").': <i>'.convertSecondToTime(roundUpToNextMultiple($object->date_read - $object->datec, 60)).'</i>';
+        	print ' - '.$langs->trans("TimeElapsedSince").': '.'<i>'.convertSecondToTime(roundUpToNextMultiple($now - $object->date_read, 60)).'</i></span>';
         }
         print '</td></tr>';
 
@@ -1034,7 +1046,7 @@ if (empty($action) || $action == 'view' || $action == 'addlink' || $action == 'd
 
         // Display navbar with links to change ticket status
         print '<!-- navbar with status -->';
-        if (!$user->socid && $user->rights->ticket->write && $object->fk_status < 8 && GETPOST('set') !== 'properties') {
+        if (!$user->socid && $user->rights->ticket->write && $object->fk_statut < 8 && GETPOST('set') !== 'properties') {
         	$actionobject->viewStatusActions($object);
         }
 
@@ -1289,6 +1301,7 @@ if (empty($action) || $action == 'view' || $action == 'addlink' || $action == 'd
 
 			$formticket->action = $action;
 			$formticket->track_id = $object->track_id;
+			$formticket->ref = $object->ref;
 			$formticket->id = $object->id;
 
 			$formticket->withfile = 2;

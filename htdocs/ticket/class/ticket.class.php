@@ -2780,6 +2780,17 @@ class Ticket extends CommonObject
             setEventMessages($langs->trans('ErrorMailRecipientIsEmptyForSendTicketMessage'), null, 'warnings');
         }
     }
+
+    function get_alerte(){
+		$now=new DateTime('now');
+        $this->alerte=false;
+		if($this->datec && $this->fk_statut != self::STATUS_CLOSED){
+			$datec=new DateTime($this->datec);
+			$diff=$now->diff($datec);
+			if ($diff->invert==1 && $diff->d > 3 )
+				$this->alerte=true;
+		}
+	}
 }
 
 

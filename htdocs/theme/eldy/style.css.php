@@ -240,6 +240,7 @@ print 'conf->global->THEME_AGRESSIVENESS_RATIO='.$conf->global->THEME_AGRESSIVEN
 print '*/'."\n";
 
 
+
 // Include the global.inc.php that include the badges, btn, info-box, dropdown, progress...
 require __DIR__.'/global.inc.php';
 

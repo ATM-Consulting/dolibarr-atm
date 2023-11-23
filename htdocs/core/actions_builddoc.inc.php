@@ -100,7 +100,7 @@ if ($action == 'builddoc' && $permissiontoadd)
 	            $urltoredirect = preg_replace('/#builddoc$/', '', $urltoredirect);
 	            $urltoredirect = preg_replace('/action=builddoc&?/', '', $urltoredirect); // To avoid infinite loop
 
-	            header('Location: '.$urltoredirect.'#builddoc');
+	            header('Location: '.$urltoredirect.'&action=popupbc#builddoc');
 	            exit;
         	}
         }

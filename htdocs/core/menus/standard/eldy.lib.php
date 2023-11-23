@@ -239,11 +239,20 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 				  !empty($user->rights->contrat->lire) ||
 				  !empty($user->rights->ficheinter->lire)
 			),
-	    'module'=>'propal|commande|supplier_order|contrat|ficheinter'
+	    'module'=>'propal|commande|supplier_order|supplier_proposal|contrat|ficheinter'
 	);
+
+	$onlysupplierorder = ! empty($user->rights->fournisseur->commande->lire) &&
+		empty($user->rights->propal->lire) &&
+		empty($user->rights->commande->lire) &&
+		empty($user->rights->supplier_order->lire) &&
+		empty($user->rights->supplier_proposal->lire) &&
+		empty($user->rights->contrat->lire) &&
+		empty($user->rights->ficheinter->lire);
+
 	$menu_arr[] = array(
 		'name' => 'Commercial',
-		'link' => '/comm/index.php?mainmenu=commercial&amp;leftmenu=',
+		'link' => ($onlysupplierorder ? '/fourn/commande/index.php?mainmenu=commercial&amp;leftmenu=' : '/comm/index.php?mainmenu=commercial&amp;leftmenu='),
 		'title' => "Commercial",
 		'level' => 0,
 	    'enabled' => $showmode = isVisibleToUserType($type_user, $tmpentry, $listofmodulesforexternal),
@@ -376,7 +385,7 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 	);
 
 	// Tools
-	$tmpentry = array(
+	/*$tmpentry = array(
 	    'enabled'=>1,
 	    'perms'=>1,
 	    'module'=>''
@@ -400,7 +409,7 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 
 		'loadLangs' => array("other"),
 		'submenus' => array(),
-	);
+	);*/
 
 	// Add menus
 	foreach ($menu_arr as $key => $smenu)
@@ -474,7 +483,20 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 			else $classname = 'class="tmenu"';
 		}
 		elseif ($showmode == 2) $classname = 'class="tmenu"';
+		if($idsel=='ticket'){
+			//nombre de tickets ouverts
+			$sql = "SELECT count(*) as num";
+			$sql .= " FROM ".MAIN_DB_PREFIX."ticket";
+			$sql .= " WHERE fk_statut <> 8 and fk_user_assign=".$user->id;
 
+			$resql = $db->query($sql);
+			if ($resql)
+			{
+				$numr = $db->num_rows($resql);
+				$objp = $db->fetch_object($resql);
+				$newTabMenu[$i]['titre'].='&nbsp;<span style="color:red;font-weight:bold;font-size:15.0pt">'.$objp->num.'</span>';
+			}
+		}
 		$menu->add($shorturl, $newTabMenu[$i]['titre'], 0, $showmode, ($newTabMenu[$i]['target'] ? $newTabMenu[$i]['target'] : $atarget), ($newTabMenu[$i]['mainmenu'] ? $newTabMenu[$i]['mainmenu'] : $newTabMenu[$i]['rowid']), ($newTabMenu[$i]['leftmenu'] ? $newTabMenu[$i]['leftmenu'] : ''), $newTabMenu[$i]['position'], $id, $idsel, $classname);
 	}
 
@@ -512,8 +534,7 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 		print_start_menu_entry('companylogo', 'class="tmenu tmenucompanylogo nohover"', 1);
 
 
-		print '<div class="center '.$logoContainerAdditionalClass.' menulogocontainer"><img class="mycompany" title="'.dol_escape_htmltag($title).'" alt="" src="'.$urllogo.'" style="max-width: 100px"></div>'."\n";
-
+		print '<div class="center '.$logoContainerAdditionalClass.' menulogocontainer"><img class="mycompany" title="'.dol_escape_htmltag($title).'" alt="" src="'.$urllogo.'" style="max-width: 100px"></div>'."\n";		
 		print_end_menu_entry(4);
 	}
 
@@ -521,9 +542,11 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
         foreach ($menu->liste as $menuval) {
             print_start_menu_entry($menuval['idsel'], $menuval['classname'], $menuval['enabled']);
             print_text_menu_entry($menuval['titre'], $menuval['enabled'], (($menuval['url'] != '#' && !preg_match('/^(http:\/\/|https:\/\/)/i', $menuval['url'])) ? DOL_URL_ROOT:'').$menuval['url'], $menuval['id'], $menuval['idsel'], $menuval['classname'], ($menuval['target'] ? $menuval['target'] : $atarget));
-            print_end_menu_entry($menuval['enabled']);
-        }
-    }
+			print_end_menu_entry($menuval['enabled']);
+		}
+		//rajout barre de recherche client
+		print_select_ajax();
+	}
 
 	$showmode = 1;
     if (empty($noout)) {
@@ -535,7 +558,53 @@ function print_eldy_menu($db, $atarget, $type_user, &$tabMenu, &$menu, $noout = 
 	return 0;
 }
 
+function print_select_ajax(){
+	//print '<li class="tmenusel" id="mainmenutd_deviscaraiso"><div class="tmenucenter"><a class="tmenuimage" tabindex="-1" href="/societe/card.php?leftmenu=customers&amp;action=create&amp;type=c&amp;idmenu=135&amp;mainmenu=deviscaraiso&amp;leftmenu=" title="Nouveau Client"><div class="mainmenu deviscaraiso topmenuimage"><span class="mainmenu tmenuimage" id="mainmenuspan_deviscaraiso"></span></div></a><a class="tmenusel" id="mainmenua_deviscaraiso" href="/societe/card.php?leftmenu=customers&amp;action=create&amp;type=c&amp;idmenu=135&amp;mainmenu=deviscaraiso&amp;leftmenu=" title="Nouveau Client"><span class="mainmenuaspan">Nouveau Client</span></a></div></li>';
+	print '<li><div style=line-height:50px;>';
+	print "<input type='text' name='name'  class='minwidth200' id='autocompletetop' autofocus='autofocus' placeholder='recherche par nom ou tel ou mail'>";
+	print "<script type=\"text/javascript\">
+        $( function() {
+      
+            $( \"#autocompletetop\" ).autocomplete({
+                source: function( request, response ) {
+                    
+                    $.ajax({
+                        url: \"/societe/fetchData.php\",
+                        type: 'post',
+                        dataType: \"json\",
+                        data: {
+                            search: request.term
+                        },
+                        success: function( data ) {
+                            response( data );
+                        }
+                    });
+                },
+                select: function (event, ui) {
+                    $('#autocompletetop').val(ui.item.label); // display the selected text
+                   
+                    if(ui.item.value){
+                        $('#autocompletetop').val(ui.item.value); // save selected id to input
+                       window.location.href='/societe/card.php?id='+ui.item.value;
+                    }
+                  
 
+                    return false;
+                }
+            });
+    
+           
+        });
+    
+        function split( val ) {
+          return val.split( /,\s*/ );
+        }
+        function extractLast( term ) {
+          return split( term ).pop();
+        }
+		</script>";
+	print '</div></li>';
+}
 /**
  * Output start menu array
  *
@@ -2014,13 +2083,19 @@ function print_left_eldy_menu($db, $menu_array_before, $menu_array_after, &$tabM
 
 			// Menu level 0
 			if ($menu_array[$i]['level'] == 0)
-			{
+			{		
 				if ($menu_array[$i]['enabled'])     // Enabled so visible
 				{
+					$print='';
 					print '<div class="menu_titre">'.$tabstring;
 					if ($shorturlwithoutparam) print '<a class="vmenu" href="'.$url.'"'.($menu_array[$i]['target'] ? ' target="'.$menu_array[$i]['target'].'"' : '').'>';
 					else print '<span class="vmenu">';
-					print ($menu_array[$i]['prefix'] ? $menu_array[$i]['prefix'] : '').$menu_array[$i]['titre'];
+					if(strstr($url,$_SERVER["PHP_SELF"]))//surligner le menu
+						$print= '<u>';
+					$print.= ($menu_array[$i]['prefix'] ? $menu_array[$i]['prefix'] : '').$menu_array[$i]['titre'];
+					if(strstr($url,$_SERVER["PHP_SELF"]))//surligner le menu
+						$print.= '</u>';
+					print $print;
 					if ($shorturlwithoutparam) print '</a>';
 					else print '</span>';
 					print '</div>'."\n";
@@ -2049,10 +2124,16 @@ function print_left_eldy_menu($db, $menu_array_before, $menu_array_after, &$tabM
 
 				if ($menu_array[$i]['enabled'] && $lastlevel0 == 'enabled')     // Enabled so visible, except if parent was not enabled.
 				{
+					$print='';
 					print '<div class="menu_contenu'.$cssmenu.'">'.$tabstring;
 					if ($shorturlwithoutparam) print '<a class="vsmenu" href="'.$url.'"'.($menu_array[$i]['target'] ? ' target="'.$menu_array[$i]['target'].'"' : '').'>';
 					else print '<span class="vsmenu">';
-					print $menu_array[$i]['titre'];
+					if(strstr($url,$_SERVER["PHP_SELF"]))//surligner le menu
+						$print= '<u>';
+					$print.= $menu_array[$i]['titre'];
+					if(strstr($url,$_SERVER["PHP_SELF"]))//surligner le menu
+						$print.= '</u>';
+					print $print;
 					if ($shorturlwithoutparam) print '</a>';
 					else print '</span>';
 					// If title is not pure text and contains a table, no carriage return added
@@ -2061,7 +2142,7 @@ function print_left_eldy_menu($db, $menu_array_before, $menu_array_after, &$tabM
 				}
 				elseif ($showmenu && $lastlevel0 == 'enabled')       // Not enabled but visible (so greyed), except if parent was not enabled.
 				{
-					print '<div class="menu_contenu'.$cssmenu.'">'.$tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">'.$menu_array[$i]['titre'].'</font><br></div>'."\n";
+					print '<div class="menu_contenu'.$cssmenu.'">'.$tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">bbb'.$menu_array[$i]['titre'].'</font><br></div>'."\n";
 				}
 			}
 

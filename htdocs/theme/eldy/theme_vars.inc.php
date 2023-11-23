@@ -105,15 +105,102 @@ $colorblind_deuteranopes_badgeWarning   = '#e4e411';
 *  TODO: use color definition vars above for define badges color status X -> exemple $badgeStatusValidate, $badgeStatusClosed, $badgeStatusActive ....
 */
 $badgeStatus0 = '#cbd3d3';
-$badgeStatus1 = '#bc9526';
-$badgeStatus2 = '#e6f0f0';
-$badgeStatus3 = '#bca52b';
-$badgeStatus4 = '#55a580'; // Color ok
-$badgeStatus5 = '#cad2d2';
-$badgeStatus6 = '#cad2d2';
-$badgeStatus7 = '#baa32b';
-$badgeStatus8 = '#993013';
-$badgeStatus9 = '#e7f0f0';
+$badgeStatus1 = '#cbd3d3';
+//$badgeStatus2 = '#689FE0'; //bleu
+$badgeStatus2 = '#E4D92E'; //jaune
+$badgeStatus3 = '#E06D03'; //orange
+//$badgeStatus4 = '#689FE0'; //bleu
+$badgeStatus4 = '#689FE0'; //Bleu
+$badgeStatus5 = '#E070D7'; // Rose
+$badgeStatus6 = '#6B6767'; //gris
+$badgeStatus7 = '#53AD4D'; //vert
+$badgeStatus8 = '#12B08E'; //vert/bleu
+$badgeStatus10 = '#993013';
+$badgeStatus9 = '#E02E2B'; //Rouge
+$badgeStatus11 = '#33D4FF';
+$badgeStatus12 = '#21B426';
+$badgeStatus13 = '#9321B4';
+$badgeStatus14 = '#7ECC74';
+$badgeStatus15 = '#E4D92E';
+$badgeStatus16 = '#689FE0';
+$badgeStatus17 = '#A93C8B';
+$badgeStatus18 = '#E4D92E';
+$badgeStatus19 = '#000000';
+$badgeStatus20 = '#A93C8B';
+$badgeStatus21 = '#A93C8B';
+$badgeStatus22 = '#A93C8B';
+
+//specifique tableau carafinance
+$badgeStatusrenov0 = '#cbd3d3';
+$badgeStatusrenov1 = '#cbd3d3';
+//$badgeStatus2 = '#689FE0'; //bleu
+$badgeStatusrenov2 = '#E02E2B'; //Rouge
+$badgeStatusrenov3 = '#E06D03'; //orange
+//$badgeStatus4 = '#689FE0'; //bleu
+$badgeStatusrenov4 = '#12B08E';//'#689FE0'; //Bleu
+$badgeStatusrenov5 = '#E070D7'; // Rose
+$badgeStatusrenov6 = '#E4D92E'; //Jaune
+$badgeStatusrenov7 = '#689FE0'; //Bleu
+$badgeStatusrenov8 = '#B9B9B6'; //Gris clair
+$badgeStatusrenov9 = '#B9B9B6'; //Gris clair
+$badgeStatusrenov10 = '#53AD4D'; //Vert
+$badgeStatusrenov11 = '#E06D03'; //Orange
+$badgeStatusrenov12 = '#E4D92E'; //Jaune
+$badgeStatusrenov13 = '#8F8F8C'; //Bleu
+$badgeStatusrenov14 = '#cbd3d3'; //Blanc
+
+
+$badgeStatusfin0 = '#cbd3d3';
+$badgeStatusfin1 = '#E4D92E';
+$badgeStatusfin2 = '#E02E2B'; //Rouge
+$badgeStatusfin3 = '#689FE0'; 
+$badgeStatusfin4 = '#53AD4D'; 
+$badgeStatusfin5 = '#12B08E';//'#689FE0'; //Bleu
+$badgeStatusfin6 = '#cbd3d3';
+$badgeStatusfin7 = '#E070D7';
+$badgeStatusfin8 = '#cbd3d3';
+$badgeStatusfin9 = '#E4D92E';
+$badgeStatusfin10 = '#E06D03';
+$badgeStatusfin11 = '#53AD4D';
+
+$badgeStatusppv0 = '#cbd3d3';
+$badgeStatusppv1 = '#E4D92E';
+$badgeStatusppv2 = '#E02E2B'; //Rouge
+$badgeStatusppv3 = '#689FE0'; 
+$badgeStatusppv4 = '#53AD4D'; 
+$badgeStatusppv5 = '#12B08E';//'#689FE0'; //Bleu
+$badgeStatusppv6 = '#cbd3d3';
+$badgeStatusppv7 = '#E070D7';
+$badgeStatusppv8 = '#cbd3d3';
+$badgeStatusppv9 = '#E4D92E';
+$badgeStatusppv10 = '#E06D03';
+$badgeStatusfin11 = '#2A563D';
+
+$badgeStatuscomission0 = '#cbd3d3';
+$badgeStatuscomission1 = '#E4D92E';
+$badgeStatuscomission2 = '#E02E2B'; //Rouge
+$badgeStatuscomission3 = '#53AD4D'; 
+$badgeStatuscomission4 = '#12B08E'; 
+$badgeStatuscomission5 = '#EE5F08';//'#689FE0'; //Bleu
+$badgeStatuscomission6 = '#E02E2B';
+$badgeStatuscomission7 = '#E070D7';
+$badgeStatuscomission8 = '#cbd3d3';
+$badgeStatuscomission9 = '#E4D92E';
+$badgeStatuscomission10 = '#E06D03';
+$badgeStatuscomission11 = '#53AD4D';
+
+$badgeStatusdevis0 = '#cbd3d3';
+$badgeStatusdevis1 = '#cbd3d3';
+$badgeStatusdevis2 = '#E06D03'; 
+$badgeStatusdevis3 = '#E4D92E';
+$badgeStatusdevis4 = '#12B08E'; 
+$badgeStatusdevis5 = '#EE5F08';//'#689FE0'; //Bleu
+$badgeStatusdevis6 = '#E02E2B';
+$badgeStatusdevis7 = '#E070D7';
+$badgeStatusdevis8 = '#cbd3d3';
+$badgeStatusdevis9 = '#E02E2B';
+$badgeStatusdevis10 = '#E06D03';
+$badgeStatusdevis11 = '#53AD4D';
 
 // status color ajustement for color blind
 $colorblind_deuteranopes_badgeStatus4 = $colorblind_deuteranopes_badgeStatus7 = $colorblind_deuteranopes_badgeSuccess; //! text color black

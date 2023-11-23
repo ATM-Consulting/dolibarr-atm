@@ -4614,6 +4614,43 @@ class Facture extends CommonInvoice
 	        return -2;
 	    }
 	}
+	public function getcpville($id){
+		$sql='select * ';
+		$sql .= ' FROM '.MAIN_DB_PREFIX.'cara_cpville as t';
+		$sql .= ' WHERE t.rowid = '.$id;
+		$result = $this->db->query($sql);
+		if ($result)
+		{
+			if ($this->db->num_rows($result))
+				$obj = $this->db->fetch_object($result);
+		}
+		return $obj;
+	}
+
+	public function update_total_rac(){
+		$tab_prime=array();
+		foreach ($this->lines as $id_line=>$line){
+			$product=new Product($this->db);
+			if ($line->fk_product > 0){
+				$product->fetch_optionals($line->fk_product);
+				if ($product->array_options['options_prime']>0 ){
+					$tab_prime[$id_line]=$line;
+					$total_prime += $line->total_ht;
+				}
+			}
+		}
+		$this->total_rac=$this->total_ttc+$total_prime;
+		$sql = 'UPDATE '.MAIN_DB_PREFIX.$this->table_element.' SET ';
+		$sql .= " total_rac=".price2num($this->total_rac);
+		$sql .= ' WHERE rowid = '.$this->id;
+
+		$resql = $this->db->query($sql);
+		if (!$resql)
+		{
+			$this->error = $this->db->lasterror();
+			$this->errors[] = $this->db->lasterror();
+		}
+	}
 }
 
 /**

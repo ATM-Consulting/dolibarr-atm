@@ -1010,7 +1010,7 @@ class Societe extends CommonObject
 		$this->fax			= preg_replace("/\s/", "", $this->fax);
 		$this->fax			= preg_replace("/\./", "", $this->fax);
 		$this->email = trim($this->email);
-		$this->url			= $this->url ?clean_url($this->url, 0) : '';
+		$this->url			= $this->url ;
 		$this->note_private = trim($this->note_private);
 		$this->note_public  = trim($this->note_public);
 		$this->idprof1		= trim($this->idprof1);
@@ -2318,8 +2318,11 @@ class Societe extends CommonObject
 			if (!empty($this->name_alias)) $label .= ' ('.$this->name_alias.')';
 		}
 		$label .= '<br><b>'.$langs->trans('Email').':</b> '.$this->email;
-		if (!empty($this->country_code))
-			$label .= '<br><b>'.$langs->trans('Country').':</b> '.$this->country_code;
+		// if (!empty($this->country_code))
+		// 	$label .= '<br><b>'.$langs->trans('Country').':</b> '.$this->country_code;
+    // Modififcation pour afficher le téléphone dans la popup.
+		if (!empty($this->phone))
+			$label .= '<br><b>'.$langs->trans('Phone').':</b> '.$this->phone;
 		if (!empty($this->tva_intra) || (!empty($conf->global->SOCIETE_SHOW_FIELD_IN_TOOLTIP) && strpos($conf->global->SOCIETE_SHOW_FIELD_IN_TOOLTIP, 'vatnumber') !== false))
 			$label .= '<br><b>'.$langs->trans('VATIntra').':</b> '.$this->tva_intra;
 		if (!empty($conf->global->SOCIETE_SHOW_FIELD_IN_TOOLTIP))
@@ -4320,5 +4323,19 @@ class Societe extends CommonObject
 		);
 
 		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
+
+	function getReno(){
+		$sql = 'SELECT rowid, ref FROM '.MAIN_DB_PREFIX.'carafinance_carafinance ';
+		$sql .= ' WHERE fk_soc = '.(int) $this->id.' ';
+
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			$obj = $this->db->fetch_object($resql) ;
+			return (array($obj->rowid, $obj->ref));
+				
+		}
+
 	}
 }

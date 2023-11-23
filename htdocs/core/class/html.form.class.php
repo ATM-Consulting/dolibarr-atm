@@ -3778,6 +3778,71 @@ class Form
 		return $return;
 	}
 
+
+	/**
+	 *      Creates HTML units selector (code => label)
+	 *
+	 *      @param	string	$selected       Preselected Unit ID
+	 *      @param  string	$htmlname       Select name
+	 *      @param	int		$showempty		Add a nempty line
+	 * 		@return	string                  HTML select
+	 */
+    public function selectFromReglement($selected = '', $htmlname = 'reglement', $showempty = 0)
+	{
+		global $langs;
+
+
+		$return = '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'">';
+
+		$sql = 'SELECT rowid, label, code from '.MAIN_DB_PREFIX.'c_fromreglement';
+		$sql .= ' WHERE active > 0';
+
+		$resql = $this->db->query($sql);
+		if ($resql && $this->db->num_rows($resql) > 0)
+		{
+			if ($showempty) $return .= '<option value="null"></option>';
+
+			while ($res = $this->db->fetch_object($resql))
+			{
+			    $unitLabel = $res->label;
+				if ($selected == $res->rowid)
+				{
+				    $return .= '<option value="'.$res->rowid.'" selected>'.$unitLabel.'</option>';
+				}
+				else
+				{
+				    $return .= '<option value="'.$res->rowid.'">'.$unitLabel.'</option>';
+				}
+			}
+			$return .= '</select>';
+		}
+		return $return;
+	}
+
+	/**
+	 *      Creates HTML units selector (code => label)
+	 *
+	 *      @param	string	$selected       Preselected Unit ID
+	 *      @param  string	$htmlname       Select name
+	 *      @param	int		$showempty		Add a nempty line
+	 * 		@return	string                  HTML select
+	 */
+    public function showFromReglement($selected = '')
+	{
+		global $langs;
+
+		$sql = 'SELECT rowid, label, short_label from '.MAIN_DB_PREFIX.'c_fromreglement';
+		$sql .= ' WHERE active > 0 and rowid='.$selected;
+
+		$resql = $this->db->query($sql);
+		if ($resql && $this->db->num_rows($resql) > 0)
+		{
+			$res = $this->db->fetch_object($resql);
+			$return = '<input type="text" value="'.$res->short_label.'" readonly >';
+		}
+		return $return;
+	}
+
     // phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 	/**
 	 *  Return a HTML select list of bank accounts
@@ -4280,7 +4345,7 @@ class Form
                     closeOnEscape: false,
                     buttons: {
                         "'.dol_escape_js($langs->transnoentities("Yes")).'": function() {
-                        	var options = "&token='.urlencode(newToken()).'";
+                        	var options = "";
                         	var inputok = '.json_encode($inputok).';
                          	var pageyes = "'.dol_escape_js(!empty($pageyes) ? $pageyes : '').'";
                          	if (inputok.length>0) {
@@ -5938,7 +6003,7 @@ class Form
 			$out .= ajax_autocompleter($preselectedvalue, $htmlname, $urlforajaxcall, $urloption, $conf->global->$confkeyforautocompletemode, 0, array());
 			$out .= '<style type="text/css">.ui-autocomplete { z-index: 250; }</style>';
 			if ($placeholder) $placeholder = ' placeholder="'.$placeholder.'"';
-			$out .= '<input type="text" class="'.$morecss.'"'.($disabled ? ' disabled="disabled"' : '').' name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'"'.$placeholder.' />';
+			$out .= '<input type="text" class="'.$morecss.'"'.($disabled ? ' disabled="disabled"' : '').' name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'"'.$placeholder.'  '.$moreparams.'/>';
 		}
 		else
 		{
@@ -6034,8 +6099,9 @@ class Form
 
 		// Search data
 		$sql = "SELECT t.rowid, ".$fieldstoshow." FROM ".MAIN_DB_PREFIX.$objecttmp->table_element." as t";
-		if ($objecttmp->ismultientitymanaged == 2)
-			if (!$user->rights->societe->client->voir && !$user->socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		//if ($objecttmp->ismultientitymanaged == 2)
+			if (!$user->rights->societe->client->voir && !$user->socid) 
+				$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 		$sql .= " WHERE 1=1";
 		if (!empty($objecttmp->ismultientitymanaged)) $sql .= " AND t.entity IN (".getEntity($objecttmp->table_element).")";
 		if ($objecttmp->ismultientitymanaged == 1 && !empty($user->socid)) {
@@ -6043,9 +6109,9 @@ class Form
 			else $sql .= " AND t.fk_soc = ".$user->socid;
 		}
 		if ($searchkey != '') $sql .= natural_search(explode(',', $fieldstoshow), $searchkey);
-		if ($objecttmp->ismultientitymanaged == 2) {
+		//if ($objecttmp->ismultientitymanaged == 2) {
 			if (!$user->rights->societe->client->voir && !$user->socid) $sql .= " AND t.rowid = sc.fk_soc AND sc.fk_user = ".$user->id;
-		}
+		//}
 		if ($objecttmp->filter) {	 // Syntax example "(t.ref:like:'SO-%') and (t.date_creation:<:'20160101')"
 			/*if (! DolibarrApi::_checkFilters($objecttmp->filter))
 			{
@@ -6054,6 +6120,8 @@ class Form
 			$regexstring = '\(([^:\'\(\)]+:[^:\'\(\)]+:[^:\(\)]+)\)';
 			$sql .= " AND (".preg_replace_callback('/'.$regexstring.'/', 'Form::forgeCriteriaCallback', $objecttmp->filter).")";
 		}
+		if($objecttmp->table_element=='user')
+			$sql.= ' and t.statut=1';
 		$sql .= $this->db->order($fieldstoshow, "ASC");
 		//$sql.=$this->db->plimit($limit, 0);
 		//print $sql;
@@ -6180,7 +6248,11 @@ class Form
 
 		$out .= '<select id="'.preg_replace('/^\./', '', $htmlname).'" '.($disabled ? 'disabled ' : '').'class="flat '.(preg_replace('/^\./', '', $htmlname)).($morecss ? ' '.$morecss : '').'"';
 		$out .= ' name="'.preg_replace('/^\./', '', $htmlname).'" '.($moreparam ? $moreparam : '');
-		$out .= '>';
+		$re = '/^(search_)*/m';
+		preg_match('/^(search_)*/m',$htmlname,$match); //uniquement sur les filtres de recherche.
+		if(count($match)>1)
+			$out .= ' onchange="this.form.submit();" ';
+		$out .= ' > ';
 
 		if ($show_empty)
 		{

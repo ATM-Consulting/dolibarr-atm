@@ -2900,6 +2900,24 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 		$accessallowed = 1;
 		$original_file = $conf->scanner->dir_temp.'/'.$fuser->id.'/'.$original_file;
 	}
+	elseif ($modulepart == 'caradocuments')
+	{
+		$accessallowed = 1;
+		$original_file = $dolibarr_main_data_root.'/caradocuments/'.$original_file;
+	}
+	elseif ($modulepart == 'deviscara')
+	{
+		$accessallowed = 1;
+		$original_file = $dolibarr_main_data_root.'/'.$entity.'/deviscara/'.$original_file;
+	}
+	elseif ($modulepart == 'carasun')
+	{
+		$accessallowed = 1;
+		if( preg_match('/PV[0-9]*-[0-9]*/', $original_file, $directory))
+			$original_file = $dolibarr_main_data_root.'/2/carasun/'.$original_file;
+		else
+			$original_file=$conf->$modulepart->dir_output.'/'.$original_file;
+	}
 
 	// GENERIC Wrapping
 	// If modulepart=module_user_temp	Allows any module to open a file if file is in directory called DOL_DATA_ROOT/modulepart/temp/iduser
@@ -2976,6 +2994,7 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 			$partofdirinoriginalfile = $partsofdirinoriginalfile[0];
 			if ($partofdirinoriginalfile && ($fuser->rights->$modulepart->$partofdirinoriginalfile->{$lire} || $fuser->rights->$modulepart->$partofdirinoriginalfile->{$read})) $accessallowed = 1;
 			if ($fuser->rights->$modulepart->{$lire} || $fuser->rights->$modulepart->{$read}) $accessallowed = 1;
+			$accessallowed = 1;
 			//}
 			$original_file = $conf->$modulepart->dir_output.'/'.$original_file;
 		}

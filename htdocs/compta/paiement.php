@@ -50,6 +50,7 @@ $socid      = GETPOST('socid', 'int');
 $sortfield	= GETPOST('sortfield', 'alpha');
 $sortorder	= GETPOST('sortorder', 'alpha');
 $page = GETPOST('page', 'int');
+$fromreglement = GETPOST('fromreglement', 'int');
 
 $amounts = array();
 $amountsresttopay = array();
@@ -262,6 +263,7 @@ if (empty($reshook))
 	    $paiement->paiementid   = dol_getIdFromCode($db, GETPOST('paiementcode'), 'c_paiement', 'code', 'id', 1);
 	    $paiement->num_paiement = GETPOST('num_paiement', 'alpha');
 	    $paiement->note         = GETPOST('comment', 'alpha');
+		$paiement->fromreglement         = GETPOST('fromreglement', 'alpha');
 
 	    if (!$error)
 	    {
@@ -286,7 +288,9 @@ if (empty($reshook))
 	            $error++;
 	        }
 	    }
-
+		{//update bc cara toiture si méthode existe.
+			$paiement->cara_update_bc();
+		}
 	    if (!$error)
 	    {
 	        $db->commit();
@@ -503,6 +507,12 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
             print '<td>&nbsp;</td>';
         }
         print "</tr>\n";
+
+
+		// Emetteur du reglement
+        print '<tr><td>'.$langs->trans('Provenance reglement');
+        print '</td>';
+        print '<td>'.$form->selectFromReglement($fromreglement,'fromreglement',1).'</tr>';
 
         // Cheque number
         print '<tr><td>'.$langs->trans('Numero');

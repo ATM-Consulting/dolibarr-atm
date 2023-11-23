@@ -516,10 +516,12 @@ function pdf_build_address($outputlangs, $sourcecompany, $targetcompany = '', $t
     		}
     		else
     		{
-    			$stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->convToOutputCharset(dol_format_address($targetcompany));
+				if(method_exists($object,'getcpville'))
+    				$cpville=$object->getcpville($targetcompany->array_options['options_ville']);
+				$stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->convToOutputCharset(dol_format_address($targetcompany));
     			// Country
     			if (!empty($targetcompany->country_code) && $targetcompany->country_code != $sourcecompany->country_code) $stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcompany->country_code));
-
+				$stringaddress.= ' '.$cpville->cp .' '.$cpville->villepdf;
     			if (!empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS) || preg_match('/targetwithdetails/', $mode))
     			{
     				// Phone
@@ -533,13 +535,13 @@ function pdf_build_address($outputlangs, $sourcecompany, $targetcompany = '', $t
     				// Fax
     			    if (!empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS) || $mode == 'targetwithdetails' || preg_match('/targetwithdetails_fax/', $mode))
     			    {
-    			    	if ($targetcompany->fax) $stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->transnoentities("Fax").": ".$outputlangs->convToOutputCharset($targetcompany->fax);
+    			    	if ($targetcompany->fax) $stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->transnoentities("Phone").": ".$outputlangs->convToOutputCharset($targetcompany->fax);
     			    }
     				// EMail
-    			    if (!empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS) || $mode == 'targetwithdetails' || preg_match('/targetwithdetails_email/', $mode))
-    			    {
-    			    	if ($targetcompany->email) $stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($targetcompany->email);
-    			    }
+    			    // if (!empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS) || $mode == 'targetwithdetails' || preg_match('/targetwithdetails_email/', $mode))
+    			    // {
+    			    // 	if ($targetcompany->email) $stringaddress .= ($stringaddress ? "\n" : '').$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($targetcompany->email);
+    			    // }
     				// Web
     			    if (!empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS) || $mode == 'targetwithdetails' || preg_match('/targetwithdetails_url/', $mode))
     			    {
@@ -2154,7 +2156,7 @@ function pdf_getLinkedObjects($object, $outputlangs)
 				$linkedobjects[$objecttype]['date_value'] = dol_print_date($elementobject->date_contrat, 'day', '', $outputlangs);
 			}
 		}
-		else if ($objecttype == 'fichinter')
+		elseif ($objecttype == 'fichinter')
 		{
 			$outputlangs->load('interventions');
 			foreach($objects as $elementobject)

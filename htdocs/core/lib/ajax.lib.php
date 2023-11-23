@@ -46,6 +46,7 @@
 function ajax_autocompleter($selected, $htmlname, $url, $urloption = '', $minLength = 2, $autoselect = 0, $ajaxoptions = array())
 {
     if (empty($minLength)) $minLength=1;
+	$urloption=str_replace ("onchange=\"this.form.submit();\"",'',$urloption);
 
     $dataforrenderITem='ui-autocomplete';
     $dataforitem='ui-autocomplete-item';

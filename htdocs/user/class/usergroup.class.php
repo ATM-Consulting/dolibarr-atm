@@ -100,7 +100,10 @@ class UserGroup extends CommonObject
 
 	public $oldcopy;		// To contains a clone of this when we need to save old properties of object
 
-
+	public $fields=array(
+		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>1, 'position'=>1, 'notnull'=>1, 'visible'=>-1, 'noteditable'=>'1', 'index'=>1, 'comment'=>"Id"),
+		'nom' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>1, 'position'=>10, 'notnull'=>1, 'visible'=>4, 'noteditable'=>'1', 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'comment'=>"Reference of object"),
+	);
 	/**
      *    Constructor de la classe
      *
@@ -260,7 +263,7 @@ class UserGroup extends CommonObject
 			$sql.= " AND u.entity IN (0,".$conf->entity.")";
 		}
 		if (! empty($excludefilter)) $sql.=' AND ('.$excludefilter.')';
-
+		$sql.=' order by lastname';
 		dol_syslog(get_class($this)."::listUsersForGroup", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)

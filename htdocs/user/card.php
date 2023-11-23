@@ -86,6 +86,7 @@ $socid = 0;
 if ($user->socid > 0) $socid = $user->socid;
 $feature2 = 'user';
 
+if(!$caneditpassword)
 $result = restrictedArea($user, 'user', $id, 'user&user', $feature2);
 
 if ($user->id <> $id && !$canreaduser) accessforbidden();

@@ -651,7 +651,10 @@ class Paiement extends CommonObject
                 '',
                 $user,
                 $emetteur_nom,
-                $emetteur_banque
+                $emetteur_banque,
+				'',
+				null,
+				$this->fromreglement,
             );
 
             // Mise a jour fk_bank dans llx_paiement
@@ -1343,5 +1346,39 @@ class Paiement extends CommonObject
 		}
 
 		return parent::fetch_thirdparty($force_thirdparty_id);
+	}
+
+	public function cara_update_bc(){
+		global $action,$confirm,$id;
+		//recherche de la facture dans les bc
+		//bc_toiture
+		$listbc=array('toit'=>'/deviscara/class/toit.class.php');
+		foreach ($listbc as $object=>$classbc){
+			dol_include_once($classbc);
+			$obj=new $object($this->db);
+			if(method_exists($object,'updateReglementFromFac')){
+				if($action=='confirm_delete_paiement' && $confirm=='yes'){
+					$sql = 'SELECT fromreglement,amount';
+    				$sql.= ' FROM '.MAIN_DB_PREFIX.'bank';
+    				$sql.= ' WHERE rowid = '.$this->bank_line;
+					$resql = $this->db->query($sql);
+					if ($resql)
+					{
+						$objsql = $this->db->fetch_object($resql);
+						$fromreglement=$objsql->fromreglement;
+						$amount=$objsql->amount;
+					}
+					$key=$id;
+					$obj->updateReglementFromFac($key,(-1)*$amount,$fromreglement);
+				}
+				else{
+					foreach ($this->amounts as $key => $amount)
+					{
+						$obj->updateReglementFromFac($key,$amount,$this->fromreglement);
+					}
+				}
+			}
+			
+		}
 	}
 }

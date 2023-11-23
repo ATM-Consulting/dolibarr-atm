@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/cheque/class/remisecheque.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array('banks', 'categories', 'bills', 'companies', 'compta'));
@@ -398,7 +399,7 @@ if ($action == 'new')
 	print '<input type="submit" class="button" name="filter" value="'.dol_escape_htmltag($langs->trans("ToFilter")).'">';
     if ($filterdate || $filteraccountid > 0)
     {
-    	print ' &nbsp; ';
+    	print '   ';
     	print '<input type="submit" class="button" name="removefilter" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     }
 	print '</div>';
@@ -407,10 +408,13 @@ if ($action == 'new')
 
 	$sql = "SELECT ba.rowid as bid, b.datec as datec, b.dateo as date, b.rowid as transactionid, ";
 	$sql .= " b.amount, ba.label, b.emetteur, b.num_chq, b.banque,";
-	$sql .= " p.rowid as paymentid";
+	$sql .= " p.rowid as paymentid, s.code_compta";  // Ajout du code_compta
 	$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."paiement as p ON p.fk_bank = b.rowid";
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."bank_account as ba ON (b.fk_account = ba.rowid)";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON pf.fk_paiement = p.rowid";  // Linking paiement to facture using the intermediate table
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON f.rowid = pf.fk_facture";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = f.fk_soc";
 	$sql .= " WHERE b.fk_type = 'CHQ'";
 	$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
 	$sql .= " AND b.fk_bordereau = 0";
@@ -428,6 +432,7 @@ if ($action == 'new')
 			$accounts[$obj->bid] = $obj->label;
 			$lines[$obj->bid][$i]["date"] = $db->jdate($obj->date);
 			$lines[$obj->bid][$i]["amount"] = $obj->amount;
+            $lines[$obj->bid][$i]["code_compta"] = $obj->code_compta;
 			$lines[$obj->bid][$i]["emetteur"] = $obj->emetteur;
 			$lines[$obj->bid][$i]["numero"] = $obj->num_chq;
 			$lines[$obj->bid][$i]["banque"] = $obj->banque;
@@ -473,6 +478,7 @@ if ($action == 'new')
 		print '<tr class="liste_titre">';
 		print '<td>'.$langs->trans("DateChequeReceived").'</td>'."\n";
 		print '<td>'.$langs->trans("ChequeNumber")."</td>\n";
+		print '<td>'.$langs->trans("Code compta")."</td>\n";
 		print '<td>'.$langs->trans("CheckTransmitter")."</td>\n";
 		print '<td>'.$langs->trans("Bank")."</td>\n";
 		print '<td>'.$langs->trans("Amount")."</td>\n";
@@ -497,6 +503,7 @@ if ($action == 'new')
 				print '<tr class="oddeven">';
 				print '<td>'.dol_print_date($value["date"], 'day').'</td>';
 				print '<td>'.$value["numero"]."</td>\n";
+                print '<td>'.$value["code_compta"]."</td>\n";
 				print '<td>'.$value["emetteur"]."</td>\n";
 				print '<td>'.$value["banque"]."</td>\n";
 				print '<td class="right">'.price($value["amount"], 0, $langs, 1, -1, -1, $conf->currency).'</td>';
@@ -511,7 +518,7 @@ if ($action == 'new')
 				}
 				else
 				{
-					print '&nbsp;';
+					print ' ';
 				}
 				print '</td>';
 				// Link to bank transaction
@@ -523,7 +530,7 @@ if ($action == 'new')
 				}
 				else
 				{
-					print '&nbsp;';
+					print ' ';
 				}
 				print '</td>';
 
@@ -575,7 +582,7 @@ else
     print '<table class="nobordernopadding" width="100%"><tr><td>';
     print $langs->trans('Date');
     print '</td>';
-    if ($action != 'editdate') print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate&amp;id='.$object->id.'">'.img_edit($langs->trans('SetDate'), 1).'</a></td>';
+    if ($action != 'editdate') print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate&id='.$object->id.'">'.img_edit($langs->trans('SetDate'), 1).'</a></td>';
     print '</tr></table>';
     print '</td><td colspan="2">';
     if ($action == 'editdate')
@@ -589,7 +596,7 @@ else
     }
     else
     {
-        print $object->date_bordereau ? dol_print_date($object->date_bordereau, 'day') : '&nbsp;';
+        print $object->date_bordereau ? dol_print_date($object->date_bordereau, 'day') : ' ';
     }
 
 	print '</td>';
@@ -602,7 +609,7 @@ else
 	print '<table class="nobordernopadding" width="100%"><tr><td>';
     print $langs->trans('RefExt');
     print '</td>';
-    if ($action != 'editrefext') print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editrefext&amp;id='.$object->id.'">'.img_edit($langs->trans('SetRefExt'),1).'</a></td>';
+    if ($action != 'editrefext') print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editrefext&id='.$object->id.'">'.img_edit($langs->trans('SetRefExt'),1).'</a></td>';
     print '</tr></table>';
     print '</td><td colspan="2">';
     if ($action == 'editrefext')
@@ -648,10 +655,13 @@ else
 	// List of cheques
 	$sql = "SELECT b.rowid, b.amount, b.num_chq, b.emetteur,";
 	$sql .= " b.dateo as date, b.datec as datec, b.banque,";
-	$sql .= " p.rowid as pid, ba.rowid as bid, p.statut";
+	$sql .= " p.rowid as pid, ba.rowid as bid, p.statut, s.code_compta";  // Added s.code_compta
 	$sql .= " FROM ".MAIN_DB_PREFIX."bank_account as ba";
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."bank as b ON (b.fk_account = ba.rowid)";
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."paiement as p ON p.fk_bank = b.rowid";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON pf.fk_paiement = p.rowid";  // Linking paiement to facture using the intermediate table
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON f.rowid = pf.fk_facture";
+    $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = f.fk_soc";
 	$sql .= " WHERE ba.entity IN (".getEntity('bank_account').")";
 	$sql .= " AND b.fk_type= 'CHQ'";
 	$sql .= " AND b.fk_bordereau = ".$object->id;
@@ -665,13 +675,14 @@ else
 	    print '<div class="div-table-responsive">';
 		print '<table class="noborder centpercent">';
 
-		$param = "&amp;id=".$object->id;
+		$param = "&id=".$object->id;
 
 		print '<tr class="liste_titre">';
 		print_liste_field_titre("Cheques", '', '', '', '', 'width="30"');
 		print_liste_field_titre("DateChequeReceived", $_SERVER["PHP_SELF"], "b.dateo,b.rowid", "", $param, 'align="center"', $sortfield, $sortorder);
 		print_liste_field_titre("Numero", $_SERVER["PHP_SELF"], "b.num_chq", "", $param, 'align="center"', $sortfield, $sortorder);
-		print_liste_field_titre("CheckTransmitter", $_SERVER["PHP_SELF"], "b.emetteur", "", $param, "", $sortfield, $sortorder);
+        print_liste_field_titre("Code compta", $_SERVER["PHP_SELF"], "s.code_compta", "", $param, "", $sortfield, $sortorder); // code comptable
+        print_liste_field_titre("CheckTransmitter", $_SERVER["PHP_SELF"], "b.emetteur", "", $param, "", $sortfield, $sortorder);
 		print_liste_field_titre("Bank", $_SERVER["PHP_SELF"], "b.banque", "", $param, "", $sortfield, $sortorder);
 		print_liste_field_titre("Amount", $_SERVER["PHP_SELF"], "b.amount", "", $param, 'class="right"', $sortfield, $sortorder);
 		print_liste_field_titre("Payment", $_SERVER["PHP_SELF"], "p.rowid", "", $param, 'align="center"', $sortfield, $sortorder);
@@ -687,7 +698,8 @@ else
     			print '<tr class="oddeven">';
     			print '<td class="center">'.$i.'</td>';
     			print '<td class="center">'.dol_print_date($db->jdate($objp->date), 'day').'</td>'; // Date operation
-    			print '<td class="center">'.($objp->num_chq ? $objp->num_chq : '&nbsp;').'</td>';
+    			print '<td class="center">'.($objp->num_chq ? $objp->num_chq : ' ').'</td>';
+                print '<td>'.$objp->code_compta."</td>\n";
     			print '<td>'.dol_trunc($objp->emetteur, 24).'</td>';
     			print '<td>'.dol_trunc($objp->banque, 24).'</td>';
     			print '<td class="right">'.price($objp->amount).'</td>';
@@ -701,7 +713,7 @@ else
     			}
     			else
     			{
-    				print '&nbsp;';
+    				print ' ';
     			}
     			print '</td>';
     			// Link to bank transaction
@@ -713,22 +725,22 @@ else
     			}
     			else
     			{
-    				print '&nbsp;';
+    				print ' ';
     			}
     			print '</td>';
     			// Action button
     			print '<td class="right">';
     			if ($object->statut == 0)
     			{
-    				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=remove&amp;lineid='.$objp->rowid.'">'.img_delete().'</a>';
+    				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=remove&lineid='.$objp->rowid.'">'.img_delete().'</a>';
     			}
        			if ($object->statut == 1 && $objp->statut != 2)
        			{
-       				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=reject_check&amp;lineid='.$objp->rowid.'">'.img_picto($langs->trans("RejectCheck"), 'disable').'</a>';
+       				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=reject_check&lineid='.$objp->rowid.'">'.img_picto($langs->trans("RejectCheck"), 'disable').'</a>';
        			}
     			if ($objp->statut == 2)
     			{
-    				print ' &nbsp; '.img_picto($langs->trans('CheckRejected'), 'statut8').'</a>';
+    				print '   '.img_picto($langs->trans('CheckRejected'), 'statut8').'</a>';
     			}
     		    print '</td>';
     			print '</tr>';
@@ -774,12 +786,12 @@ print '<div class="tabsAction">';
 
 if ($user->socid == 0 && !empty($object->id) && $object->statut == 0 && $user->rights->banque->cheque)
 {
-	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=valide&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$langs->trans('Validate').'</a>';
+	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=valide&sortfield='.$sortfield.'&sortorder='.$sortorder.'">'.$langs->trans('Validate').'</a>';
 }
 
 if ($user->socid == 0 && !empty($object->id) && $user->rights->banque->cheque)
 {
-	print '<a class="butActionDelete" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=delete&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$langs->trans('Delete').'</a>';
+	print '<a class="butActionDelete" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&sortfield='.$sortfield.'&sortorder='.$sortorder.'">'.$langs->trans('Delete').'</a>';
 }
 print '</div>';
 

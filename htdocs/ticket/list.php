@@ -559,6 +559,7 @@ foreach ($object->fields as $key => $val)
 		{
 			print '<td class="liste_titre'.($cssforfield ? ' '.$cssforfield : '').'"><input type="text" class="flat maxwidth75" name="search_societe" value="'.dol_escape_htmltag($search_societe).'"></td>';
 		}
+		
 		else {
 			print '<td class="liste_titre'.($cssforfield ? ' '.$cssforfield : '').'"><input type="text" class="flat maxwidth75" name="search_'.$key.'" value="'.dol_escape_htmltag($search[$key]).'"></td>';
 		}
@@ -634,6 +635,7 @@ while ($i < min($num, $limit))
 
 	// Show here line of result
 	print '<tr class="oddeven">';
+	$object->get_alerte();
 	foreach ($object->fields as $key => $val)
 	{
 		$cssforfield = '';
@@ -656,6 +658,12 @@ while ($i < min($num, $limit))
 			elseif ($key == 'type_code') print $langs->getLabelFromKey($db, $object->type_code, 'c_ticket_type', 'code', 'label');
 			elseif ($key == 'tms') print dol_print_date($db->jdate($obj->$key), 'dayhour', 'tzuser');
 			elseif (in_array($val['type'], array('date', 'datetime', 'timestamp'))) print $object->showOutputField($val, $key, $db->jdate($obj->$key), '');
+			elseif($key=='ref'){
+				print '<a href="'.dol_buildpath('/ticket/card.php', 1).'?id='.$object->id.'">'.$object->showOutputField($val, $key, $obj->$key, '').'</a>';
+				if ($object->alerte==true){
+					print'&nbsp;<img src="'.DOL_URL_ROOT.dol_buildpath('/deviscaraiso/img/',1).'warning.gif " alt="Alerte" height="25" > ';
+				}
+			}
 			else print $object->showOutputField($val, $key, $obj->$key, '');
 			print '</td>';
 			if (!$i) $totalarray['nbfield']++;

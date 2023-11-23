@@ -25,7 +25,7 @@ span.butAction, span.butActionDelete {
 
 .button, .buttonDelete, .butAction, .butActionDelete, .butActionRefused, .butActionNewRefused {
 	border-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.25);
-	display: inline-block;
+	/*display: inline-block;*/
 	padding: 0.4em <?php echo ($dol_optimize_smallscreen?'0.4':'0.7'); ?>em;
 	margin: 0em <?php echo ($dol_optimize_smallscreen?'0.7':'0.9'); ?>em;
 	line-height: 20px;

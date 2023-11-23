@@ -453,31 +453,31 @@ class FormMail extends Form
 			}
 
 			// Zone to select email template
-			if (count($modelmail_array) > 0)
-			{
-				// If list of template is filled
-				$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
-				$out .= '<span class="opacitymedium">'.$langs->trans('SelectMailModel').':</span> '.$this->selectarray('modelmailselected', $modelmail_array, 0, 1, 0, 0, '', 0, 0, 0, '', 'minwidth100');
-				if ($user->admin) $out .= info_admin($langs->trans("YouCanChangeValuesForThisListFrom", $langs->transnoentitiesnoconv('Setup').' - '.$langs->transnoentitiesnoconv('EMails')), 1);
-				$out .= ' &nbsp; ';
-				$out .= '<input class="button" type="submit" value="'.$langs->trans('Apply').'" name="modelselected" id="modelselected">';
-				$out .= ' &nbsp; ';
-				$out .= '</div>';
-			} elseif (!empty($this->param['models']) && in_array($this->param['models'], array(
-					'propal_send', 'order_send', 'facture_send',
-					'shipping_send', 'fichinter_send', 'supplier_proposal_send', 'order_supplier_send',
-					'invoice_supplier_send', 'thirdparty', 'contract', 'user', 'all'
-                )))
-			{
-				// If list of template is empty
-				$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
-				$out .= $langs->trans('SelectMailModel').': <select name="modelmailselected" disabled="disabled"><option value="none">'.$langs->trans("NoTemplateDefined").'</option></select>'; // Do not put 'disabled' on 'option' tag, it is already on 'select' and it makes chrome crazy.
-				if ($user->admin) $out .= info_admin($langs->trans("YouCanChangeValuesForThisListFrom", $langs->transnoentitiesnoconv('Setup').' - '.$langs->transnoentitiesnoconv('EMails')), 1);
-				$out .= ' &nbsp; ';
-				$out .= '<input class="button" type="submit" value="'.$langs->trans('Apply').'" name="modelselected" disabled="disabled" id="modelselected">';
-				$out .= ' &nbsp; ';
-				$out .= '</div>';
-			}
+			// if (count($modelmail_array) > 0)
+			// {
+			// 	// If list of template is filled
+			// 	$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
+			// 	$out .= '<span class="opacitymedium">'.$langs->trans('SelectMailModel').':</span> '.$this->selectarray('modelmailselected', $modelmail_array, 0, 1, 0, 0, '', 0, 0, 0, '', 'minwidth100');
+			// 	if ($user->admin) $out .= info_admin($langs->trans("YouCanChangeValuesForThisListFrom", $langs->transnoentitiesnoconv('Setup').' - '.$langs->transnoentitiesnoconv('EMails')), 1);
+			// 	$out .= ' &nbsp; ';
+			// 	$out .= '<input class="button" type="submit" value="'.$langs->trans('Apply').'" name="modelselected" id="modelselected">';
+			// 	$out .= ' &nbsp; ';
+			// 	$out .= '</div>';
+			// } elseif (!empty($this->param['models']) && in_array($this->param['models'], array(
+			// 		'propal_send', 'order_send', 'facture_send',
+			// 		'shipping_send', 'fichinter_send', 'supplier_proposal_send', 'order_supplier_send',
+			// 		'invoice_supplier_send', 'thirdparty', 'contract', 'user', 'all'
+            //     )))
+			// {
+			// 	// If list of template is empty
+			// 	$out .= '<div class="center" style="padding: 0px 0 12px 0">'."\n";
+			// 	$out .= $langs->trans('SelectMailModel').': <select name="modelmailselected" disabled="disabled"><option value="none">'.$langs->trans("NoTemplateDefined").'</option></select>'; // Do not put 'disabled' on 'option' tag, it is already on 'select' and it makes chrome crazy.
+			// 	if ($user->admin) $out .= info_admin($langs->trans("YouCanChangeValuesForThisListFrom", $langs->transnoentitiesnoconv('Setup').' - '.$langs->transnoentitiesnoconv('EMails')), 1);
+			// 	$out .= ' &nbsp; ';
+			// 	$out .= '<input class="button" type="submit" value="'.$langs->trans('Apply').'" name="modelselected" disabled="disabled" id="modelselected">';
+			// 	$out .= ' &nbsp; ';
+			// 	$out .= '</div>';
+			// }
 
 
 

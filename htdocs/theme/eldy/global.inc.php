@@ -821,7 +821,11 @@ table[summary="list_of_modules"] .fa-cog {
 	height: 100px;
 }
 
-
+// @media screen and (max-width: 768px) {
+//   .ui-autocomplete-input {
+//     display: none;
+//   }
+// }
 /* ============================================================================== */
 /* Styles to hide objects                                                         */
 /* ============================================================================== */
@@ -5252,8 +5256,8 @@ a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-i
 }
 select {
     /* display: inline-block; */	/* We can't set this. This disable ability to make */
-    overflow:hidden;
-    white-space: nowrap;			/* Enabling this make behaviour strange when selecting the empty value if this empty value is '' instead of '&nbsp;' */
+    /*overflow:hidden;*/
+    white-space: nowrap;			/* Enabling this make behaviour strange when selecting the empty value if this empty value is '' instead of ' ' */
     text-overflow: ellipsis;
 }
 .fiche .ui-controlgroup {

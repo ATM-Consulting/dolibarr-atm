@@ -945,6 +945,9 @@ if (empty($reshook))
 		{
 			$paiement = new Paiement($db);
 			$result = $paiement->fetch(GETPOST('paiement_id'));
+			{//update bc cara toiture si méthode existe.
+				$paiement->cara_update_bc();
+			}
 			if ($result > 0) {
 				$result = $paiement->delete(); // If fetch ok and found
 				header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
@@ -952,6 +955,7 @@ if (empty($reshook))
 			if ($result < 0) {
 				setEventMessages($paiement->error, $paiement->errors, 'errors');
 			}
+			
 		}
 	}
 
@@ -1183,6 +1187,7 @@ if (empty($reshook))
 							}
 						}
 
+						$object->update_total_rac();
 						$object->update_price(1);
 					}
 				}
@@ -2272,7 +2277,7 @@ if (empty($reshook))
 					}
 				}
 			}
-
+			$object->update_total_rac();
 			$result = $object->updateline(GETPOST('lineid'), $description, $pu_ht, $qty, GETPOST('remise_percent'),
 				$date_start, $date_end, $vat_rate, $localtax1_rate, $localtax2_rate, 'HT', $info_bits, $type,
 				GETPOST('fk_parent_line'), 0, $fournprice, $buyingprice, $label, $special_code, $array_options, GETPOST('progress'),
@@ -3889,7 +3894,7 @@ elseif ($id > 0 || !empty($ref))
 	}
 
 	// Call Hook formConfirm
-	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid);
+	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid, 'remainingtopay' => &$resteapayer);
 	$reshook = $hookmanager->executeHooks('formConfirm', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 	if (empty($reshook)) $formconfirm .= $hookmanager->resPrint;
 	elseif ($reshook > 0) $formconfirm = $hookmanager->resPrint;
@@ -4448,7 +4453,23 @@ elseif ($id > 0 || !empty($ref))
 
 	// Total with tax
 	print '<tr><td>'.$langs->trans('AmountTTC').'</td><td class="nowrap amountcard">'.price($object->total_ttc, 1, '', 1, - 1, - 1, $conf->currency).'</td></tr>';
-
+	//recherche des primes à afficher
+	$tab_prime=array();
+	foreach ($object->lines as $id_line=>$line){
+		$product=new Product($db);
+		if ($line->fk_product > 0){
+			$product->fetch_optionals($line->fk_product);
+			if ($product->array_options['options_prime']>0 ){
+				$tab_prime[$id_line]=$line;
+				$total_prime += $line->total_ht;
+			}
+		}
+	}
+	foreach($tab_prime as $prime){
+		print '<tr><td>'.$prime->libelle.'</td><td class="nowrap amountcard">'.price($prime->total_ht, 1, '', 1, - 1, - 1, $conf->currency).'</td></tr>';
+	}
+	$total_rac=$object->total_ttc+$total_prime;
+	print '<tr><td>Total Reste à charge</td><td class="nowrap amountcard">'.price($total_rac, 1, '', 1, - 1, - 1, $conf->currency).'</td></tr>';
 	print '</table>';
 
 
@@ -4610,6 +4631,7 @@ elseif ($id > 0 || !empty($ref))
 		print '<td class="liste_titre right">'.$langs->trans('BankAccount').'</td>';
 	}
 	print '<td class="liste_titre right">'.$langs->trans('Amount').'</td>';
+	print '<td class="right">'.$langs->trans('Emetteur du réglement').'</td>';
 	print '<td class="liste_titre" width="18">&nbsp;</td>';
 	print '</tr>';
 
@@ -4617,7 +4639,7 @@ elseif ($id > 0 || !empty($ref))
 	$sql = 'SELECT p.datep as dp, p.ref, p.num_paiement as num_payment, p.rowid, p.fk_bank,';
 	$sql .= ' c.code as payment_code, c.libelle as payment_label,';
 	$sql .= ' pf.amount,';
-	$sql .= ' ba.rowid as baid, ba.ref as baref, ba.label, ba.number as banumber, ba.account_number, ba.fk_accountancy_journal';
+	$sql .= ' ba.rowid as baid, ba.ref as baref, ba.label, ba.number as banumber, ba.account_number,b.fromreglement, ba.fk_accountancy_journal';
 	$sql .= ' FROM '.MAIN_DB_PREFIX.'paiement_facture as pf, '.MAIN_DB_PREFIX.'paiement as p';
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_paiement as c ON p.fk_paiement = c.id';
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'bank as b ON p.fk_bank = b.rowid';
@@ -4670,6 +4692,7 @@ elseif ($id > 0 || !empty($ref))
 					print '</td>';
 				}
 				print '<td class="right">'.price($sign * $objp->amount).'</td>';
+				print '<td class="right">'.$form->showFromReglement($objp->fromreglement).'</td>';
 				print '<td class="center">';
 				if ($object->statut == Facture::STATUS_VALIDATED && $object->paye == 0 && $user->socid == 0)
 				{
@@ -4678,6 +4701,8 @@ elseif ($id > 0 || !empty($ref))
 					print '</a>';
 				}
 				print '</td>';
+				
+				
 				print '</tr>';
 				$i++;
 			}
