@@ -93,6 +93,7 @@ StockLimitShort=Limite pour alerte
 StockLimit=Limite stock pour alerte
 StockLimitDesc=(vide) signifie pas d'avertissement. <br> 0 peut être utilisé pour déclencher un avertissement dès que le stock est vide.
 PhysicalStock=Stock physique
+StockWarehouse=Stock entrepôt
 RealStock=Stock réel
 RealStockDesc=Le stock physique ou réel est le stock présent dans les entrepôts.
 RealStockWillAutomaticallyWhen=Le stock réel sera modifié selon ces règles (voir la configuration du module Stock) :
