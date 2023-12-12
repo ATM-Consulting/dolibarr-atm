@@ -1,0 +1,1 @@
+- NEW DA024200 - Add product filter in inventory card - *2023-12-11*

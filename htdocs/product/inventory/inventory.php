@@ -43,6 +43,9 @@ $cancel = GETPOST('cancel', 'aZ09');
 $contextpage = GETPOST('contextpage', 'aZ') ?GETPOST('contextpage', 'aZ') : 'inventorycard'; // To manage different context of search
 $backtopage = GETPOST('backtopage', 'alpha');
 $listoffset = GETPOST('listoffset', 'alpha');
+/** SPE SDM : ajout d'un filtre par produit sur les inventaires **/
+$fk_product_search = GETPOST('fk_product_search', 'int');
+/** SPE SDM **/
 $limit = GETPOST('limit', 'int') > 0 ?GETPOST('limit', 'int') : $conf->liste_limit;
 $page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
 if (empty($page) || $page == -1) {
@@ -260,8 +263,10 @@ if (empty($reshook)) {
 	}
 
 	// Save quantity found during inventory (when we click on Save button on inventory page)
-	if ($action =='updateinventorylines' && $permissiontoadd) {
-		$sql = 'SELECT id.rowid, id.datec as date_creation, id.tms as date_modification, id.fk_inventory, id.fk_warehouse,';
+    /** SPE SDM : ajout d'un filtre par produit sur les inventaires **/
+	if ($action =='updateinventorylines' && GETPOSTISSET('save', 'alphanohtml') && $permissiontoadd) {
+    /** SPE SDM **/
+        $sql = 'SELECT id.rowid, id.datec as date_creation, id.tms as date_modification, id.fk_inventory, id.fk_warehouse,';
 		$sql .= ' id.fk_product, id.batch, id.qty_stock, id.qty_view, id.qty_regulated';
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'inventorydet as id';
 		$sql .= ' WHERE id.fk_inventory = '.((int) $object->id);
@@ -897,6 +902,10 @@ print '<div class="fichecenter">';
 //print '<div class="fichehalfleft">';
 print '<div class="clearboth"></div>';
 
+/** SPE SDM : ajout d'un filtre par produit sur les inventaires **/
+print $form->select_produits($fk_product_search, 'fk_product_search', '', 0);
+print '<input type="submit" class="button paddingright" name="searchbyproduct" value="'.$langs->trans("Search").'">';
+/** SPE SDM **/
 //print load_fiche_titre($langs->trans('Consumption'), '', '');
 
 print '<div class="div-table-responsive-no-min">';
@@ -978,6 +987,9 @@ $sql = 'SELECT id.rowid, id.datec as date_creation, id.tms as date_modification,
 $sql .= ' id.fk_product, id.batch, id.qty_stock, id.qty_view, id.qty_regulated, id.fk_movement, id.pmp_real, id.pmp_expected';
 $sql .= ' FROM '.MAIN_DB_PREFIX.'inventorydet as id';
 $sql .= ' WHERE id.fk_inventory = '.((int) $object->id);
+/** SPE SDM : ajout d'un filtre par produit sur les inventaires **/
+if($fk_product_search > 0) $sql .= ' AND fk_product = '.$fk_product_search;
+/** SPE SDM **/
 $sql .= $db->order('id.rowid', 'ASC');
 $sql .= $db->plimit($limit, $offset);
 
