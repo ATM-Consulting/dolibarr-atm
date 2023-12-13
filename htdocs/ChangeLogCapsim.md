@@ -1,0 +1,1 @@
+- FIX DA024205 Report (pr 27079) : formconfirm() add contact to project and tasks error data too long in URL (GET)

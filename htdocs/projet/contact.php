@@ -125,9 +125,10 @@ if ($action == 'addcontact') {
 			}
 			$formquestion[] = array('type'=> 'other', 'name'=>'tasksavailable', 'label'=>'', 'value' => '<input type="hidden" id="tasksavailable" name="tasksavailable" value="'.implode(',', array_keys($task_to_affect)).'">');
 		}
-
-		$formconfirmtoaddtasks = $form->formconfirm($_SERVER['PHP_SELF'] . $url_redirect, $text, '', 'addcontact_confirm', $formquestion, '', 1, 300, 590);
-		$formconfirmtoaddtasks .='
+        /**SPE CAPSIM : REPORT pr 27079**/
+        $formconfirmtoaddtasks = $form->formconfirm($_SERVER['PHP_SELF'] . $url_redirect, $text, '', 'addcontact_confirm', $formquestion, '', ((count($formquestion) > 10) ? 0 : 1), 300, 590);
+        /**SPE CAPSIM**/
+        $formconfirmtoaddtasks .='
 		 <script>
 		 $(document).ready(function() {
 			var saveprop = false;
@@ -150,6 +151,12 @@ if ($action == 'addcontact') {
 
 // Add new contact
 if ($action == 'addcontact_confirm' && $user->rights->projet->creer) {
+    /**SPE CAPSIM : REPORT pr 27079**/
+    if (GETPOST('confirm', 'alpha') == 'no') {
+        header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+        exit;
+    }
+    /**SPE CAPSIM**/
 	$contactid = (GETPOST('userid') ? GETPOST('userid', 'int') : GETPOST('contactid', 'int'));
 	$typeid = (GETPOST('typecontact') ? GETPOST('typecontact') : GETPOST('type'));
 
