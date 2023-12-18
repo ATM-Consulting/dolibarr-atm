@@ -906,7 +906,13 @@ if ($action == 'create') {
 	print '<input type="hidden" name="token" value="' . newToken() . '">';
 	print '<input type="hidden" name="action" value="add">';
 	if ($backtopage) {
+        /*
+         * Spécifique CDC Conseil, en attente de PR standard : https://github.com/Dolibarr/dolibarr/pull/27161
+         */
         print '<input type="hidden" name="backtopage" value="' . $backtopage . '?fk_job='.$fk_job.'">';
+        /*
+         * Fin du spécifique
+         */
 	}
 
 	if ($backtopageforcancel) {
