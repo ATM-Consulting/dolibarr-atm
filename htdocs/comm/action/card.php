@@ -474,8 +474,14 @@ if (empty($reshook) && $action == 'add') {
 				
 				if (!empty($backtopage)) {
 					dol_syslog("Back to ".$backtopage.($moreparam ? (preg_match('/\?/', $backtopage) ? '&'.$moreparam : '?'.$moreparam) : ''));
+                    /*
+                     * Spécifique CDC Conseil, par Saami, voir PR https://github.com/Dolibarr/dolibarr/pull/27052
+                     */
 					$httpsIfNeeded = (preg_match('!^https://!', $backtopage)) ? '' : 'https://';
 					header("Location: ".$httpsIfNeeded.$backtopage.($moreparam ? (preg_match('/\?/', $backtopage) ? '&'.$moreparam : '?'.$moreparam) : ''));
+                    /*
+                     * Fin Spécifique
+                     */
 				} elseif ($idaction) {
 					header("Location: ".DOL_URL_ROOT.'/comm/action/card.php?id='.$idaction.($moreparam ? '&'.$moreparam : ''));
 				} else {
