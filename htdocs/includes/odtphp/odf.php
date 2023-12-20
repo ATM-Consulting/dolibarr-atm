@@ -234,6 +234,10 @@ class Odf
 
         $odtResult = '';
 
+        /*
+         * Spécifique SDM : Ajout du paramètre $encode pour les utilisations récursive de la fonction _replaceHtmlWithOdtTag()
+         * A supprimer, dès que mergé en standard : https://github.com/Dolibarr/dolibarr/pull/27187
+         */
         foreach ((array) $tags as $tag) {
             // Check if the current item is a tag or just plain text
             if (isset($tag['text'])) {
@@ -246,23 +250,23 @@ class Odf
                         break;
                     case 'strong':
                     case 'b':
-                        $odtResult .= '<text:span text:style-name="boldText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="boldText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 'i':
                     case 'em':
-                        $odtResult .= '<text:span text:style-name="italicText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="italicText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 'u':
-                        $odtResult .= '<text:span text:style-name="underlineText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="underlineText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 's':
-                        $odtResult .= '<text:span text:style-name="strikethroughText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="strikethroughText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 'sub':
-                        $odtResult .= '<text:span text:style-name="subText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="subText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 'sup':
-                        $odtResult .= '<text:span text:style-name="supText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                        $odtResult .= '<text:span text:style-name="supText">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                         break;
                     case 'span':
                         if (isset($tag['attributes']['style'])) {
@@ -299,15 +303,18 @@ class Odf
                                 // Generate a unique id for the style (using microtime and random because some CPUs are really fast...)
                                 $key = floatval(str_replace('.', '', microtime(true))) + rand(0, 10);
                                 $customStyles[$key] = $odtStyles;
-                                $odtResult .= '<text:span text:style-name="customStyle' . $key . '">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
+                                $odtResult .= '<text:span text:style-name="customStyle' . $key . '">' . ($tag['children'] != null ? $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode) : $this->encode_chars($tag['innerText'], $encode, $charset)) . '</text:span>';
                             }
                         }
                         break;
                     default:
-                        $odtResult .= $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations);
+                        $odtResult .= $this->_replaceHtmlWithOdtTag($tag['children'], $customStyles, $fontDeclarations, $encode);
                         break;
                 }
             }
+            /*
+             * Fin du spécifique
+             */
         }
         return $odtResult;
     }
