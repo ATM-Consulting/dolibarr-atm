@@ -234,6 +234,10 @@ class Odf
 
         $odtResult = '';
 
+        /*
+         * Spécifique SDM : Ajout du paramètre $encode pour les utilisations récursive de la fonction _replaceHtmlWithOdtTag()
+         * A supprimer, dès que mergé en standard : https://github.com/Dolibarr/dolibarr/pull/27187
+         */
         foreach ((array) $tags as $tag) {
             // Check if the current item is a tag or just plain text
             if (isset($tag['text'])) {
@@ -308,6 +312,9 @@ class Odf
                         break;
                 }
             }
+            /*
+             * Fin du spécifique
+             */
         }
         return $odtResult;
     }
