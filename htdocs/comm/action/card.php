@@ -475,10 +475,11 @@ if (empty($reshook) && $action == 'add') {
 				if (!empty($backtopage)) {
 					dol_syslog("Back to ".$backtopage.($moreparam ? (preg_match('/\?/', $backtopage) ? '&'.$moreparam : '?'.$moreparam) : ''));
                     /*
-                     * Spécifique CDC Conseil, par Saami, voir PR https://github.com/Dolibarr/dolibarr/pull/27052
+					 * Spécifique CDC Conseil, par Saami, voir PR https://github.com/Dolibarr/dolibarr/pull/27052
+					 * edit de saami: c'était pas cette PR qu'il fallait récupérer elle casse tout, on s'est mal compris
                      */
-					$httpsIfNeeded = (preg_match('!^https://!', $backtopage)) ? '' : 'https://';
-					header("Location: ".$httpsIfNeeded.$backtopage.($moreparam ? (preg_match('/\?/', $backtopage) ? '&'.$moreparam : '?'.$moreparam) : ''));
+					//$httpsIfNeeded = (preg_match('!^https://!', $backtopage)) ? '' : 'https://';
+					header("Location: ".$backtopage.($moreparam ? (preg_match('/\?/', $backtopage) ? '&'.$moreparam : '?'.$moreparam) : ''));
                     /*
                      * Fin Spécifique
                      */
