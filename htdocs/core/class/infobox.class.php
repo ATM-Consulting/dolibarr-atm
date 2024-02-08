@@ -75,7 +75,9 @@ class InfoBox
 				24 => 'expensereportindex',
 				25 => 'mailingindex',
 				26 => 'opensurveyindex',
-				27 => 'AccountancyHome'
+				27 => 'AccountancyHome',
+                666 => 'CRM360 Acceuil Commerce',
+                999 => 'CRM360 Vue 360 Tiers',
 			);
 		}
 	}
