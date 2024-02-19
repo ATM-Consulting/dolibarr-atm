@@ -168,10 +168,10 @@ if (!empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT)
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array(
 	'p.ref'=>"Ref",
-	'pfp.ref_fourn'=>"RefSupplier",
 	'p.label'=>"ProductLabel",
 	'p.description'=>"Description",
 	"p.note"=>"Note",
+	'pfp.ref_fourn'=>"RefSupplier",
 
 );
 // multilang
@@ -427,6 +427,9 @@ if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListSelect', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 $sql .= $hookmanager->resPrint;
+
+$sqlfields = $sql; // $sql fields to remove for count total
+
 $sql .= ' FROM '.MAIN_DB_PREFIX.'product as p';
 if (!empty($conf->global->MAIN_PRODUCT_PERENTITY_SHARED)) {
 	$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "product_perentity as ppe ON ppe.fk_product = p.rowid AND ppe.entity = " . ((int) $conf->entity);
@@ -437,7 +440,8 @@ if (!empty($extrafields->attributes[$object->table_element]['label']) && is_arra
 if (!empty($searchCategoryProductList) || !empty($catid)) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
 }
-$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+$linktopfp = " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+$sql .= $linktopfp;
 // multilang
 if (!empty($conf->global->MAIN_MULTILANGS)) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang = '".$db->escape($langs->getDefaultLang())."'";
@@ -453,7 +457,21 @@ if (!empty($conf->global->PRODUCT_USE_UNITS)) {
 
 $sql .= ' WHERE p.entity IN ('.getEntity('product').')';
 if ($sall) {
-	$sql .= natural_search(array_keys($fieldstosearchall), $sall);
+	// Clean $fieldstosearchall
+	$newfieldstosearchall = $fieldstosearchall;
+	unset($newfieldstosearchall['pfp.ref_fourn']);
+	unset($newfieldstosearchall['pfp.barcode']);
+
+	$sql .= ' AND (';
+	$sql .= natural_search(array_keys($newfieldstosearchall), $sall, 0, 1);
+	// Search also into a supplier reference 'pfp.ref_fourn'="RefSupplier"
+	$sql .= ' OR EXISTS (SELECT rowid FROM '.MAIN_DB_PREFIX.'product_fournisseur_price as pfp WHERE pfp.fk_product = p.rowid';
+	$sql .= ' AND ('.natural_search('pfp.ref_fourn', $sall, 0, 1);
+	if (isModEnabled('barcode')) {
+		// Search also into a supplier barcode 'pfp.barcode'='GencodBuyPrice';
+		$sql .= ' OR '.natural_search('pfp.barcode', $sall, 0, 1);
+	}
+	$sql .= ')))';
 }
 // if the type is not 1, we show all products (type = 0,2,3)
 if (dol_strlen($search_type) && $search_type != '-1') {
@@ -593,8 +611,24 @@ $sql .= $db->order($sortfield, $sortorder);
 
 $nbtotalofrecords = '';
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
+	/* The fast and low memory method to get and count full list converts the sql into a sql count */
+	$sqlforcount = preg_replace('/^'.preg_quote($sqlfields, '/').'/', 'SELECT COUNT(*) as nbtotalofrecords', $sql);
+	$sqlforcount = preg_replace('/'.preg_quote($linktopfp, '/').'/', '', $sqlforcount);
+	$sqlforcount = preg_replace('/GROUP BY .*$/', '', $sqlforcount);
+
+	$resql = $db->query($sqlforcount);
+	if ($resql) {
+		$objforcount = $db->fetch_object($resql);
+		$nbtotalofrecords = $objforcount->nbtotalofrecords;
+	} else {
+		dol_print_error($db);
+	}
+
+	/*
 	$result = $db->query($sql);
 	$nbtotalofrecords = $db->num_rows($result);
+	*/
+
 	if (($page * $limit) > $nbtotalofrecords) {	// if total resultset is smaller then paging size (filtering), goto and load page 0
 		$page = 0;
 		$offset = 0;

@@ -81,7 +81,7 @@ function getDolGlobalString($key, $default = '')
 {
 	global $conf;
 	// return $conf->global->$key ?? $default;
-	return (string) (empty($conf->global->$key) ? $default : $conf->global->$key);
+	return (string) (isset($conf->global->$key) ? $conf->global->$key : $default);
 }
 
 /**
@@ -94,7 +94,7 @@ function getDolGlobalInt($key, $default = 0)
 {
 	global $conf;
 	// return $conf->global->$key ?? $default;
-	return (int) (empty($conf->global->$key) ? $default : $conf->global->$key);
+	return (int) (isset($conf->global->$key) ? $conf->global->$key : $default);
 }
 
 /**
@@ -7540,15 +7540,16 @@ function getCommonSubstitutionArray($outputlangs, $onlykey = 0, $exclude = null,
 				$substitutionarray['__CANDIDATE_LASTNAME__'] = isset($object->lastname) ? $object->lastname : '';
 			}
 
+			$project = null;
 			if (is_object($object->project)) {
-				$substitutionarray['__PROJECT_ID__'] = (is_object($object->project) ? $object->project->id : '');
-				$substitutionarray['__PROJECT_REF__'] = (is_object($object->project) ? $object->project->ref : '');
-				$substitutionarray['__PROJECT_NAME__'] = (is_object($object->project) ? $object->project->title : '');
+				$project = $object->project;
+			} elseif (is_object($object->projet)) { // Deprecated, for backward compatibility
+				$project = $object->projet;
 			}
-			if (is_object($object->projet)) {	// Deprecated, for backward compatibility
-				$substitutionarray['__PROJECT_ID__'] = (is_object($object->projet) ? $object->projet->id : '');
-				$substitutionarray['__PROJECT_REF__'] = (is_object($object->projet) ? $object->projet->ref : '');
-				$substitutionarray['__PROJECT_NAME__'] = (is_object($object->projet) ? $object->projet->title : '');
+			if ($project) {
+				$substitutionarray['__PROJECT_ID__'] = $project->id;
+				$substitutionarray['__PROJECT_REF__'] = $project->ref;
+				$substitutionarray['__PROJECT_NAME__'] = $project->title;
 			}
 			if (is_object($object) && $object->element == 'project') {
 				$substitutionarray['__PROJECT_NAME__'] = $object->title;
