@@ -2917,7 +2917,13 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 			if (is_array($conf->$modulepart->multidir_output) && !empty($conf->$modulepart->multidir_output[$entity])) {
 				$original_file = $conf->$modulepart->multidir_output[$entity].'/'.$original_file;
 			} else {
-				$original_file = $conf->$modulepart->dir_output.'/'.$original_file;
+				// [FM] FIX SPÉ Edengroupe: quand paramètre $entity passé et différent de $conf->entity, Dolibarr ne devrait pas utiliser
+				// $conf pour chercher le répertoire d'enregistrement des fichiers du module.
+				if ($entity != $conf->entity && $entity = 1) {
+					$original_file = DOL_DATA_ROOT . ($entity == 1 ? '/' : '/' . $entity . '/') . $modulepart . '/' . $original_file;
+				} else {
+					$original_file = $conf->$modulepart->dir_output.'/'.$original_file;
+				}
 			}
 		}
 
