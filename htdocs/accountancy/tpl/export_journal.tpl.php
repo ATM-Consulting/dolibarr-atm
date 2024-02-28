@@ -66,4 +66,7 @@ if (($accountancyexport->getFormatCode($formatexportset) == 'fec' || $accountanc
 	$completefilename = ($code ? $code."_" : "").($prefix ? $prefix."_" : "").$filename.($nodateexport ? "" : $date_export).".".$format;
 }
 
+// Fait par Got pour le ticket DA022178 le 19/07/2022, visiblement selon la doc fournie dans le ticket, le fichier final doit systématiquement s'appeler comme ça, je laisse en non commit ici pour faire un essai
+$completefilename='ECRITURE.WIN';
+
 header('Content-Disposition: attachment;filename='.$completefilename);

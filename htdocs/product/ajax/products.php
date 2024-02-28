@@ -150,6 +150,7 @@ if (!empty($action) && $action == 'fetch' && !empty($id)) {
 			$sql .= " ORDER BY date_price";
 			$sql .= " DESC LIMIT 1";
 
+//print $sql;
 			$result = $db->query($sql);
 			if ($result) {
 				$objp = $db->fetch_object($result);
