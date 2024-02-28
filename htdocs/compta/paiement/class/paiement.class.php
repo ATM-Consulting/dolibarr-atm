@@ -31,7 +31,7 @@
  */
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 require_once DOL_DOCUMENT_ROOT.'/multicurrency/class/multicurrency.class.php';
-
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 /**
  *	Class to manage payments of customer invoices
