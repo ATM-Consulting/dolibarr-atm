@@ -982,7 +982,7 @@ if ($resql)
 			// Customer ref
 			if (! empty($arrayfields['f.ref_client']['checked']))
 			{
-				print '<td class="nowrap">';
+				print '<td class="nowrap tdoverflowmax200" title="'.$obj->ref_client.'">';
 				print $obj->ref_client;
 				print '</td>';
 				if (! $i) $totalarray['nbfield']++;

@@ -57,11 +57,20 @@ if (! $sortorder) $sortorder="ASC";
 
 $startdate=$enddate='';
 
-if (!empty($_POST['startdatemonth']))
-  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'],  $_POST['startdateday'],  $_POST['startdateyear']);
-if (!empty($_POST['enddatemonth']))
-  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'],  $_POST['enddateday'],  $_POST['enddateyear']);
+if (!empty(GETPOST('startdatemonth')))
+  $startdate  = dol_mktime(0, 0, 0, GETPOST('startdatemonth'),  GETPOST('startdateday'),  GETPOST('startdateyear'));
+if (!empty(GETPOST('enddatemonth')))
+  $enddate  = dol_mktime(23, 59, 59, GETPOST('enddatemonth'),  GETPOST('enddateday'),  GETPOST('enddateyear'));
 
+
+$param = '';
+if($socid) $param.= '&socid='.$socid;
+if($startdate) $param.= '&startdatemonth='.GETPOST('startdatemonth');
+if($startdate) $param.= '&startdateday='.GETPOST('startdateday');
+if($startdate) $param.= '&startdateyear='.GETPOST('startdateyear');
+if($enddate) $param.= '&enddatemonth='.GETPOST('enddatemonth');
+if($enddate) $param.= '&enddateday='.GETPOST('enddateday');
+if($enddate) $param.= '&enddateyear='.GETPOST('enddateyear');
 
 /*
  * View
@@ -260,18 +269,18 @@ if ($result)
 
 	print '<tr class="liste_titre">';
 	if (! empty($client)) {
-  		print_liste_field_titre("Invoice",$_SERVER["PHP_SELF"],"f.facnumber","","&amp;socid=".$socid,'',$sortfield,$sortorder);
-  		print_liste_field_titre("DateInvoice",$_SERVER["PHP_SELF"],"f.datef","","&amp;socid=".$socid,'align="center"',$sortfield,$sortorder);
+  		print_liste_field_titre("Invoice",$_SERVER["PHP_SELF"],"f.facnumber","",$param,'',$sortfield,$sortorder);
+  		print_liste_field_titre("DateInvoice",$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
 	}
 	else
-  		print_liste_field_titre("Customer",$_SERVER["PHP_SELF"],"s.nom","","&amp;socid=".$socid,'',$sortfield,$sortorder);
-	print_liste_field_titre("SellingPrice",$_SERVER["PHP_SELF"],"selling_price","","&amp;socid=".$socid,'align="right"',$sortfield,$sortorder);
-	print_liste_field_titre($labelcostprice,$_SERVER["PHP_SELF"],"buying_price","","&amp;socid=".$socid,'align="right"',$sortfield,$sortorder);
-	print_liste_field_titre("Margin",$_SERVER["PHP_SELF"],"marge","","&amp;socid=".$socid,'align="right"',$sortfield,$sortorder);
+  		print_liste_field_titre("Customer",$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre("SellingPrice",$_SERVER["PHP_SELF"],"selling_price","",$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($labelcostprice,$_SERVER["PHP_SELF"],"buying_price","",$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre("Margin",$_SERVER["PHP_SELF"],"marge","",$param,'align="right"',$sortfield,$sortorder);
 	if (! empty($conf->global->DISPLAY_MARGIN_RATES))
-		print_liste_field_titre("MarginRate",$_SERVER["PHP_SELF"],"","","&amp;socid=".$socid,'align="right"',$sortfield,$sortorder);
+		print_liste_field_titre("MarginRate",$_SERVER["PHP_SELF"],"","",$param,'align="right"',$sortfield,$sortorder);
 	if (! empty($conf->global->DISPLAY_MARK_RATES))
-		print_liste_field_titre("MarkRate",$_SERVER["PHP_SELF"],"","","&amp;socid=".$socid,'align="right"',$sortfield,$sortorder);
+		print_liste_field_titre("MarkRate",$_SERVER["PHP_SELF"],"","",$param,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
 	$cumul_achat = 0;
