@@ -198,6 +198,8 @@ if (!$user->hasRight('accounting', 'mouvements', 'lire')) {
 	accessforbidden();
 }
 
+$error = 0;
+
 
 /*
  * Action
@@ -417,7 +419,7 @@ if (empty($reshook)) {
 		if (!$error) {
 			foreach ($toselect as $toselectid) {
 				$result = $object->fetch($toselectid);
-                if ($result > 0 && (!isset($object->date_validation) || $object->date_validation === '')) {			//PR en attente de merge dans la branche develop standard de Dolibarr
+				if ($result > 0 && (!isset($object->date_validation) || $object->date_validation === '')) {
 					$result = $object->deleteMvtNum($object->piece_num);
 					if ($result > 0) {
 						$nbok++;
@@ -430,12 +432,11 @@ if (empty($reshook)) {
 					setEventMessages($object->error, $object->errors, 'errors');
 					$error++;
 					break;
-                } elseif (isset($object->date_validation) || $object->date_validation != '') {
-                    setEventMessages($langs->trans("ValidatedRecordWhereFound"), null, 'errors');
-                    $error++;
-                    break;
-                }
-
+				} elseif (isset($object->date_validation) || $object->date_validation != '') {
+					setEventMessages($langs->trans("ValidatedRecordWhereFound"), null, 'errors');
+					$error++;
+					break;
+				}
 			}
 		}
 

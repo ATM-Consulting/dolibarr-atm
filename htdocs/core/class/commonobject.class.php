@@ -734,7 +734,7 @@ abstract class CommonObject
 
 		$ret .= dolGetFirstLastname($firstname, $lastname, $nameorder);
 
-		return dol_trunc($ret, $maxlen);
+		return dol_string_nohtmltag(dol_trunc($ret, $maxlen));
 	}
 
 	/**
@@ -2159,7 +2159,7 @@ abstract class CommonObject
 		}
 
 		// For backward compatibility
-		if ($this->table_element == 'facture_rec' && $fieldid == 'title') {
+		if (in_array($this->table_element, array('facture_rec', 'facture_fourn_rec')) && $fieldid == 'title') {
 			$fieldid = 'titre';
 		}
 
@@ -8288,7 +8288,7 @@ abstract class CommonObject
 						}
 
 						// HTML, text, select, integer and varchar: take into account default value in database if in create mode
-						if (in_array($extrafields->attributes[$this->table_element]['type'][$key], array('html', 'text', 'varchar', 'select', 'int', 'boolean'))) {
+						if (in_array($extrafields->attributes[$this->table_element]['type'][$key], array('html', 'text', 'varchar', 'select', 'radio', 'int', 'boolean'))) {
 							if ($action == 'create') {
 								$value = (GETPOSTISSET($keyprefix.'options_'.$key.$keysuffix) || $value) ? $value : $extrafields->attributes[$this->table_element]['default'][$key];
 							}
@@ -9086,7 +9086,7 @@ abstract class CommonObject
 
 		foreach ($this->fields as $field => $info) {
 			if ($this->isDate($info)) {
-				if (is_null($obj->{$field}) || $obj->{$field} === '' || $obj->{$field} === '0000-00-00 00:00:00' || $obj->{$field} === '1000-01-01 00:00:00') {
+				if (!isset($obj->{$field}) || is_null($obj->{$field}) || $obj->{$field} === '' || $obj->{$field} === '0000-00-00 00:00:00' || $obj->{$field} === '1000-01-01 00:00:00') {
 					$this->{$field} = '';
 				} else {
 					$this->{$field} = $db->jdate($obj->{$field});
@@ -9102,7 +9102,7 @@ abstract class CommonObject
 							$this->{$field} = (double) $obj->{$field};
 						}
 					} else {
-						if (!is_null($obj->{$field}) || (isset($info['notnull']) && $info['notnull'] == 1)) {
+						if (isset($obj->{$field}) && (!is_null($obj->{$field}) || (isset($info['notnull']) && $info['notnull'] == 1))) {
 							$this->{$field} = (int) $obj->{$field};
 						} else {
 							$this->{$field} = null;
@@ -9117,7 +9117,7 @@ abstract class CommonObject
 						$this->{$field} = (double) $obj->{$field};
 					}
 				} else {
-					if (!is_null($obj->{$field}) || (isset($info['notnull']) && $info['notnull'] == 1)) {
+					if (isset($obj->{$field}) && (!is_null($obj->{$field}) || (isset($info['notnull']) && $info['notnull'] == 1))) {
 						$this->{$field} = (double) $obj->{$field};
 					} else {
 						$this->{$field} = null;
