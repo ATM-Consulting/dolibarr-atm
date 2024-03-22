@@ -7671,7 +7671,7 @@ class Form
 				$ret .= '</table>';
 			}
 		}
-		else dol_print_error('', 'Call of showphoto with wrong parameters modulepart='.$modulepart);
+		//else dol_print_error('', 'Call of showphoto with wrong parameters modulepart='.$modulepart);
 
 		return $ret;
 	}
