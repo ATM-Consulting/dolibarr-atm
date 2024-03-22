@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit', '2048M');
 /* Copyright (C) 2006-2014  Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2011       Juanjo Menent       <jmenent@2byte.es>
  * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
@@ -35,6 +36,8 @@ $action = GETPOST('action', 'aZ09');
 $what = GETPOST('what', 'alpha');
 $export_type = GETPOST('export_type', 'alpha');
 $file = GETPOST('filename_template', 'alpha');
+
+set_time_limit(0);
 
 // Load variable for pagination
 $limit = GETPOST('limit', 'int') ?GETPOST('limit', 'int') : $conf->liste_limit;
