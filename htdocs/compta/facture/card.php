@@ -416,7 +416,7 @@ if (empty($reshook))
 		}
 		$object->date = $date;
 		$new_date_lim_reglement = $object->calculate_date_lim_reglement();
-		if ($new_date_lim_reglement > $old_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
+		if ($new_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
 		if ($object->date_lim_reglement < $object->date) $object->date_lim_reglement = $object->date;
 		$result = $object->update($user);
 		if ($result < 0) {
@@ -456,7 +456,7 @@ if (empty($reshook))
 		if (! $error) {
 			$old_date_lim_reglement = $object->date_lim_reglement;
 			$new_date_lim_reglement = $object->calculate_date_lim_reglement();
-			if ($new_date_lim_reglement > $old_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
+			if ($new_date_lim_reglement) $object->date_lim_reglement = $new_date_lim_reglement;
 			if ($object->date_lim_reglement < $object->date) $object->date_lim_reglement = $object->date;
 			$result = $object->update($user);
 			if ($result < 0) {
