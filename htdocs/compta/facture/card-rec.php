@@ -243,6 +243,13 @@ if (empty($reshook)) {
 			$oldinvoice = new Facture($db);
 			$oldinvoice->fetch(GETPOST('facid', 'int'));
 
+            // Extrafields
+            if(count($oldinvoice->array_options > 0)) {
+                foreach ($oldinvoice->array_options as $option_label => $option_value) {
+                    if (!empty($option_value)) $object->array_options[$option_label] = $option_value;
+                }
+            }
+
 			$result = $object->create($user, $oldinvoice->id);
 			if ($result > 0) {
 				$result = $oldinvoice->delete($user, 1);
@@ -258,9 +265,11 @@ if (empty($reshook)) {
 			}
 
 			if (!$error) {
-				$db->commit();
+                $db->commit();
 
-				header("Location: ".$_SERVER['PHP_SELF'].'?facid='.$object->id);
+
+
+                header("Location: ".$_SERVER['PHP_SELF'].'?facid='.$object->id);
 				exit;
 			} else {
 				$db->rollback();
@@ -1074,10 +1083,30 @@ if ($action == 'create') {
 		print $form->selectarray('modelpdf', $list, $conf->global->FACTURE_ADDON_PDF);
 		print "</td></tr>";
 
-		print "</table>";
 
-		print dol_get_fiche_end();
 
+        // Extrafields
+        if(is_array($object->array_options) && count($object->array_options) > 0) {
+            $efAttr = &$extrafields->attributes[$object->table_element];
+            foreach($object->array_options as $efLabel => $efValue) {
+                $efLabel = str_replace('options_', '', $efLabel);
+                print "<tr>";
+                if(($efAttr['required'][$efLabel] == 1)) {
+                    print "<td class='fieldrequired'>" . $efAttr['label'][$efLabel] . "</td>";
+                } else {
+                    print "<td>" . $efAttr['label'][$efLabel] . "</td>";
+                }
+                if($efAttr['type'][$efLabel] == 'select') {
+                    $efValue = $efAttr['param'][$efLabel]['options'][$efValue];
+                }
+                print "<td>" . $efValue . "</td>";
+                print "<input type='hidden' name='". 'extrafield_'.$efLabel ."' id='". 'extrafield_'.$efLabel ."' value='". $efValue ."'>";
+                print '</tr>';
+            }
+        }
+
+        print "</table>";
+        print dol_get_fiche_end();
 
 		// Autogeneration
 		$title = $langs->trans("Recurrence");
@@ -1123,7 +1152,6 @@ if ($action == 'create') {
 		print "</table>";
 
 		print dol_get_fiche_end();
-
 
 		$title = $langs->trans("ProductsAndServices");
 		if (!isModEnabled('service')) {
