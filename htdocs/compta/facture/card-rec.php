@@ -1086,7 +1086,7 @@ if ($action == 'create') {
 
 
         // Extrafields
-        if(is_array($object->array_options) && count($object->array_options) > 0) {
+        if(count($object->array_options) > 0) {
             $efAttr = &$extrafields->attributes[$object->table_element];
             foreach($object->array_options as $efLabel => $efValue) {
                 $efLabel = str_replace('options_', '', $efLabel);

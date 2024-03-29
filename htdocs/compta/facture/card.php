@@ -3240,6 +3240,14 @@ if ($action == 'create') {
 	$invoice_predefined = new FactureRec($db);
 	if (empty($origin) && empty($originid) && GETPOST('fac_rec', 'int') > 0) {
 		$invoice_predefined->fetch(GETPOST('fac_rec', 'int'));
+        // Extrafields
+        if(!isset($fac_rec_array_options) || !is_array($fac_rec_array_options) || count($fac_rec_array_options) < 1) {
+            $fac_rec_array_options = array();
+        }
+        foreach($invoice_predefined->array_options as $option_label => $option_value) {
+             $fac_rec_array_options[$option_label] = $option_value;
+        }
+        $object->array_options = $fac_rec_array_options;
 	}
 
 	// Thirdparty
@@ -4030,6 +4038,7 @@ if ($action == 'create') {
 
 	// fetch optionals attributes and labels
 	$extrafields->fetch_name_optionals_label($object->table_element);
+
 
 	if ($user->socid > 0 && $user->socid != $object->socid) {
 		accessforbidden('', 0, 1);
