@@ -95,7 +95,6 @@ if ($action == 'add' && !empty($permissiontoadd)) {
 		} elseif ($object->fields[$key]['type'] == 'datetime') {
 			$value = dol_mktime(GETPOST($key.'hour', 'int'), GETPOST($key.'min', 'int'), GETPOST($key.'sec', 'int'), GETPOST($key.'month', 'int'), GETPOST($key.'day', 'int'), GETPOST($key.'year', 'int'), 'tzuserrel');
 		} elseif ($object->fields[$key]['type'] == 'duration') {
-			// FIX multiplication error on 18.0 refer to PR #28266
 			$hour = intval(GETPOST($key.'hour', 'int'));
 			$min = intval(GETPOST($key.'min', 'int'));
 			$value = 60 * 60 * $hour + 60 * $min;
