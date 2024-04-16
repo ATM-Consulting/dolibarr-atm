@@ -8078,8 +8078,8 @@ class Form
 				}
 			}
 		}
-	//	var_dump($objectdesc);exit;
-		if(empty($objectdesc)) $objectdesc = $objectdescorig;
+
+        if(empty($objectdesc) || $objectdesc == 'integer') $objectdesc = $objectdescorig;
 		if ($objectdesc) {
 			// Example of value for $objectdesc:
 			// Bom:bom/class/bom.class.php:0:t.status=1
@@ -8101,9 +8101,8 @@ class Form
 
 			// Load object according to $id and $element
 			$objecttmp = fetchObjectByElement(0, strtolower($InfoFieldList[0]));
-		//	var_dump($objecttmp);exit;
 			// Fallback to another solution to get $objecttmp
-			if (empty($objecttmp) && !empty($classpath)) {
+			if ((empty($objecttmp)) && !empty($classpath)) {
 				dol_include_once($classpath);
 
 				if ($classname && class_exists($classname)) {
