@@ -7723,8 +7723,14 @@ abstract class CommonObject
 					}
 				}
 			}
-			$objectfield = $this->element.($this->module ? '@'.$this->module : '').':'.$key.$keysuffix;
-			$out = $form->selectForForms($param_list_array[0], $keyprefix.$key.$keysuffix, $value, $showempty, '', '', $morecss, $moreparam, 0, (empty($val['disabled']) ? 0 : 1), '', $objectfield);
+
+			// FIX John le 17/04/2024 : je n'est pas compris pourquoi eldy a fait ça
+			$objectfield = null; // $this->element.($this->module ? '@'.$this->module : '').':'.$key.$keysuffix;
+			$out = $form->selectForForms($param_list[0], $keyprefix.$key.$keysuffix, $value, $showempty, '', '', $morecss, $moreparam, 0, (empty($val['disabled']) ? 0 : 1), '', $objectfield);
+			// FIN FIX John le 17/04/2024 : je n'est pas compris pourquoi eldy a fait ça
+
+			//          $objectfield = $this->element.($this->module ? '@'.$this->module : '').':'.$key.$keysuffix;
+			//          $out = $form->selectForForms($param_list_array[0], $keyprefix.$key.$keysuffix, $value, $showempty, '', '', $morecss, $moreparam, 0, (empty($val['disabled']) ? 0 : 1), '', $objectfield);
 
 			if (!empty($param_list_array[2])) {		// If the entry into $fields is set, we must add a create button
 				if ((!GETPOSTISSET('backtopage') || strpos(GETPOST('backtopage'), $_SERVER['PHP_SELF']) === 0)	// // To avoid to open several times the 'Plus' button (we accept only one level)
