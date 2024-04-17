@@ -7724,10 +7724,10 @@ abstract class CommonObject
 				}
 			}
 
-			// FIX John le 17/04/2024 : je n'est pas compris pourquoi eldy a fait ça
+			// FIX John le 17/04/2024 : je n'ai pas compris pourquoi eldy a fait ça
 			$objectfield = null; // $this->element.($this->module ? '@'.$this->module : '').':'.$key.$keysuffix;
 			$out = $form->selectForForms($param_list[0], $keyprefix.$key.$keysuffix, $value, $showempty, '', '', $morecss, $moreparam, 0, (empty($val['disabled']) ? 0 : 1), '', $objectfield);
-			// FIN FIX John le 17/04/2024 : je n'est pas compris pourquoi eldy a fait ça
+			// FIN FIX John le 17/04/2024 : je n'ai pas compris pourquoi eldy a fait ça
 
 			//          $objectfield = $this->element.($this->module ? '@'.$this->module : '').':'.$key.$keysuffix;
 			//          $out = $form->selectForForms($param_list_array[0], $keyprefix.$key.$keysuffix, $value, $showempty, '', '', $morecss, $moreparam, 0, (empty($val['disabled']) ? 0 : 1), '', $objectfield);
