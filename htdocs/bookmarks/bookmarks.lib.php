@@ -77,10 +77,12 @@ function printDropdownBookmarksList()
 	}
 
 	$url .= ($tmpurl ? '?'.$tmpurl : '');
-	if (!empty($url_param)) {
-		$url .= '&'.implode('&', $url_param);
-	}
 
+    //Backport v18 - FIX Ticket DA024837
+	if (!empty($url_param)) {
+		$url .= '?'.implode('&', $url_param);
+	}
+    //Fin backport
 	$searchForm = '<!-- form with POST method by default, will be replaced with GET for external link by js -->'."\n";
 	$searchForm .= '<form id="top-menu-action-bookmark" name="actionbookmark" method="POST" action=""'.(empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER) ? ' onsubmit="return false"' : '').'>';
 	$searchForm .= '<input type="hidden" name="token" value="'.newToken().'">';
