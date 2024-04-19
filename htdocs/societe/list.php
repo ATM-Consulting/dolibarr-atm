@@ -641,7 +641,7 @@ if (!empty($searchCategorySupplierList)) {
 	}
 }
 
-$sqlTempLength = strlen($sql);
+$sqlTempLength = dol_strlen($sql);
 
 if (strlen($search_cti)) {
 	$sql .= natural_search('s.phone', $search_cti);
