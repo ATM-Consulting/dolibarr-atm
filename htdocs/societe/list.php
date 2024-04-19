@@ -128,7 +128,7 @@ $search_date_modif_end = dol_mktime(23, 59, 59, $search_date_modif_endmonth, $se
 $type = GETPOST('type', 'alpha');
 $place = GETPOST('place', 'aZ09') ? GETPOST('place', 'aZ09') : '0'; // $place is string id of table for Bar or Restaurant
 
-q$diroutputmassaction = $conf->societe->dir_output.'/temp/massgeneration/'.$user->id;
+$diroutputmassaction = $conf->societe->dir_output.'/temp/massgeneration/'.$user->id;
 
 // Load variable for pagination
 $limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
@@ -774,6 +774,7 @@ if ($search_date_modif_end) {
 	$sql .= " AND s.tms <= '".$db->idate($search_date_modif_end)."'";
 }
 
+// FIX for Ticket DA024807
 if ($search_all && $sqlTempLength == strlen($sql)) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
 } else {
@@ -783,6 +784,9 @@ if ($search_all && $sqlTempLength == strlen($sql)) {
 if ($search_status != '' && $search_status >= 0) {
 	$sql .= natural_search("s.status", $search_status, 2);
 }
+// END of FIX
+
+
 // Add where from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
 // Add where from hooks
