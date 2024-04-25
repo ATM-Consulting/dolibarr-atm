@@ -424,7 +424,8 @@ class Task extends CommonObjectLine
 		$sql .= " progress=".(($this->progress != '' && $this->progress >= 0) ? $this->progress : 'null').",";
 		$sql .= " budget_amount=".(($this->budget_amount != '' && $this->budget_amount >= 0) ? $this->budget_amount : 'null').",";
 		$sql .= " rang=".((!empty($this->rang)) ? $this->rang : "0");
-		$sql .= " priority=".((!empty($this->priority)) ? $this->priority : "0");
+		/*Backport PR 29472*/
+		$sql .= " priority=".((!empty($this->priority)) ? ((int) $this->priority) : "0").",";
 		$sql .= " WHERE rowid=".((int) $this->id);
 
 		$this->db->begin();
