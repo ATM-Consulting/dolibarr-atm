@@ -168,7 +168,7 @@ if (!empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT)
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array(
 	'p.ref'=>"Ref",
-	'pfp.ref_fourn'=>"RefSupplier",
+//	'pfp.ref_fourn'=>"RefSupplier",
 	'p.label'=>"ProductLabel",
 	'p.description'=>"Description",
 	"p.note"=>"Note",

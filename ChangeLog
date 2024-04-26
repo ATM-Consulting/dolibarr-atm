@@ -5,6 +5,7 @@ English Dolibarr ChangeLog
 
 ***** ChangeLog for 16.0.5 compared to 16.0.4 *****
 
+FIX: fix fieldsearchall Unknown column pfp.ref_fourn in where clause DA024880 *26/04*2024
 FIX: 16.0 propalestats Unknown column 'p.fk_soc' in 'on clause'
 FIX: #23804
 FIX: #23860
