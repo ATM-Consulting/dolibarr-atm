@@ -179,7 +179,12 @@ class CActionComm
 		if ($resql) {
 			$nump = $this->db->num_rows($resql);
 			if ($nump) {
-				$idforallfornewmodule = 97;
+				// Backport : DA023062
+				$idforallfornewmodule = 96;
+				$TSystem = array();
+				$TSystemAuto = array();
+				$TModule = array();
+				// Fin Backport : DA023062
 				$i = 0;
 				while ($i < $nump) {
 					$obj = $this->db->fetch_object($resql);
@@ -267,15 +272,19 @@ class CActionComm
 						}
 						$label = (($transcode != $keyfortrans) ? $transcode : $langs->trans($obj->label));
 						if (($onlyautoornot == -1 || $onlyautoornot == -2) && !empty($conf->global->AGENDA_USE_EVENT_TYPE)) {
-							if ($typecalendar == 'system') {
+							// Backport : DA023062
+							if ($typecalendar == 'system' || $typecalendar == 'user') {
 								$label = '&nbsp;&nbsp; '.$label;
-								$repid[-99] = $langs->trans("ActionAC_MANUAL");
-								$repcode['AC_NON_AUTO'] = '-- '.$langs->trans("ActionAC_MANUAL");
+								$TSystem['id'][-99] = $langs->trans("ActionAC_MANUAL");
+								$TSystem['code']['AC_NON_AUTO'] = '-- '.$langs->trans("ActionAC_MANUAL");
 							}
+							//Fin Backport : DA023062
 							if ($typecalendar == 'systemauto') {
 								$label = '&nbsp;&nbsp; '.$label;
-								$repid[-98] = $langs->trans("ActionAC_AUTO");
-								$repcode['AC_ALL_AUTO'] = '-- '.$langs->trans("ActionAC_AUTO");
+								// Backport : DA023062
+								$TSystemAuto['id'][-98] = $langs->trans("ActionAC_AUTO");
+								$TSystemAuto['code']['AC_ALL_AUTO'] = '-- '.$langs->trans("ActionAC_AUTO");
+								//Fin Backport : DA023062
 							}
 							if ($typecalendar == 'module') {
 								//TODO check if possible to push it between system and systemauto
@@ -288,29 +297,41 @@ class CActionComm
 								if (!isset($repcode['AC_ALL_'.strtoupper($module)])) {	// If first time for this module
 									$idforallfornewmodule--;
 								}
-								$repid[$idforallfornewmodule] = $langs->trans("ActionAC_ALL_".strtoupper($module));
-								$repcode['AC_ALL_'.strtoupper($module)] = '-- '.$langs->trans("Module").' '.ucfirst($module);
+								// Backport : DA023062
+								$TModule['id'][$idforallfornewmodule] = $langs->trans("ActionAC_ALL_".strtoupper($module));
+								$TModule['code']['AC_ALL_'.strtoupper($module)] = '-- '.$langs->trans("Module").' '.ucfirst($module);
+								//Fin Backport : DA023062
 							}
 						}
-						$repid[$obj->id] = $label;
-						$repcode[$obj->code] = $label;
-						$repall[$obj->code] = array('id' => $label, 'label' => $label, 'type' => $typecalendar, 'color' => $obj->color, 'picto' => $obj->picto);
+						// Backport : DA023062
+						if($typecalendar == 'system' || $typecalendar == 'user') {
+							$TSystem['id'][$obj->id] = $label;
+							$TSystem['code'][$obj->code] = $label;
+							$TSystem['all'][$obj->code] = array('id' => $label, 'label' => $label, 'type' => $typecalendar, 'color' => $obj->color, 'picto' => $obj->picto);
+						} elseif($typecalendar == 'systemauto') {
+							$TSystemAuto['id'][$obj->id] = $label;
+							$TSystemAuto['code'][$obj->code] = $label;
+							$TSystemAuto['all'][$obj->code] = array('id' => $label, 'label' => $label, 'type' => $typecalendar, 'color' => $obj->color, 'picto' => $obj->picto);
+						}
+						//Fin Backport : DA023062
 						if ($onlyautoornot > 0 && preg_match('/^module/', $obj->type) && $obj->module) {
-							$repcode[$obj->code] .= ' ('.$langs->trans("Module").': '.$obj->module.')';
-							$repall[$obj->code]['label'] .= ' ('.$langs->trans("Module").': '.$obj->module.')';
+							// Backport : DA023062
+							$TModule['code'][$obj->code] .= ' ('.$langs->trans("Module").': '.$obj->module.')';
+							$TModule['all'][$obj->code]['label'] .= ' ('.$langs->trans("Module").': '.$obj->module.')';
+							//Fin Backport : DA023062
 						}
 					}
 					$i++;
 				}
 			}
 
-			if ($idorcode == 'id') {
-				$this->liste_array = $repid;
-			} elseif ($idorcode == 'code') {
-				$this->liste_array = $repcode;
-			} else {
-				$this->liste_array = $repall;
-			}
+			// Backport : DA023062
+			if(empty($idorcode)) $idorcode = 'all';
+			$TType = $TSystem[$idorcode];
+			if(! empty($TSystemAuto[$idorcode])) $TType = array_merge($TSystem[$idorcode], $TSystemAuto[$idorcode]);
+			if(! empty($TModule[$idorcode])) $TType = array_merge($TSystem[$idorcode], $TModule[$idorcode]);
+			$this->liste_array = $TType;
+			//Fin Backport : DA023062
 
 			return $this->liste_array;
 		} else {
