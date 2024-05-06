@@ -2517,7 +2517,7 @@ if ($action == 'create') {
 				if (empty($conf->facture->enabled)) {
 					print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled">'.$langs->trans("ClassifyBilled").'</a>';
 				} else {
-					if (!empty($object->linkedObjectsIds['invoice_supplier'])) {
+					if (!empty($object->linkedObjectsIds['invoice_supplier']) || (empty($object->linkedObjectsIds['invoice_supplier']) && empty($conf->global->WORKFLOW_DISABLE_CLASSIFY_BILLED_FROM_SUPPLIER_ORDER))) {
 						if ($user->rights->fournisseur->facture->creer || $user->rights->supplier_invoice->creer) {
 							print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled">'.$langs->trans("ClassifyBilled").'</a>';
 						}
