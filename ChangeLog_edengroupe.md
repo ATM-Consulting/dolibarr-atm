@@ -1,0 +1,1 @@
+- New: Add possibility to classify as billed a supplier order without invoice - **2024/05/13**
