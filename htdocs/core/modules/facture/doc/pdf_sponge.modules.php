@@ -1342,7 +1342,10 @@ class pdf_sponge extends ModelePDFFactures
 					$bac = new CompanyBankAccount($this->db);
 					$bac->fetch(0, $object->thirdparty->id);
 					$iban= $bac->iban.(($bac->iban && $bac->bic) ? ' / ' : '').$bac->bic;
-					$lib_mode_reg .= ' '.$outputlangs->trans("PaymentTypePREdetails", dol_trunc($iban, 6, 'right', 'UTF-8', 1));
+					/* Backport V20 #29669 */
+					if (getDolGlobalInt('INVOICE_NO_TRUNCATE_IBAN_FOR_PDF_INVOICES') === 1) $lib_mode_reg .= ' ' . $outputlangs->trans("PaymentTypePREfulldetails", $iban);
+					else $lib_mode_reg .= ' ' . $outputlangs->trans("PaymentTypePREdetails", dol_trunc($iban, 6, 'right', 'UTF-8', 1));
+					/* -------------------- */
 				}
 
 				$pdf->MultiCell($posxend - $posxval, 5, $lib_mode_reg, 0, 'L');
