@@ -967,7 +967,7 @@ class modProduct extends DolibarrModules
 				'pa.incdec' => "0",
 				'pa.rang' => "1");
 			$this->import_regex_array[$r] = array('pa.fk_product_pere' => 'rowid@'.MAIN_DB_PREFIX.'product', 'pa.fk_product_fils' => 'rowid@'.MAIN_DB_PREFIX.'product');
-			$this->import_updatekeys_array[$r] = array('pa.fk_product_pere' => 'ref parent', 'pa.fk_product_fils' => "ref enfant");
+			$this->import_updatekeys_array[$r] = array('pa.fk_product_pere' => 'import_ref_parent', 'pa.fk_product_fils' => "import_ref_child");
 		}
 	}
 
