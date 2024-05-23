@@ -53,6 +53,8 @@ if (is_numeric($entity)) {
 include '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
+global $hookmanager;
+
 $action = GETPOST('action', 'aZ09');
 
 $signature = GETPOST('signaturebase64');
@@ -91,6 +93,9 @@ if (empty($SECUREKEY) || !dol_verifyHash($securekeyseed.$type.$ref.(!isModEnable
 top_httphead();
 
 if ($action == "importSignature") {
+
+	$hookmanager->initHooks(array('pdfImportSignature'));
+
 	$issignatureok = (!empty($signature) && $signature[0] == "image/png;base64");
 	if ($issignatureok) {
 		$signature = $signature[1];
@@ -172,11 +177,16 @@ if ($action == "importSignature") {
 						$yforimgstart = (empty($s['h']) ? 240 : $s['h'] - 60);
 						$wforimg = $s['w'] - 20 - $xforimgstart;
 
+						$parameters = array('pdf'=>$pdf, 'pageCount'=> $pagecount);
+						$reshook = $hookmanager->executeHooks('beforePDFImportSignature', $parameters, $object, $action);
+						if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+
 						$pdf->SetXY($xforimgstart, $yforimgstart + round($wforimg / 4) - 4);
 						$pdf->SetFont($default_font, '', $default_font_size - 1);
 						$pdf->MultiCell($wforimg, 4, $langs->trans("DateSigning").': '.dol_print_date(dol_now(), "daytext", false, $langs, true), 0, 'L');
 						$pdf->SetXY($xforimgstart, $yforimgstart + round($wforimg / 4));
 						$pdf->MultiCell($wforimg, 4, $langs->trans("Lastname").': '.$online_sign_name, 0, 'L');
+
 
 						$pdf->Image($upload_dir.$filename, $xforimgstart, $yforimgstart, $wforimg, round($wforimg / 4));
 
