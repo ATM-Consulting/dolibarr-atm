@@ -492,25 +492,8 @@ class Notify
 								$link = '<a href="'.$urlwithroot.'/commande/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
 								$dir_output = $conf->commande->dir_output."/".get_exdir(0, 0, 0, 1, $object, 'commande');
 								$object_type = 'order';
-								//Récupération nom du tiers
-								$sql = "SELECT s.nom";
-								$sql .= " FROM ".$this->db->prefix()."societe as s";
-								$sql .= " INNER JOIN ".$this->db->prefix()."notify as n ON s.rowid = n.fk_soc";
-								$sql .= " WHERE n.fk_soc = ".((int) $object->socid);
-								$resql = $this->db->query($sql);
-								if ($resql){
-									$obj = $this->db->fetch_object($resql);
-									$nomsoc = $obj->nom;
-									$mesg =  $langs->transnoentitiesnoconv("EMailTextOrderValidatedBy", $user->getFullName($langs));
-									//Ajout ligne nom client
-									if (!empty($nomsoc)){
-										$mesg .="\n\n" .$langs->transnoentitiesnoconv("EMailTextOrderCustomer" , $nomsoc);
-									}
-									$labeltouse = $conf->global->ORDER_VALIDATE_TEMPLATE;
-									$mesg = $outputlangs->transnoentitiesnoconv("EMailTextOrderValidated", $link);
-
-								}
-
+								$labeltouse = $conf->global->ORDER_VALIDATE_TEMPLATE;
+								$mesg = $outputlangs->transnoentitiesnoconv("EMailTextOrderValidated", $link);
 								break;
 							case 'PROPAL_VALIDATE':
 								$link = '<a href="'.$urlwithroot.'/comm/propal/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
@@ -542,7 +525,6 @@ class Notify
 								$link = '<a href="'.$urlwithroot.'/fourn/commande/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
 								$dir_output = $conf->fournisseur->commande->dir_output;
 								$object_type = 'order_supplier';
-								$labeltouse = isset($conf->global->ORDER_SUPPLIER_VALIDATE_TEMPLATE) ? $conf->global->ORDER_SUPPLIER_VALIDATE_TEMPLATE : '';
 								$mesg = $outputlangs->transnoentitiesnoconv("Hello").",\n\n";
 								$mesg .= $outputlangs->transnoentitiesnoconv("EMailTextOrderValidatedBy", $link, $user->getFullName($outputlangs));
 								$mesg .= "\n\n".$outputlangs->transnoentitiesnoconv("Sincerely").".\n\n";
@@ -551,7 +533,6 @@ class Notify
 								$link = '<a href="'.$urlwithroot.'/fourn/commande/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
 								$dir_output = $conf->fournisseur->commande->dir_output;
 								$object_type = 'order_supplier';
-								$labeltouse = isset($conf->global->ORDER_SUPPLIER_APPROVE_TEMPLATE) ? $conf->global->ORDER_SUPPLIER_APPROVE_TEMPLATE : '';
 								$mesg = $outputlangs->transnoentitiesnoconv("Hello").",\n\n";
 								$mesg .= $outputlangs->transnoentitiesnoconv("EMailTextOrderApprovedBy", $link, $user->getFullName($outputlangs));
 								$mesg .= "\n\n".$outputlangs->transnoentitiesnoconv("Sincerely").".\n\n";
@@ -560,7 +541,6 @@ class Notify
 								$link = '<a href="'.$urlwithroot.'/fourn/commande/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
 								$dir_output = $conf->fournisseur->commande->dir_output;
 								$object_type = 'order_supplier';
-								$labeltouse = isset($conf->global->ORDER_SUPPLIER_REFUSE_TEMPLATE) ? $conf->global->ORDER_SUPPLIER_REFUSE_TEMPLATE : '';
 								$mesg = $outputlangs->transnoentitiesnoconv("Hello").",\n\n";
 								$mesg .= $outputlangs->transnoentitiesnoconv("EMailTextOrderRefusedBy", $link, $user->getFullName($outputlangs));
 								$mesg .= "\n\n".$outputlangs->transnoentitiesnoconv("Sincerely").".\n\n";
@@ -762,7 +742,21 @@ class Notify
 						$link = '<a href="'.$urlwithroot.'/commande/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
 						$dir_output = $conf->commande->dir_output."/".get_exdir(0, 0, 0, 1, $object, 'commande');
 						$object_type = 'order';
-						$mesg = $langs->transnoentitiesnoconv("EMailTextOrderValidated", $link);
+						//Récupération nom du tiers
+						$sql = "SELECT s.nom";
+						$sql .= " FROM ".$this->db->prefix()."societe as s";
+						$sql .= " INNER JOIN ".$this->db->prefix()."notify as n ON s.rowid = n.fk_soc";
+						$sql .= " WHERE n.fk_soc = ".((int) $object->socid);
+						$resql = $this->db->query($sql);
+						if ($resql){
+							$obj = $this->db->fetch_object($resql);
+							$nomsoc = $obj->nom;
+							$mesg = $langs->transnoentitiesnoconv("EMailTextOrderValidated", $link);
+							//Ajout ligne utilisateur
+							$mesg .="\n\n" .$langs->transnoentitiesnoconv("EMailTextOrderValidatedBy", $user->getFullName($langs));
+							//Ajout ligne nom client
+							$mesg .="\n\n" .$langs->transnoentitiesnoconv("EMailTextOrderCustomer" , $nomsoc);
+						}
 						break;
 					case 'PROPAL_VALIDATE':
 						$link = '<a href="'.$urlwithroot.'/comm/propal/card.php?id='.$object->id.'&entity='.$object->entity.'">'.$newref.'</a>';
@@ -874,29 +868,12 @@ class Notify
 					$mimefilename_list[] = $ref.".pdf";
 				}
 
-				// if an e-mail template is configured for this notification code (for instance
-				// 'SHIPPING_VALIDATE_TEMPLATE'), we fetch this template by its label. Otherwise, a default message
-				// content will be sent.
-				$mailTemplateLabel = isset($conf->global->{$notifcode.'_TEMPLATE'}) ? $conf->global->{$notifcode.'_TEMPLATE'} : '';
-				$emailTemplate = null;
-				if (!empty($mailTemplateLabel)) {
-					include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-					$formmail = new FormMail($this->db);
-					$emailTemplate = $formmail->getEMailTemplate($this->db, $object_type.'_send', $user, $langs, 0, 1, $labeltouse);
-				}
-				if (!empty($mailTemplateLabel) && is_object($emailTemplate) && $emailTemplate->id > 0) {
-					$substitutionarray = getCommonSubstitutionArray($langs, 0, null, $object);
-					complete_substitutions_array($substitutionarray, $langs, $object);
-					$subject = make_substitutions($emailTemplate->topic, $substitutionarray, $langs);
-					$message = make_substitutions($emailTemplate->content, $substitutionarray, $langs);
-				} else {
-					$message = '';
-					$message .= $langs->transnoentities("YouReceiveMailBecauseOfNotification2", $application, $mysoc->name)."\n";
-					$message .= "\n";
-					$message .= $mesg;
+				$message = '';
+				$message .= $langs->transnoentities("YouReceiveMailBecauseOfNotification2", $application, $mysoc->name)."\n";
+				$message .= "\n";
+				$message .= $mesg;
 
-					$message = nl2br($message);
-				}
+				$message = nl2br($message);
 
 				// Replace keyword __SUPERVISOREMAIL__
 				if (preg_match('/__SUPERVISOREMAIL__/', $sendto)) {
