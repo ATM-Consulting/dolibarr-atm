@@ -516,6 +516,9 @@ if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListSelect', $parameters); // Note that $action and $object may have been modified by hook
 $sql .= $hookmanager->resPrint;
+
+$sqlfields = $sql;
+
 $sql .= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as country on (country.rowid = s.fk_pays)";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_typent as typent on (typent.id = s.fk_typent)";
@@ -761,14 +764,10 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
 	$result = $db->query($sql);
 	$nbtotalofrecords = $db->num_rows($result);
 	*/
+
 	/* The fast and low memory method to get and count full list converts the sql into a sql count */
-	if ($sall || $search_product_category > 0 || $search_user > 0) {
-		$sqlforcount = preg_replace('/^SELECT[a-zA-Z0-9\._\s\(\),=<>\:\-\']+\sFROM/', 'SELECT COUNT(DISTINCT f.rowid) as nbtotalofrecords FROM', $sql);
-	} else {
-		$sqlforcount = preg_replace('/^SELECT[a-zA-Z0-9\._\s\(\),=<>\:\-\']+\sFROM/', 'SELECT COUNT(f.rowid) as nbtotalofrecords FROM', $sql);
-		$sqlforcount = preg_replace('/LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture as pf ON pf.fk_facture = f.rowid/', '', $sqlforcount);
-	}
-	$sqlforcount = preg_replace('/GROUP BY.*$/', '', $sqlforcount);
+	$sqlforcount = preg_replace('/^'.preg_quote($sqlfields, '/').'/', 'SELECT COUNT(*) as nbtotalofrecords', $sql);
+	$sqlforcount = preg_replace('/GROUP BY .*$/', '', $sqlforcount);
 
 	$resql = $db->query($sqlforcount);
 	$objforcount = $db->fetch_object($resql);
