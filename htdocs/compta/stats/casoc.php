@@ -266,6 +266,8 @@ if ($modecompta == 'CREANCES-DETTES') {
 	}
 	if ($selected_cat === -2) {	// Without any category
 		$sql .= " AND cs.fk_soc is null";
+	} elseif ($selected_cat === -1) {
+		$sql .= "";
 	} elseif ($selected_cat) {	// Into a specific category
 		$sql .= " AND (c.rowid = ".((int) $selected_cat);
 		if ($subcat) {
