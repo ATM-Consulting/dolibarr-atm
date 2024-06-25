@@ -213,7 +213,7 @@ class Notify
 
 		if (!$error) {
 			if ($socid >= 0 && in_array('thirdparty', $scope)) {
-				$sql = "SELECT a.code, c.email, c.rowid, , c.statut as status";
+				$sql = "SELECT a.code, c.email, c.rowid, c.statut as status";
 				$sql .= " FROM ".$this->db->prefix()."notify_def as n,";
 				$sql .= " ".$this->db->prefix()."socpeople as c,";
 				$sql .= " ".$this->db->prefix()."c_action_trigger as a,";
