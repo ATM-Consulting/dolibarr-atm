@@ -450,8 +450,8 @@ abstract class CommonObject
 
 	/**
 	 * @var array    List of child tables. To know object to delete on cascade.
-	 *               If name matches '@ClassNAme:FilePathClass;ParentFkFieldName' it will
-	 *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object
+	 *               If name is like '@ClassName:FilePathClass:ParentFkFieldName', it will
+	 *               call method deleteByParentField(parentId, ParentFkFieldName) to fetch and delete child object.
 	 */
 	protected $childtablesoncascade = array();
 
@@ -1356,6 +1356,8 @@ abstract class CommonObject
 		if ($resql) {
 			$num = $this->db->num_rows($resql);
 			if ($num > 0) {
+				$langs->loadLangs(array("propal", "orders", "bills", "suppliers", "contracts", "supplier_proposal"));
+
 				while ($obj = $this->db->fetch_object($resql)) {
 					$modulename = $obj->element;
 					if (strpos($obj->element, 'project') !== false) {
@@ -1371,11 +1373,15 @@ abstract class CommonObject
 					}
 					if ($conf->{$modulename}->enabled) {
 						$libelle_element = $langs->trans('ContactDefault_'.$obj->element);
-						$transkey = "TypeContact_".$obj->element."_".$source."_".$obj->code;
+						$tmpelement = $obj->element;
+						$transkey = "TypeContact_".$tmpelement."_".$source."_".$obj->code;
 						$libelle_type = ($langs->trans($transkey) != $transkey ? $langs->trans($transkey) : $obj->libelle);
-						if (empty($option))
+						if (empty($option)) {
 							$tab[$obj->rowid] = $libelle_element.' - '.$libelle_type;
-						else $tab[$obj->rowid] = $libelle_element.' - '.$libelle_type;
+						}
+						else {
+							$tab[$obj->rowid] = $libelle_element.' - '.$libelle_type;
+						}
 					}
 				}
 			}
@@ -2184,14 +2190,16 @@ abstract class CommonObject
 								$this->updateline(
 									$line->id, ($line->description ? $line->description : $line->desc), $line->subprice, $line->qty, $line->remise_percent,
 									$line->tva_tx, $line->localtax1_tx, $line->localtax2_tx, 'HT', $line->info_bits, $line->product_type, false,
-									$line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $line->multicurrency_subprice
+									$line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $line->multicurrency_subprice,
+									$line->ref_supplier
 								);
 								break;
 							case 'invoice_supplier':
 								$this->updateline(
 									$line->id, ($line->description ? $line->description : $line->desc), $line->subprice, $line->tva_tx, $line->localtax1_tx,
 									$line->localtax2_tx, $line->qty, 0, 'HT', $line->info_bits, $line->product_type, $line->remise_percent, false,
-									$line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $line->multicurrency_subprice
+									$line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $line->multicurrency_subprice,
+									$line->ref_supplier
 								);
 								break;
 							default:
@@ -5493,6 +5501,7 @@ abstract class CommonObject
 			   		$mandatorypb = false;
 			   		if ($attributeType == 'link' && $this->array_options[$key] == '-1') $mandatorypb = true;
 			   		if ($this->array_options[$key] === '') $mandatorypb = true;
+					if ($attributeType == 'sellist' && $this->array_options[$key] == '0') $mandatorypb = true;
 			   		if ($mandatorypb)
 			   		{
 			   		    dol_syslog("Mandatory extra field ".$key." is empty");

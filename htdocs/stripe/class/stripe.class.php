@@ -428,11 +428,12 @@ class Stripe extends CommonObject
     		// payment_method =
     		// payment_method_types = array('card')
             //var_dump($dataforintent);
-    		if ($off_session)
-    		{
-    		    unset($dataforintent['setup_future_usage']);
-    		    $dataforintent["off_session"] = true;
-    		}
+			if ($off_session)
+			{
+				unset($dataforintent['setup_future_usage']);
+				//$dataforintent["setup_future_usage"] = "off_session";
+				$dataforintent["off_session"] = true;
+			}
     		if (!is_null($payment_method))
     		{
     			$dataforintent["payment_method"] = $payment_method;

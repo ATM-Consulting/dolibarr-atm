@@ -1448,7 +1448,8 @@ function top_htmlhead($head, $title = '', $disablejs = 0, $disablehead = 0, $arr
                 {
                 	$pathckeditor = constant('JS_CKEDITOR');
                 }
-                print '<script><!-- enable ckeditor by main.inc.php -->';
+                print '<script>';
+                print '/* enable ckeditor by main.inc.php */';
                 print 'var CKEDITOR_BASEPATH = \''.$pathckeditor.'\';'."\n";
                 print 'var ckeditorConfig = \''.dol_buildpath($themesubdir.'/theme/'.$conf->theme.'/ckeditor/config.js'.($ext ? '?'.$ext : ''), 1).'\';'."\n"; // $themesubdir='' in standard usage
                 print 'var ckeditorFilebrowserBrowseUrl = \''.DOL_URL_ROOT.'/core/filemanagerdol/browser/default/browser.php?Connector='.DOL_URL_ROOT.'/core/filemanagerdol/connectors/php/connector.php\';'."\n";
@@ -1765,6 +1766,7 @@ function top_menu_user($hideloginname = 0, $urllogout = '')
     global $dolibarr_main_authentication, $dolibarr_main_demo;
     global $menumanager;
 
+	$langs->load('companies');
     $userImage = $userDropDownImage = '';
     if (!empty($user->photo))
     {

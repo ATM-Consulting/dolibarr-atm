@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2010  Jean Heimburger         <jean@tiaris.info>
  * Copyright (C) 2011       Juanjo Menent           <jmenent@2byte.es>
  * Copyright (C) 2012       Regis Houssin           <regis.houssin@inodbox.com>
- * Copyright (C) 2013-2017  Alexandre Spangaro      <aspangaro@open-dsi.fr>
+ * Copyright (C) 2013-2021  Alexandre Spangaro      <aspangaro@open-dsi.fr>
  * Copyright (C) 2013-2016  Olivier Geffroy         <jeff@jeffinfo.com>
  * Copyright (C) 2013-2016  Florian Henry           <florian.henry@open-concept.pro>
  * Copyright (C) 2018       Frédéric France         <frederic.france@netlogic.fr>
@@ -92,7 +92,7 @@ if (!GETPOSTISSET('date_startmonth') && (empty($date_start) || empty($date_end))
 	$date_end = dol_get_last_day($pastmonthyear, $pastmonth, false);
 }
 
-$sql = "SELECT f.rowid, f.ref as ref, f.type, f.datef as df, f.libelle,f.ref_supplier, f.date_lim_reglement as dlf, f.close_code,";
+$sql = "SELECT f.rowid, f.ref as ref, f.type, f.datef as df, f.libelle,f.ref_supplier, f.date_lim_reglement as dlr, f.close_code,";
 $sql .= " fd.rowid as fdid, fd.description, fd.product_type, fd.total_ht, fd.tva as total_tva, fd.total_localtax1, fd.total_localtax2, fd.tva_tx, fd.total_ttc, fd.vat_src_code,";
 $sql .= " s.rowid as socid, s.nom as name, s.fournisseur, s.code_client, s.code_fournisseur, s.code_compta, s.code_compta_fournisseur,";
 $sql .= " p.accountancy_code_buy , aa.rowid as fk_compte, aa.account_number as compte, aa.label as label_compte";
@@ -628,7 +628,7 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 				print '"'.$val["refsologest"].'"'.$sep;
 				print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
 				print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
-				print '"'.$conf->global->ACCOUNTING_ACCOUNT_SUPPLIER.'"'.$sep;
+				print '"'.length_accountg($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER).'"'.$sep;
 				print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
 				print '"'.$langs->trans("Thirdparty").'"'.$sep;
 				print '"'.utf8_decode(dol_trunc($companystatic->name, 16)).' - '.$val["refsuppliersologest"].' - '.$langs->trans("Thirdparty").'"'.$sep;
@@ -694,9 +694,9 @@ if ($action == 'exportcsv') {		// ISO and not UTF8 !
 						print '"'.$date.'"'.$sep;
 						print '"'.$val["refsologest"].'"'.$sep;
 						print '"'.utf8_decode(dol_trunc($companystatic->name, 32)).'"'.$sep;
-						print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
-						print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
-						print '"'.length_accounta(html_entity_decode($k)).'"'.$sep;
+						print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
+						print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
+						print '"'.length_accountg(html_entity_decode($k)).'"'.$sep;
 						print '"'.$langs->trans("Thirdparty").'"'.$sep;
 						print '"'.utf8_decode(dol_trunc($companystatic->name, 16)).' - '.$val["refsuppliersologest"].' - '.$langs->trans("VAT").' NPR"'.$sep;
 						print '"'.($mt < 0 ? price(-$mt) : '').'"'.$sep;
@@ -867,7 +867,7 @@ if (empty($action) || $action == 'view') {
 			print "<td>".$invoicestatic->getNomUrl(1)."</td>";
 			// Account
 			print "<td>";
-			$accountoshow = length_accounta($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER);
+			$accountoshow = length_accountg($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER);
 			if (($accountoshow == "") || $accountoshow == 'NotDefined')
 			{
 				print '<span class="error">'.$langs->trans("MainAccountForSuppliersNotDefined").'</span>';

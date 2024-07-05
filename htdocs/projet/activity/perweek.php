@@ -225,7 +225,7 @@ if ($action == 'addtime' && $user->rights->projet->lire && GETPOST('assigntask')
 		{
 			// Test if we are already contact of the project (should be rare but sometimes we can add as task contact without being contact of project, like when admin user has been removed from contact of project)
 			$sql = 'SELECT ec.rowid FROM '.MAIN_DB_PREFIX.'element_contact as ec, '.MAIN_DB_PREFIX.'c_type_contact as tc WHERE tc.rowid = ec.fk_c_type_contact';
-			$sql .= ' AND ec.fk_socpeople = '.$idfortaskuser." AND ec.element_id = '.$object->fk_project.' AND tc.element = 'project' AND source = 'internal'";
+			$sql .= ' AND ec.fk_socpeople = '.((int) $idfortaskuser)." AND ec.element_id = ".((int) $object->fk_project)." AND tc.element = 'project' AND source = 'internal'";
 			$resql = $db->query($sql);
 			if ($resql)
 			{
@@ -521,6 +521,11 @@ $startday = dol_mktime(12, 0, 0, $startdayarray['first_month'], $startdayarray['
 
 // Get if user is available or not for each day
 $isavailable = array();
+
+// Assume from Monday to Friday if conf empty or badly formed
+$numstartworkingday = 1;
+$numendworkingday = 5;
+
 if (!empty($conf->global->MAIN_DEFAULT_WORKING_DAYS))
 {
 	$tmparray = explode('-', $conf->global->MAIN_DEFAULT_WORKING_DAYS);
@@ -530,7 +535,6 @@ if (!empty($conf->global->MAIN_DEFAULT_WORKING_DAYS))
 		$numendworkingday = $tmparray[1];
 	}
 }
-
 for ($idw = 0; $idw < 7; $idw++)
 {
 	$dayinloopfromfirstdaytoshow = dol_time_plus_duree($firstdaytoshow, $idw, 'd'); // $firstdaytoshow is a date with hours = 0

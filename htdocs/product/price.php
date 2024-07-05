@@ -349,6 +349,7 @@ if (empty($reshook))
 
 				$newprice = price2num($newprice, 'MU');
 				$newprice_min = price2num($val['price_min'], 'MU');
+				$newvattx = price2num($val['vat_tx']);
 
 				if (!empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE) && $newprice_min < $maxpricesupplier) {
 					setEventMessages($langs->trans("MinimumPriceLimit", price($maxpricesupplier, 0, '', 1, - 1, - 1, 'auto')), null, 'errors');
@@ -356,10 +357,9 @@ if (empty($reshook))
 					break;
 				}
 
-				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'])
+				if ($object->multiprices[$key] != $newprice || $object->multiprices_min[$key] != $newprice_min || $object->multiprices_base_type[$key] != $val['price_base_type'] || $object->multiprices_tva_tx[$key] != $newvattx)
        				$res = $object->updatePrice($newprice, $val['price_base_type'], $user, $val['vat_tx'], $newprice_min, $key, $val['npr'], $psq, 0, $val['localtaxes_array'], $val['default_vat_code']);
 				else $res = 0;
-
 
 				if ($res < 0) {
 					$error++;
@@ -1617,13 +1617,13 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action == 'showlog_defaul
     			    elseif ($i > 0) $candelete = 1;
 
     				print '<td class="right">';
-    				if ($candelete)
-    				{
+    				if ($candelete || ($db->jdate($objp->dp) >= dol_now())) {		// Test on date is to be able to delete a corrupted record with a a date in future
     					print '<a href="'.$_SERVER["PHP_SELF"].'?action=delete&amp;id='.$object->id.'&amp;lineid='.$objp->rowid.'">';
     					print img_delete();
     					print '</a>';
-    				} else
+    				} else {
     					print '&nbsp;'; // Can not delete last price (it's current price)
+    				}
     				print '</td>';
     			}
 

@@ -327,7 +327,7 @@ if (empty($reshook))
 		$duration = GETPOST('duree_validite', 'int');
 
 		if (empty($datep)) {
-			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Date")), null, 'errors');
+			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("DatePropal")), null, 'errors');
 			$action = 'create';
 			$error++;
 		}
@@ -942,6 +942,7 @@ if (empty($reshook))
 						if (count($prodcustprice->lines) > 0) {
 							$pu_ht = price($prodcustprice->lines[0]->price);
 							$pu_ttc = price($prodcustprice->lines[0]->price_ttc);
+							$price_min =  price($prodcustprice->lines[0]->price_min);
 							$price_base_type = $prodcustprice->lines[0]->price_base_type;
 							$tva_tx = ($prodcustprice->lines[0]->default_vat_code ? $prodcustprice->lines[0]->tva_tx.' ('.$prodcustprice->lines[0]->default_vat_code.' )' : $prodcustprice->lines[0]->tva_tx);
 							if ($prodcustprice->lines[0]->default_vat_code && !preg_match('/\(.*\)/', $tva_tx)) $tva_tx .= ' ('.$prodcustprice->lines[0]->default_vat_code.')';
@@ -1621,7 +1622,7 @@ if ($action == 'create')
 	}
 
 	// Date
-	print '<tr><td class="fieldrequired">'.$langs->trans('Date').'</td><td>';
+	print '<tr><td class="fieldrequired">'.$langs->trans('DatePropal').'</td><td>';
 	print $form->selectDate('', '', '', '', '', "addprop", 1, 1);
 	print '</td></tr>';
 
@@ -2050,7 +2051,7 @@ if ($action == 'create')
 	print '<tr>';
 	print '<td>';
 	print '<table class="nobordernopadding" width="100%"><tr><td>';
-	print $langs->trans('Date');
+	print $langs->trans('DatePropal');
 	print '</td>';
 	if ($action != 'editdate' && $object->statut == Propal::STATUS_DRAFT && $usercancreate)
 		print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editdate&amp;id='.$object->id.'">'.img_edit($langs->trans('SetDate'), 1).'</a></td>';

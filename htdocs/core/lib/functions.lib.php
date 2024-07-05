@@ -41,6 +41,30 @@ include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
 
 
 /**
+ * Return dolibarr global constant string value
+ * @param string $key key to return value, return '' if not set
+ * @return string
+ */
+function getDolGlobalString($key)
+{
+	global $conf;
+	// return $conf->global->$key ?? '';
+	return (string) (empty($conf->global->$key) ? '' : $conf->global->$key);
+}
+
+/**
+ * Return dolibarr global constant int value
+ * @param string $key key to return value, return 0 if not set
+ * @return int
+ */
+function getDolGlobalInt($key)
+{
+	global $conf;
+	// return $conf->global->$key ?? 0;
+	return (int) (empty($conf->global->$key) ? 0 : $conf->global->$key);
+}
+
+/**
  * Return a DoliDB instance (database handler).
  *
  * @param   string	$type		Type of database (mysql, pgsql...)
@@ -4760,7 +4784,7 @@ function price2num($amount, $rounding = '', $option = 0)
 		$nbofdectoround = '';
 		if ($rounding == 'MU')     $nbofdectoround = $conf->global->MAIN_MAX_DECIMALS_UNIT;
 		elseif ($rounding == 'MT') $nbofdectoround = $conf->global->MAIN_MAX_DECIMALS_TOT;
-		elseif ($rounding == 'MS') $nbofdectoround = empty($conf->global->MAIN_MAX_DECIMALS_STOCK) ? 5 : $conf->global->MAIN_MAX_DECIMALS_STOCK;
+		elseif ($rounding == 'MS') $nbofdectoround = !isset($conf->global->MAIN_MAX_DECIMALS_STOCK) ? 5 : $conf->global->MAIN_MAX_DECIMALS_STOCK;
 		elseif ($rounding == 'CR') $nbofdectoround = 8;
 		elseif (is_numeric($rounding))  $nbofdectoround = $rounding;
 		//print "RR".$amount.' - '.$nbofdectoround.'<br>';
@@ -6453,11 +6477,11 @@ function getCommonSubstitutionArray($outputlangs, $onlykey = 0, $exclude = null,
 		if ($onlykey != 2 || $mysoc->useLocalTax(1)) $substitutionarray['__AMOUNT_TAX2__']     = is_object($object) ? $object->total_localtax1 : '';
 		if ($onlykey != 2 || $mysoc->useLocalTax(2)) $substitutionarray['__AMOUNT_TAX3__']     = is_object($object) ? $object->total_localtax2 : '';
 
-		$substitutionarray['__AMOUNT_FORMATED__']          = is_object($object) ? ($object->total_ttc ? price($object->total_ttc, 0, $outputlangs, 0, 0, -1, $conf->currency) : null) : '';
-		$substitutionarray['__AMOUNT_EXCL_TAX_FORMATED__'] = is_object($object) ? ($object->total_ht ? price($object->total_ht, 0, $outputlangs, 0, 0, -1, $conf->currency) : null) : '';
-		$substitutionarray['__AMOUNT_VAT_FORMATED__']      = is_object($object) ? ($object->total_vat ? price($object->total_vat, 0, $outputlangs, 0, 0, -1, $conf->currency) : ($object->total_tva ? price($object->total_tva, 0, $outputlangs, 0, 0, -1, $conf->currency) : null)) : '';
-		if ($onlykey != 2 || $mysoc->useLocalTax(1)) $substitutionarray['__AMOUNT_TAX2_FORMATED__']     = is_object($object) ? ($object->total_localtax1 ? price($object->total_localtax1, 0, $outputlangs, 0, 0, -1, $conf->currency) : null) : '';
-		if ($onlykey != 2 || $mysoc->useLocalTax(2)) $substitutionarray['__AMOUNT_TAX3_FORMATED__']     = is_object($object) ? ($object->total_localtax2 ? price($object->total_localtax2, 0, $outputlangs, 0, 0, -1, $conf->currency) : null) : '';
+		$substitutionarray['__AMOUNT_FORMATED__']          = is_object($object) ? ($object->total_ttc ? price($object->total_ttc, 0, $outputlangs, 0, -1, -1, $conf->currency) : null) : '';
+		$substitutionarray['__AMOUNT_EXCL_TAX_FORMATED__'] = is_object($object) ? ($object->total_ht ? price($object->total_ht, 0, $outputlangs, 0, -1, -1, $conf->currency) : null) : '';
+		$substitutionarray['__AMOUNT_VAT_FORMATED__']      = is_object($object) ? ($object->total_vat ? price($object->total_vat, 0, $outputlangs, 0, -1, -1, $conf->currency) : ($object->total_tva ? price($object->total_tva, 0, $outputlangs, 0, 0, -1, $conf->currency) : null)) : '';
+		if ($onlykey != 2 || $mysoc->useLocalTax(1)) $substitutionarray['__AMOUNT_TAX2_FORMATED__']     = is_object($object) ? ($object->total_localtax1 ? price($object->total_localtax1, 0, $outputlangs, 0, -1, -1, $conf->currency) : null) : '';
+		if ($onlykey != 2 || $mysoc->useLocalTax(2)) $substitutionarray['__AMOUNT_TAX3_FORMATED__']     = is_object($object) ? ($object->total_localtax2 ? price($object->total_localtax2, 0, $outputlangs, 0, -1, -1, $conf->currency) : null) : '';
 
 		// TODO Add keys for foreign multicurrency
 
@@ -8306,7 +8330,7 @@ function getDictvalue($tablename, $field, $id, $checkentity = false, $rowidfield
 	if (!isset($dictvalues[$tablename]))
 	{
 		$dictvalues[$tablename] = array();
-		$sql = 'SELECT * FROM '.$tablename.' WHERE 1'; // Here select * is allowed as it is generic code and we don't have list of fields
+		$sql = 'SELECT * FROM '.$tablename.' WHERE 1 = 1'; // Here select * is allowed as it is generic code and we don't have list of fields
 		if ($checkentity) $sql .= ' AND entity IN (0,'.getEntity($tablename).')';
 
 		$resql = $db->query($sql);
