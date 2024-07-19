@@ -1389,6 +1389,14 @@ class Form
 		if (empty($user->rights->societe->client->voir) && !$user->socid) {
 			$sql .= ", ".$this->db->prefix()."societe_commerciaux as sc";
 		}
+		/*Debut - PR Standard en cours #30417. Si pas acceptée, ajouter un hook*/
+		if(isModEnabled('category')){
+			$sql .= " LEFT JOIN ".$this->db->prefix()."categorie_societe as cats ON cats.fk_soc = s.rowid";
+			if(isModEnabled('fournisseur')) {
+				$sql .= " LEFT JOIN " . $this->db->prefix() . "categorie_fournisseur as catf ON catf.fk_soc = s.rowid";
+			}
+		}
+		/*Fin - PR Standard en cours #30417. Si pas acceptée, ajouter un hook*/
 		$sql .= " WHERE s.entity IN (".getEntity('societe').")";
 		if (!empty($user->socid)) {
 			$sql .= " AND s.rowid = ".((int) $user->socid);
