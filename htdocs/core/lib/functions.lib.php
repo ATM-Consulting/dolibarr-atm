@@ -7704,6 +7704,14 @@ function dol_htmlwithnojs($stringtoencode, $nouseofiframesandbox = 0, $check = '
 					$out = 'InvalidHTMLStringCantBeCleaned '.$e->getMessage();
 				}
 			}
+			/**
+			 * BACKPORT a supprimer pour la mdv en v20 - DA025205
+			 */
+			//Clear ZERO WIDTH NO-BREAK SPACE, ZERO WIDTH SPACE, ZERO WIDTH JOINER
+			$out = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', ' ', $out);
+			/**
+ 			* end BACKPORT
+ 			*/
 
 			// Clean some html entities that are useless so text is cleaner
 			$out = preg_replace('/&(tab|newline);/i', ' ', $out);
@@ -7809,6 +7817,13 @@ function dol_htmlentitiesbr($stringtoencode, $nl2brmode = 0, $pagecodefrom = 'UT
 		if ($removelasteolbr) {
 			$newstring = preg_replace('/<br>$/i', '', $newstring); // Remove last <br> (remove only last one)
 		}
+		/**
+		 * BACKPORT a supprimer pour la mdv en v20 - DA025205
+		 */
+		$newstring = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', ' ', $newstring);
+		/**
+		 * end BACKPORT
+		 */
 		$newstring = strtr($newstring, array('&'=>'__and__', '<'=>'__lt__', '>'=>'__gt__', '"'=>'__dquot__'));
 		$newstring = dol_htmlentities($newstring, ENT_COMPAT, $pagecodefrom); // Make entity encoding
 		$newstring = strtr($newstring, array('__and__'=>'&', '__lt__'=>'<', '__gt__'=>'>', '__dquot__'=>'"'));
