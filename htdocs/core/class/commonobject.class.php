@@ -1498,13 +1498,15 @@ abstract class CommonObject
 					if (strpos($obj->element, 'project') !== false) {
 						$modulename = 'projet';
 					} elseif ($obj->element == 'contrat') {
-						$element = 'contract';
+						$modulename = 'contract';
 					} elseif ($obj->element == 'action') {
 						$modulename = 'agenda';
 					} elseif (strpos($obj->element, 'supplier') !== false && $obj->element != 'supplier_proposal') {
 						$modulename = 'fournisseur';
 					} elseif (strpos($obj->element, 'supplier') !== false && $obj->element != 'supplier_proposal') {
 						$modulename = 'fournisseur';
+					} elseif ($obj->element == 'fichinter') {
+						$modulename = 'ficheinter';
 					}
 					if (!empty($conf->{$modulename}->enabled)) {
 						$libelle_element = $langs->trans('ContactDefault_'.$obj->element);
