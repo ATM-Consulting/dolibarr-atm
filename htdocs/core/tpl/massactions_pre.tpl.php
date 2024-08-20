@@ -31,7 +31,6 @@
 // $sendto
 // $withmaindocfilemail
 
-
 if ($massaction == 'predeletedraft') {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassDraftDeletion"), $langs->trans("ConfirmMassDeletionQuestion", count($toselect)), "delete", null, '', 0, 200, 500, 1);
 }
@@ -94,7 +93,7 @@ if ($massaction == 'preaffecttag' && isModEnabled('category')) {
 	}
 }
 
-if ($massaction == 'preupdateprice' && isModEnabled('category')) {
+if ($massaction == 'preupdateprice') {
 	$formquestion = array();
 
 	$valuefield = '<div style="display: flex; align-items: center; justify-content: flex-end; padding-right: 150px">';
@@ -385,6 +384,17 @@ if ($massaction == 'presetcommercial') {
 			'value' => $form->multiselectarray('commercial', $userlist, null, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, '', '', '', 1));
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmAllocateCommercial"), $langs->trans("ConfirmAllocateCommercialQuestion", count($toselect)), "affectcommercial", $formquestion, 1, 0, 200, 500, 1);
 }
+// Spécifique client ajout de massaction de désaffectation de commercial
+if ($massaction == 'unsetcommercial') {
+	$formquestion = array();
+	$userlist = $form->select_dolusers('', '', 0, null, 0, '', '', 0, 0, 0, 'AND u.statut = 1', 0, '', '', 0, 1);
+	$formquestion[] = array('type' => 'other',
+		'name' => 'unassigncommercial',
+		'label' => $form->editfieldkey('UnallocateCommercial', 'commercial_id', '', $object, 0),
+		'value' => $form->multiselectarray('commercial', $userlist, null, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0, '', '', '', 1));
+	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmUnallocateCommercial"), $langs->trans("ConfirmUnallocateCommercialQuestion", count($toselect)), "unassigncommercial", $formquestion, 1, 0, 200, 500, 1);
+}
+// fin spécifique
 if ($massaction == 'preapproveleave') {
 	print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans("ConfirmMassLeaveApproval"), $langs->trans("ConfirmMassLeaveApprovalQuestion", count($toselect)), "approveleave", null, 'yes', 0, 200, 500, 1);
 }

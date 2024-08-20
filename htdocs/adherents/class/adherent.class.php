@@ -1255,7 +1255,7 @@ class Adherent extends CommonObject
 
 					if ($result >= 0) {
 						$result = $luser->setPassword($user, $this->pass, 0, 0, 1);
-						if (is_numeric($result) && $result < 0) {
+						if (is_int($result) && $result < 0) {
 							$this->error = $luser->error;
 							dol_syslog(get_class($this)."::setPassword ".$this->error, LOG_ERR);
 							$error++;
@@ -3102,6 +3102,7 @@ class Adherent extends CommonObject
 
 			$sql = 'SELECT rowid FROM '.MAIN_DB_PREFIX.'adherent';
 			$sql .= " WHERE entity = ".((int) $conf->entity); // Do not use getEntity('adherent').")" here, we want the batch to be on its entity only;
+			$sql .= " AND statut = 1";
 			$sql .= " AND datefin = '".$this->db->idate($datetosearchfor)."'";
 			//$sql .= " LIMIT 10000";
 

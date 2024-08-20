@@ -5,7 +5,7 @@
  * Copyright (C) 2015       Florian Henry       <florian.henry@open-concept.pro>
  * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2016       Pierre-Henry Favre  <phf@atm-consulting.fr>
- * Copyright (C) 2016-2023  Alexandre Spangaro  <aspangaro@open-dsi.fr>
+ * Copyright (C) 2016-2024  Alexandre Spangaro  <aspangaro@open-dsi.fr>
  * Copyright (C) 2022  		Lionel Vessiller    <lvessiller@open-dsi.fr>
  * Copyright (C) 2013-2017  Olivier Geffroy     <jeff@jeffinfo.com>
  * Copyright (C) 2017       Elarifr. Ari Elbaz  <github@accedinfo.com>
@@ -385,11 +385,12 @@ class AccountancyExport
 				// directory already created when module is enabled
 				$outputDir .= '/export';
 				$outputDir .= '/'.dol_sanitizePathName($formatexportset);
-				if (!dol_is_dir($outputDir)) {
-					if (dol_mkdir($outputDir) < 0) {
-						$this->errors[] = $langs->trans('ErrorCanNotCreateDir', $outputDir);
-						return -1;
-					}
+			}
+
+			if (!dol_is_dir($outputDir)) {
+				if (dol_mkdir($outputDir) < 0) {
+					$this->errors[] = $langs->trans('ErrorCanNotCreateDir', $outputDir);
+					return -1;
 				}
 			}
 
@@ -816,7 +817,7 @@ class AccountancyExport
 	/**
 	 * Export format : Quadratus (Format ASCII)
 	 * Format since 2015 compatible QuadraCOMPTA
-	 * Last review for this format : 2023/01/28 Alexandre Spangaro (aspangaro@open-dsi.fr)
+	 * Last review for this format : 2023/09/16 Alexandre Spangaro (aspangaro@open-dsi.fr)
 	 *
 	 * Help : https://docplayer.fr/20769649-Fichier-d-entree-ascii-dans-quadracompta.html
 	 * In QuadraCompta | Use menu : "Outils" > "Suivi des dossiers" > "Import ASCII(Compta)"
@@ -839,10 +840,16 @@ class AccountancyExport
 		foreach ($objectLines as $line) {
 			// Clean some data
 			$line->doc_ref = dol_string_unaccent($line->doc_ref);
+
+			$line->label_operation = str_replace(array("\t", "\n", "\r"), " ", $line->label_operation);
+			$line->label_operation = str_replace(array("- ", "…", "..."), "", $line->label_operation);
 			$line->label_operation = dol_string_unaccent($line->label_operation);
+
 			$line->numero_compte = dol_string_unaccent($line->numero_compte);
 			$line->label_compte = dol_string_unaccent($line->label_compte);
 			$line->subledger_account = dol_string_unaccent($line->subledger_account);
+
+			$line->subledger_label = str_replace(array("- ", "…", "..."), "", $line->subledger_label);
 			$line->subledger_label = dol_string_unaccent($line->subledger_label);
 
 			$code_compta = $line->numero_compte;
@@ -858,11 +865,11 @@ class AccountancyExport
 				$tab['lib_compte'] = str_pad(self::trunc($line->subledger_label, 30), 30);
 
 				if ($line->doc_type == 'customer_invoice') {
-					$tab['lib_alpha'] = strtoupper(str_pad('C'.self::trunc(dol_string_unaccent($line->subledger_label), 6), 6));
+					$tab['lib_alpha'] = strtoupper(str_pad('C'.self::trunc(dol_string_unaccent($line->subledger_label), 6), 7));
 					$tab['filler'] = str_repeat(' ', 52);
 					$tab['coll_compte'] = str_pad(self::trunc($conf->global->ACCOUNTING_ACCOUNT_CUSTOMER, 8), 8);
 				} elseif ($line->doc_type == 'supplier_invoice') {
-					$tab['lib_alpha'] = strtoupper(str_pad('F'.self::trunc(dol_string_unaccent($line->subledger_label), 6), 6));
+					$tab['lib_alpha'] = strtoupper(str_pad('F'.self::trunc(dol_string_unaccent($line->subledger_label), 6), 7));
 					$tab['filler'] = str_repeat(' ', 52);
 					$tab['coll_compte'] = str_pad(self::trunc($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER, 8), 8);
 				} else {

@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 
 
 /**
@@ -211,7 +212,7 @@ class ActionsTicket
 			$msg = GETPOSTISSET('message_initial') ? GETPOST('message_initial', 'restricthtml') : $object->message;
 			include_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 			$uselocalbrowser = true;
-			$ckeditorenabledforticket = $conf->global->FCKEDITOR_ENABLE_TICKET;
+			$ckeditorenabledforticket = getDolGlobalString('FCKEDITOR_ENABLE_TICKET');
 			$doleditor = new DolEditor('message_initial', $msg, '100%', 250, 'dolibarr_details', 'In', true, $uselocalbrowser, $ckeditorenabledforticket, ROWS_9, '95%');
 			$doleditor->Create();
 		} else {
@@ -296,7 +297,7 @@ class ActionsTicket
 					//print '<tr>';
 					print '<tr class="oddeven">';
 					print '<td><strong>';
-					print img_picto('', 'object_action', 'class="paddingright"').dol_print_date($arraymsgs['datec'], 'dayhour');
+					print img_picto('', 'object_action', 'class="paddingright"').dol_print_date($arraymsgs['datep'], 'dayhour');
 					print '<strong></td>';
 					if ($show_user) {
 						print '<td>';
