@@ -45,6 +45,8 @@ class Contracts extends DolibarrApi
 	 */
 	public $contract;
 
+	public ContratLigne $contractLine;
+
 	/**
 	 * Constructor
 	 */
@@ -53,6 +55,7 @@ class Contracts extends DolibarrApi
 		global $db, $conf;
 		$this->db = $db;
 		$this->contract = new Contrat($this->db);
+		$this->contractLine = new ContratLigne($this->db);
 	}
 
 	/**
@@ -338,26 +341,25 @@ class Contracts extends DolibarrApi
 		$request_data->desc = sanitizeVal($request_data->desc, 'restricthtml');
 		$request_data->price_base_type = sanitizeVal($request_data->price_base_type);
 
-		$updateRes = $this->contract->updateline(
-			$lineid,
-			$request_data->desc,
-			$request_data->subprice,
-			$request_data->qty,
-			$request_data->remise_percent,
-			$request_data->date_start,
-			$request_data->date_end,
-			$request_data->tva_tx,
-			$request_data->localtax1_tx,
-			$request_data->localtax2_tx,
-			$request_data->date_start_real,
-			$request_data->date_end_real,
-			$request_data->price_base_type ? $request_data->price_base_type : 'HT',
-			$request_data->info_bits,
-			$request_data->fk_fourn_price,
-			$request_data->pa_ht,
-			$request_data->array_options,
-			$request_data->fk_unit
-		);
+		$this->contractLine->fetch($lineid);
+		$this->contractLine->description = $request_data->desc;
+		$this->contractLine->qty = $request_data->qty;
+		$this->contractLine->remise_percent = $request_data->remise_percent;
+		$this->contractLine->datestart = $request_data->date_start;
+		$this->contractLine->date_end = $request_data->date_end;
+		$this->contractLine->tva_tx = $request_data->tva_tx;
+		$this->contractLine->localtax1_tx = $request_data->localtax1_tx;
+		$this->contractLine->localtax2_tx = $request_data->localtax2_tx;
+		$this->contractLine->date_start_real = $request_data->date_start_real;
+		$this->contractLine->date_end_real = $request_data->date_end_real;
+		$this->contractLine->price_base_type = $request_data->price_base_type ? $request_data->price_base_type : 'HT';
+		$this->contractLine->info_bits = $request_data->info_bits;
+		$this->contractLine->fk_fournprice = $request_data->fk_fourn_price;
+		$this->contractLine->pa_ht = $request_data->pa_ht;
+		$this->contractLine->array_options = $request_data->array_options;
+		$this->contractLine->fk_unit = $request_data->fk_unit;
+
+		$updateRes = $this->contractLine->update();
 
 		if ($updateRes > 0) {
 			$result = $this->get($id);
@@ -476,7 +478,11 @@ class Contracts extends DolibarrApi
 
 		// TODO Check the lineid $lineid is a line of object
 
-		$updateRes = $this->contract->deleteline($lineid, DolibarrApiAccess::$user);
+
+		$this->contractLine->fetch($lineid);
+
+		$updateRes = $this->contractLine->delete(DolibarrApiAccess::$user);
+
 		if ($updateRes > 0) {
 			return $this->get($id);
 		} else {
